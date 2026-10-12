@@ -126,7 +126,7 @@ namespace ConventionSamples
         /// </summary>
         private void OnEnable()
         {
-            OnGameOver += HandleGameOver;
+
         }
 
         /// <summary>
@@ -216,16 +216,13 @@ namespace ConventionSamples
             _state = EGameState.Playing;
         }
 
-        #endregion
-
-        #region ETC - Protected Methods
-
         /// <summary>
-        /// 공통 피격 반응을 샘플 전용으로 재정의합니다.
+        /// 추상 클래스 구현
         /// </summary>
-        protected override void HandleDamage(int damage)
+        /// <exception cref="NotImplementedException"></exception>
+        public override void Move()
         {
-            base.HandleDamage(damage);
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -250,12 +247,7 @@ namespace ConventionSamples
         /// </summary>
         public virtual void TakeDamage(int damage)
         {
-            if (IsValidDamage(damage) == false)
-            {
-                return;
-            }
 
-            HandleDamage(damage);
         }
 
         #endregion
