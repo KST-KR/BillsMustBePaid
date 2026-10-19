@@ -2,25 +2,49 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// 현재 재화를 관리하고 변경 결과를 알림
-/// 민재: 저금통 파괴 보상액을 Earn으로 전달해 재화에 반영
-/// 요셉: UI에 표시할 재화 값을 갱신
+/// [FIN-01-01] 재화 종류 구분
+/// </summary>
+public enum ECurrencyType
+{
+    /// <summary>
+    /// [FIN-01-01] 일반 골드
+    /// </summary>
+    Gold,
+    /// <summary>
+    /// [FIN-01-01] 영구 재화 레거시 포인트
+    /// </summary>
+    LegacyPoint
+}
+
+/// <summary>
+/// [FIN-01-01][FIN-01-02] 재화 잔고와 변경 이벤트 관리
 /// </summary>
 public class CurrencyManager : MonoBehaviour
 {
     #region 싱글톤
-    public static CurrencyManager Instance { get; private set; } 
+    public static CurrencyManager Instance { get; private set; }
     #endregion
 
     #region 속성
-    public int CurrentAmount => _currentAmount; 
+    public int Gold => _gold;
+    public int LegacyPoints => _legacyPoints;
     #endregion
 
     #region 이벤트
-    public event Action<int> OnAmountChanged; 
+    public event Action<int> OnAmountChanged;
+    public event Action<ECurrencyType, int, int> OnBalanceChanged;
     #endregion
 
-    private int _currentAmount;
+    #region 인스펙터
+    [Header("초기 잔고")]
+    [SerializeField, Min(0)] private int _initialGold = 100;
+    [SerializeField, Min(0)] private int _initialLegacyPoints;
+    #endregion
+
+    #region 내부 변수
+    private int _gold;
+    private int _legacyPoints;
+    #endregion
 
     #region 이벤트 함수
     private void Awake()
@@ -32,6 +56,7 @@ public class CurrencyManager : MonoBehaviour
         }
 
         Instance = this;
+        InitializeBalances();
     }
 
     private void OnDestroy()
@@ -45,30 +70,107 @@ public class CurrencyManager : MonoBehaviour
 
     #region 커스텀 (Public)
     /// <summary>
-    /// 보상 재화를 더하고 변경 이벤트를 발생
-    /// 민재: 저금통 파괴 보상 금액을 전달해 재화에 반영
+    /// [FIN-01-02] 지정한 재화 잔고 반환
     /// </summary>
-    public void Earn(int amount)
+    public int GetBalance(ECurrencyType type)
     {
-
+        return type == ECurrencyType.Gold ? _gold : _legacyPoints;
     }
 
     /// <summary>
-    /// 재화가 충분할 때만 지정한 금액을 차감
-    /// 요셉: 납부/구매 입력을 처리할 때 차감 성공 여부를 확인
+    /// [FIN-01-02] 지정한 재화를 추가
     /// </summary>
-    public bool TrySpend(int amount)
+    public bool TryAdd(ECurrencyType type, int amount)
     {
+        if (amount <= 0)
+        {
+            return false;
+        }
+
+        long newAmount = (long)GetBalance(type) + amount;
+        if (newAmount > int.MaxValue)
+        {
+            return false;
+        }
+
+        SetBalance(type, (int)newAmount);
         return true;
     }
 
     /// <summary>
-    /// 파산 패널티 비율만큼 재화를 차감하고 실제 차감액을 반환
-    /// 요셉: OnAmountChanged 이벤트로 파산 처리 시 적용할 재화 패널티를 확인
+    /// [FIN-01-02] 잔고를 확인하고 지정한 재화 차감
+    /// </summary>
+    public bool TrySpend(ECurrencyType type, int amount)
+    {
+        if (amount <= 0 || GetBalance(type) < amount)
+        {
+            return false;
+        }
+
+        SetBalance(type, GetBalance(type) - amount);
+        return true;
+    }
+
+    /// <summary>
+    /// [FIN-01-01][FIN-01-02] Inspector 초기 잔고로 재화 잔고 초기화
+    /// </summary>
+    public void ResetBalances()
+    {
+        SetBalance(ECurrencyType.Gold, Mathf.Max(0, _initialGold));
+        SetBalance(ECurrencyType.LegacyPoint, Mathf.Max(0, _initialLegacyPoints));
+    }
+
+    /// <summary>
+    /// [FIN-01-02] 골드 잔고에 파산 패널티 적용 후 차감액 반환
     /// </summary>
     public int ApplyPenalty(float penaltyRate)
     {
-        return 0;
-    } 
+        if (penaltyRate <= 0.0f)
+        {
+            return 0;
+        }
+
+        int penalty = Mathf.Clamp(Mathf.RoundToInt(_gold * penaltyRate), 0, _gold);
+        if (penalty > 0)
+        {
+            SetBalance(ECurrencyType.Gold, _gold - penalty);
+        }
+
+        return penalty;
+    }
+    #endregion
+
+    #region 커스텀 (Private)
+    private void InitializeBalances()
+    {
+        _gold = Mathf.Max(0, _initialGold);
+        _legacyPoints = Mathf.Max(0, _initialLegacyPoints);
+    }
+
+    /// <summary>
+    /// 재화 잔고를 특정 금액으로 초기화
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="amount"></param>
+    private void SetBalance(ECurrencyType type, int amount)
+    {
+        int previousAmount = GetBalance(type);
+        if (previousAmount == amount)
+        {
+            return;
+        }
+
+        if (type == ECurrencyType.Gold)
+        {
+            _gold = amount;
+            OnAmountChanged?.Invoke(_gold);
+        }
+        else
+        {
+            _legacyPoints = amount;
+        }
+
+        OnBalanceChanged?.Invoke(type, previousAmount, amount);
+    }
     #endregion
 }
