@@ -1,19 +1,19 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ±âº» µÅÁö Àú±İÅë
+/// ê¸°ë³¸ ë¼ì§€ ì €ê¸ˆí†µ
 /// </summary>
 [CreateAssetMenu(menuName = "3D/Data/Basic PigBank Data", fileName = "PigBankDataSO_Basic")]
 public class CBasicPigBankDataSO : CPigBankGameDataSO
 {
-    #region ÇÁ·ÎÆÛÆ¼
+    #region í”„ë¡œí¼í‹°
     public GameObject PigPrefab => _pigPrefab;
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
-    [Header("µÅÁö Àú±İÅë ¼³Á¤")]
+    #region ì¸ìŠ¤í™í„°
+    [Header("ë¼ì§€ ì €ê¸ˆí†µ ì„¤ì •")]
     [SerializeField] private GameObject _pigPrefab;
     #endregion
 
