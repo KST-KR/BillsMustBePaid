@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 마우스 입력만 처리
+/// [PL-MOVE-01] 마우스 입력만 처리
 /// 실제 이동속도나 위치 변경은 담당하지 않음.
 /// </summary>
 public class PlayerInputHandler : MonoBehaviour
