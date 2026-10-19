@@ -82,6 +82,22 @@ public class PlayerStats : MonoBehaviour
 
     #region 커스텀 (public)
     /// <summary>
+    /// 현재 플레이의 성장값을 초기 상태로 되돌린다.
+    /// 스테이지 전환이 아니라 새로운 플레이를 시작할 때 호출
+    /// </summary>
+    public void ResetRunGrowth()
+    {
+        _attackPowerGrowth = 0f;
+        _attackIntervalModifier = 0f;
+        _attackRangeGrowth = 0f;
+        _criticalChanceGrowth = 0f;
+        _luckGrowth = 0f;
+        _maxStaminaGrowth = 0f;
+
+        OnStateChanged?.Invoke();
+    }
+
+    /// <summary>
     /// 각각 능력치에 따른 증가와 이벤트 전달
     /// </summary>
     public void AddAttackPowerGrowth(float amount)
@@ -108,7 +124,7 @@ public class PlayerStats : MonoBehaviour
             return;
         }
 
-        _attackIntervalModifier += amount;
+        _attackRangeGrowth += amount;
         OnStateChanged?.Invoke();
     }
 
