@@ -3,6 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// [PL-STAT-01] 플레이어의 기본 능력치와 초기화
+/// 성장 능력치를 받아와서 기본 능력치에 합한 후 반환
+/// </summary>
 public class PlayerStats : MonoBehaviour
 {
     #region 인스펙터

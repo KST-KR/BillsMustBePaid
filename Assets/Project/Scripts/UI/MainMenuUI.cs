@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// [UI-01-01]
+/// </summary>
 public class MainMenuUI : MonoBehaviour
 {
     [Header("저장 데이터에 따라 표시할 버튼")]
