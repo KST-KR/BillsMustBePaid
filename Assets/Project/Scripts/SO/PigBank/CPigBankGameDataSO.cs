@@ -1,11 +1,11 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 /// <summary>
-/// [OBJECT - 01] °øÅë ºÎ¸ğ Å¬·¡½º SO
+/// [OBJECT - 01] ê³µí†µ ë¶€ëª¨ í´ë˜ìŠ¤ SO
 /// </summary>
 public abstract class CPigBankGameDataSO : ScriptableObject
 {
-    #region ¼Ó¼º
+    #region ì†ì„±
     public string ID => _id;
 
     public string PigBankName => _pigBankName;
@@ -18,27 +18,27 @@ public abstract class CPigBankGameDataSO : ScriptableObject
     public float ShinePigBankChance => _shinePigBankChance;
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
+    #region ì¸ìŠ¤í™í„°
     [Header("ID")]
     [SerializeField] protected string _id = "";
 
-    [Header("µÅÁö Àú±İÅë Á¤º¸")]
+    [Header("ë¼ì§€ ì €ê¸ˆí†µ ì •ë³´")]
     [SerializeField] protected string _pigBankName = "";
     [SerializeField] protected int _pigBankHP;
     [SerializeField] protected float _moveSpeed;
 
-    [Header("ÆÄ±« ·¹º§")]
+    [Header("íŒŒê´´ ë ˆë²¨")]
     [SerializeField] protected int _crashLevel;
 
-    [Header("ÄÚÀÎ ¼³Á¤")]
+    [Header("ì½”ì¸ ì„¤ì •")]
     [SerializeField] protected int _rewardCoin;
 
-    [Header("È®·ü")]
-    [Tooltip("ÀèÆÌ ¹ß»ı È®·ü (0 = 0 %, 1 = 100 %)")]
+    [Header("í™•ë¥ ")]
+    [Tooltip("ì­íŒŸ ë°œìƒ í™•ë¥  (0 = 0 %, 1 = 100 %)")]
     [SerializeField] protected float _jackpotChance = 0.05f;
-    [Tooltip("ºû³ª´Â Àú±İÅë ¹ß»ı È®·ü (0 = 0 %, 1 = 100 %)")]
+    [Tooltip("ë¹›ë‚˜ëŠ” ì €ê¸ˆí†µ ë°œìƒ í™•ë¥  (0 = 0 %, 1 = 100 %)")]
     [SerializeField] protected float _shinePigBankChance = 0.01f;
-    [Tooltip("Æ¯¼ö ÄÚÀÎ µîÀå È®·ü (0 = 0 %, 1 = 100 %)")]
+    [Tooltip("íŠ¹ìˆ˜ ì½”ì¸ ë“±ì¥ í™•ë¥  (0 = 0 %, 1 = 100 %)")]
     [SerializeField] protected float _specialCoinChance = 0.02f;
     #endregion
 
@@ -48,7 +48,7 @@ public abstract class CPigBankGameDataSO : ScriptableObject
     {
         if (string.IsNullOrWhiteSpace(_id))
         {
-            Debug.LogWarning($"{name} : ID°¡ ºñ¾îÀÖ´Ù. È®ÀÎ ÇÊ¿ä");
+            Debug.LogWarning($"{name} : IDê°€ ë¹„ì–´ìˆë‹¤. í™•ì¸ í•„ìš”");
         }
     }
 }

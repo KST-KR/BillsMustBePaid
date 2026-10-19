@@ -1,16 +1,16 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "3D/Data/Woody PigBank Data", fileName = "PigBankDataSO_Woody")]
 public class CWoodyPigBankDataSO : CPigBankGameDataSO
 {
-    #region ÇÁ·ÎÆÛÆ¼
+    #region í”„ë¡œí¼í‹°
     public GameObject PigPrefab => _pigPrefab;
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
-    [Header("µÅÁö Àú±İÅë ¼³Á¤")]
+    #region ì¸ìŠ¤í™í„°
+    [Header("ë¼ì§€ ì €ê¸ˆí†µ ì„¤ì •")]
     [SerializeField] private GameObject _pigPrefab;
     #endregion
 
