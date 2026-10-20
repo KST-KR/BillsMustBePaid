@@ -6558,15 +6558,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b32495101b019449d29ec26800574b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _settingsButton: {fileID: 0}
-  _exitButton: {fileID: 0}
-  _newGameButton: {fileID: 0}
+  _settingsButton: {fileID: 519444565}
+  _exitButton: {fileID: 27545692}
+  _newGameButton: {fileID: 1923583999}
   _continueButton: {fileID: 120194759}
   _skillTreeButton: {fileID: 706830361}
   _loadOrNewGameButton: {fileID: 452924807}
-  _mainMenuPanel: {fileID: 0}
-  _loadPanel: {fileID: 0}
-  _settingsPanel: {fileID: 0}
+  _mainMenuPanel: {fileID: 504024449}
+  _loadPanel: {fileID: 1874212628}
+  _settingsPanel: {fileID: 503804694}
 --- !u!1 &1239044530
 GameObject:
   m_ObjectHideFlags: 0
