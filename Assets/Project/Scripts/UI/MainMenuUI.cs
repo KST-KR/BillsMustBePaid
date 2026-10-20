@@ -6,7 +6,14 @@
 /// </summary>
 public class MainMenuUI : MonoBehaviour
 {
-    [Header("저장 데이터에 따라 표시할 버튼")]
+    [Header("항상 표시할 버튼")]
+    [SerializeField] private GameObject _settingsButton;
+    [SerializeField] private GameObject _exitButton;
+
+    [Header("저장 데이터가 없을 때 표시할 버튼")]
+    [SerializeField] private GameObject _newGameButton;
+
+    [Header("저장 데이터가 있을 때 표시할 버튼")]
     [SerializeField] private GameObject _continueButton;
     [SerializeField] private GameObject _skillTreeButton;
     [SerializeField] private GameObject _loadOrNewGameButton;
@@ -18,10 +25,12 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
+        // 실제 저장 시스템과 연결할 부분
         bool hasSaveData = CheckSaveData();
 
         SetSaveDataUI(hasSaveData);
 
+        // 초기 패널 설정
         _mainMenuPanel.SetActive(true);
         _loadPanel.SetActive(false);
         _settingsPanel.SetActive(false);
@@ -29,20 +38,26 @@ public class MainMenuUI : MonoBehaviour
 
     private bool CheckSaveData()
     {
-        // TODO: 저장 시스템 완성 후 실제 데이터 확인
-        return false;
+        // 나중에 실제 저장 데이터 확인 로직으로 교체
+        return true;
     }
 
     /// <summary>
-    /// 저장 데이터 유무에 따른 버튼 표시
+    /// 저장 데이터 유무에 따라 버튼 표시
     /// </summary>
     private void SetSaveDataUI(bool hasSaveData)
     {
+        // 항상 표시할 버튼
+        _settingsButton.SetActive(true);
+        _exitButton.SetActive(true);
+
+        // 저장 데이터가 없으면 새 게임 버튼 표시
+        _newGameButton.SetActive(!hasSaveData);
+
+        // 저장 데이터가 있으면 관련 버튼 표시
         _continueButton.SetActive(hasSaveData);
         _skillTreeButton.SetActive(hasSaveData);
-
-        // 저장 데이터가 없어도 새 게임 진입은 가능해야 함
-        _loadOrNewGameButton.SetActive(true);
+        _loadOrNewGameButton.SetActive(hasSaveData);
     }
 
     /// <summary>
