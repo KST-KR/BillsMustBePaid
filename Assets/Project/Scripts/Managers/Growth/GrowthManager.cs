@@ -98,11 +98,19 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] 스킬 학습 여부 반환
+    /// [GROW-01-01] 스킬 학습 여부 반환 (레벨 1 이상)
     /// </summary>
     public bool IsLearned(string upgradeId)
     {
         return GetLevel(upgradeId) > 0;
+    }
+
+    /// <summary>
+    /// [GROW-01-01] 스킬 학습 여부 반환 (스킬 해금 조건 포함)
+    /// </summary>
+    public bool IsLearned(PrerequisiteUpgrade item)
+    {
+        return GetLevel(item.upgradeId) >= item.requiredLevel;
     }
 
     /// <summary>
@@ -185,7 +193,7 @@ public class GrowthManager : MonoBehaviour
     #region 커스텀 (Private)
     private bool ArePrerequisitesLearned(UpgradeData upgrade)
     {
-        string[] prerequisites = upgrade.PrerequisiteIds;
+        PrerequisiteUpgrade[] prerequisites = upgrade.PrerequisiteIds;
         for (int i = 0; i < prerequisites.Length; i++)
         {
             if (!IsLearned(prerequisites[i]))

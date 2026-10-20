@@ -1,18 +1,21 @@
 ﻿using UnityEngine;
 
 /// <summary>
+/// [GROW-01-01] 요구 사항 스킬 구조체
+/// </summary>
+[System.Serializable]
+public struct PrerequisiteUpgrade
+{
+    public string upgradeId;
+    public int requiredLevel;
+}
+
+/// <summary>
 /// [GROW-01-01] 스킬 트리 노드 및 레벨별 성장 데이터 보유
 /// </summary>
 [CreateAssetMenu(fileName = "UpgradeData", menuName = "Bills Must Be Paid/Upgrade")]
 public class UpgradeData : ScriptableObject
 {
-    [System.Serializable]
-    public struct PrerequisiteSkill
-    {
-        public string upgradeId;
-        public int requiredLevel;
-    }
-
     #region 속성
     public string UpgradeId => _upgradeId;
     public string DisplayName => _displayName;
@@ -21,7 +24,7 @@ public class UpgradeData : ScriptableObject
     public int Cost => _cost;
     public float ValuePerLevel => _valuePerLevel;
     public int MaxLevel => _maxLevel;
-    public PrerequisiteSkill[] PrerequisiteIds => _prerequisiteIds;
+    public PrerequisiteUpgrade[] PrerequisiteIds => _prerequisiteIds;
     public Sprite Icon => _icon;
     public Vector2 TreePosition => _treePosition;
     #endregion
@@ -34,7 +37,7 @@ public class UpgradeData : ScriptableObject
     [SerializeField, Min(0)] private int _cost = 100;
     [SerializeField] private float _valuePerLevel = 1.0f;
     [SerializeField, Min(1)] private int _maxLevel = 10;
-    [SerializeField] private PrerequisiteSkill[] _prerequisiteIds = new PrerequisiteSkill[0];
+    [SerializeField] private PrerequisiteUpgrade[] _prerequisiteIds = new PrerequisiteUpgrade[0];
     [SerializeField] private Sprite _icon;
     [SerializeField] private Vector2 _treePosition;
     #endregion
