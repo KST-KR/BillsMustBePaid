@@ -9,7 +9,7 @@ public class RandomRewardManager : MonoBehaviour
 {
     #region 인스펙터
     [Header("데이터")]
-    [SerializeField] private CPigBankGameDataSO _pigData;
+    [SerializeField] private PigBankGameDataSO _pigData;
 
     [Header("스폰위치")]
     [SerializeField] private Transform _spawnPoint;
@@ -62,7 +62,7 @@ public class RandomRewardManager : MonoBehaviour
 
         DropCoins();
 
-        //TODO : 돼지 저금통을 풀로 되돌려야 함
+        PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
     }
 
     private void DropCoins()

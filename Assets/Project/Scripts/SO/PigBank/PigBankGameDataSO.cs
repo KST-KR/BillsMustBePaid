@@ -3,7 +3,7 @@
 /// <summary>
 /// [OBJECT - 01] 공통 부모 클래스 SO
 /// </summary>
-public abstract class CPigBankGameDataSO : ScriptableObject
+public abstract class PigBankGameDataSO : ScriptableObject
 {
     #region 속성
     public string ID => _id;
@@ -11,6 +11,8 @@ public abstract class CPigBankGameDataSO : ScriptableObject
     public string PigBankName => _pigBankName;
     public int PigBankHP => _pigBankHP;
     public float MoveSpeed => _moveSpeed;
+
+    public GameObject PigPrefab => _pigPrefab;
 
     public int RewardCoin => _rewardCoin;
 
@@ -26,6 +28,9 @@ public abstract class CPigBankGameDataSO : ScriptableObject
     [SerializeField] protected string _pigBankName = "";
     [SerializeField] protected int _pigBankHP;
     [SerializeField] protected float _moveSpeed;
+
+    [Header("돼지 저금통 프리팹")]
+    [SerializeField] protected GameObject _pigPrefab;
 
     [Header("파괴 레벨")]
     [SerializeField] protected int _crashLevel;
