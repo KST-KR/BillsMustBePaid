@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "3D/Data/Pinata PigBank Data", fileName = "PigBankDataSO_Pinata")]
-public class CPinataPigBankDataSO : CPigBankGameDataSO
+/// <summary>
+/// 기본 돼지 저금통
+/// </summary>
+[CreateAssetMenu(menuName = "3D/Data/Basic PigBank Data", fileName = "PigBankDataSO_Basic")]
+public class BasicPigBankDataSO : PigBankGameDataSO
 {
     #region 프로퍼티
     public GameObject PigPrefab => _pigPrefab;

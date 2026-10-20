@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "3D/Data/Angry PigBank Data", fileName = "PigBankDataSO_Angry")]
-public class CAngryPigBankDataSO : CPigBankGameDataSO
+public class AngryPigBankDataSO : PigBankGameDataSO
 {
     #region 프로퍼티
     public GameObject PigPrefab => _pigPrefab;

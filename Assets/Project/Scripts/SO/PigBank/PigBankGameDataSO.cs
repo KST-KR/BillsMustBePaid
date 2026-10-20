@@ -3,7 +3,7 @@
 /// <summary>
 /// [OBJECT - 01] 공통 부모 클래스 SO
 /// </summary>
-public abstract class CPigBankGameDataSO : ScriptableObject
+public abstract class PigBankGameDataSO : ScriptableObject
 {
     #region 속성
     public string ID => _id;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "3D/Data/Tourist PigBank Data", fileName = "PigBankDataSO_Tourist")]
-public class CTouristPigBankDataSO : CPigBankGameDataSO
+public class TouristPigBankDataSO : PigBankGameDataSO
 {
     #region 프로퍼티
     public GameObject PigPrefab => _pigPrefab;
