@@ -23,7 +23,7 @@ public class MainMenuUI : MonoBehaviour
         // 나중에 실제 저장 데이터 확인 로직으로 교체
         return false;
     }
-    
+
     /// <summary>
     /// 저장 데이터가 있을 때 표시할 UI
     /// </summary>
