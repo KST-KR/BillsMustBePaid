@@ -72,7 +72,7 @@ public abstract class DataBaseSO<T> : ScriptableObject, ISerializationCallbackRe
     public void OnAfterDeserialize()
     {
         _isDirty = true;
-    }
+    }  
     #endregion
 
     #region 커스텀 메소드 (Private)
