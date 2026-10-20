@@ -37,7 +37,7 @@ public class PlayerStamina : MonoBehaviour
         }
     }
 
-    public bool IsDepletd
+    public bool IsDepleted
     {
         get
         {
@@ -162,6 +162,9 @@ public class PlayerStamina : MonoBehaviour
         {
             return;
         }
+
+        // 변경된 최대 스태미나를 반영
+        _cachedMaxStamina = newMaxStamina;
 
         // 최대 스태미나가 감소하면 현재 스태미나도 제한한다.
         _currentStamina = Mathf.Min(_currentStamina, _cachedMaxStamina);
