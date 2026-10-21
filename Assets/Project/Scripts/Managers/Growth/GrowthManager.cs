@@ -184,9 +184,14 @@ public class GrowthManager : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// [GROW-01-05] 현재 런의 스킬 성장 진행 정보 초기화
+    /// </summary>
     public void ResetRunGrowth()
     {
-
+        _levels.Clear();
+        _unlockedIds.Clear();
+        OnGrowthChanged?.Invoke();
     }
     #endregion
 
