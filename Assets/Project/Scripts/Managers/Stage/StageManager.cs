@@ -8,32 +8,26 @@ using UnityEngine;
 public class StageManager : MonoBehaviour
 {
     #region 싱글톤
-
     public static StageManager Instance { get; private set; }
-
     #endregion
 
     #region 속성
-
     public int CurrentStage => _currentStage;
     public bool IsStageActive => _isStageActive;
-
     #endregion
 
     #region 이벤트
-
     public event Action<int> OnStageStarted;
     public event Action<int> OnStageCleared;
     public event Action<int> OnStageChanged;
     public event Action OnStageFailed;
-
     #endregion
 
     #region 내부 변수
+    private PlayerStamina _playerStamina;
 
     private int _currentStage;
     private bool _isStageActive;
-
     #endregion
 
     #region 이벤트 함수
@@ -53,6 +47,25 @@ public class StageManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 스태미나에 따른 스테이지 실패 이벤트 구독과 해제
+    /// </summary>
+    private void OnEnable()
+    {
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnStaminaDepleted += HandleStaminaDepleted;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnStaminaDepleted -= HandleStaminaDepleted;
+        }
+    }
+
+    /// <summary>
     /// StageManager가 파괴될 때 싱글톤 참조를 해제합니다.
     /// </summary>
     private void OnDestroy()
@@ -62,7 +75,13 @@ public class StageManager : MonoBehaviour
             Instance = null;
         }
     }
+    #endregion
 
+    #region 커스텀 메서드 (Private)
+    private void HandleStaminaDepleted()
+    {
+        ClearStage();
+    }
     #endregion
 
     #region 커스텀 메서드 (Public)
@@ -82,14 +101,14 @@ public class StageManager : MonoBehaviour
             return;
         }
 
-        int previouseStage = _currentStage;
+        int previousStage = _currentStage;
 
         _currentStage = stageNumber;
         _isStageActive = true;
 
         GameManager.Instance.ChangeGameState(EGameState.Playing);
 
-        if (previouseStage != _currentStage)
+        if (previousStage != _currentStage)
         {
             OnStageChanged?.Invoke(_currentStage);
         }
@@ -109,7 +128,10 @@ public class StageManager : MonoBehaviour
 
         _isStageActive = false;
 
-        GameManager.Instance.ChangeGameState(EGameState.StageClear);
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ChangeGameState(EGameState.StageClear);
+        }
 
         OnStageCleared?.Invoke(_currentStage);
     }
@@ -170,4 +192,3 @@ public class StageManager : MonoBehaviour
 
     #endregion
 }
-
