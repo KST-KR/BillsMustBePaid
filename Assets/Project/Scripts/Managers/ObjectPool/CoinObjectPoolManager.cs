@@ -11,6 +11,8 @@ public class CoinObjectPoolManager : MonoBehaviour
     #region 인스펙터
     [Header("코인 설정")]
     [SerializeField] private GameObject _coinPrefab;
+
+    [Header("생성 개수")]
     [SerializeField] private int _generationCount = 50;
     #endregion
 
