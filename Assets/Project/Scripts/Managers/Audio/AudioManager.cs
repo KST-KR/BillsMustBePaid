@@ -48,6 +48,7 @@ public class AudioManager : MonoBehaviour
 
     /// <summary>
     /// AudioManager 싱글톤을 등록합니다.
+    /// 씬 전환 시 유지
     /// </summary>
     private void Awake()
     {
@@ -58,6 +59,8 @@ public class AudioManager : MonoBehaviour
         }
 
         Instance = this;
+
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
@@ -80,7 +83,18 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PlayBGM(EAudioType audioType)
     {
-        // TODO: 매핑된 BGM 재생
+
+        AudioClip clip = FindAudioClip(audioType);
+
+        if(clip == null)
+        {
+            return;
+        }
+
+        _bgmSource.clip = clip;
+        _bgmSource.volume = _bgmVolume;
+        _bgmSource.loop = true;
+        _bgmSource.Play();
     }
 
     /// <summary>
@@ -88,7 +102,8 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void StopBGM()
     {
-        // TODO: BGM 정지
+
+        _bgmSource.Stop();
     }
 
     /// <summary>
@@ -96,7 +111,15 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PlaySFX(EAudioType audioType)
     {
-        // TODO: 매핑된 효과음 재생
+
+        AudioClip clip = FindAudioClip(audioType);
+
+        if( clip == null)
+        {
+            return;
+        }
+
+        _sfxSource.PlayOneShot(clip, _sfxVolume);
     }
 
     /// <summary>
@@ -104,7 +127,8 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PauseBGM()
     {
-        // TODO: BGM 일시정지
+
+        _bgmSource.Pause();
     }
 
     /// <summary>
@@ -112,7 +136,8 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void ResumeBGM()
     {
-        // TODO: BGM 재개
+
+        _bgmSource.UnPause();
     }
 
     /// <summary>
@@ -120,7 +145,9 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void SetBGMVolume(float volume)
     {
-        // TODO: BGM 볼륨 변경
+
+        _bgmVolume = Mathf.Clamp01(volume);
+        _bgmSource.volume = _bgmVolume;
     }
 
     /// <summary>
@@ -128,7 +155,8 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void SetSFXVolume(float volume)
     {
-        // TODO: 효과음 볼륨 변경
+
+        _sfxVolume = Mathf.Clamp01(volume);
     }
 
     /// <summary>
@@ -148,7 +176,16 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     private AudioClip FindAudioClip(EAudioType audioType)
     {
-        // TODO: 사운드 매핑 검색
+
+        foreach (var data in _audioData)
+        {
+            if(data.AudioType == audioType)
+            {
+                return data.AudioClip;
+            }
+        }
+
+        Debug.LogError($"AudioType을 찾을 수 없습니다 : {audioType}");
         return null;
     }
 
