@@ -1,14 +1,36 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 청구서 발행과 납부 가능 여부 및 결과를 관리
-/// 요셉: 구독 관련 UI와 런 흐름을 갱신
+/// [BILL-01-02] 게임 일차에 따른 청구서 발행 및 납부 상태 관리
 /// </summary>
 public class BillManager : MonoBehaviour
 {
     #region 싱글톤
     public static BillManager Instance { get; private set; }
+    #endregion
+
+    #region 속성
+    public IReadOnlyList<BillRecord> Bills => _bills;
+    public BillRecord CurrentBill => GetNextUnpaidBill();
+    public int CurrentDay => _currentDay;
+    #endregion
+
+    #region 이벤트
+    public event Action<BillRecord> OnBillIssued;
+    public event Action<BillRecord> OnBillPaid;
+    public event Action<BillRecord> OnBillChanged;
+    #endregion
+
+    #region 인스펙터
+    [SerializeField] private BillData[] _billRules = new BillData[0];
+    #endregion
+
+    #region 내부 변수
+    private readonly List<BillRecord> _bills = new List<BillRecord>();
+    private readonly Dictionary<BillData, int> _issuedCounts = new Dictionary<BillData, int>();
+    private int _currentDay;
     #endregion
 
     #region 이벤트 함수
@@ -21,6 +43,10 @@ public class BillManager : MonoBehaviour
         }
 
         Instance = this;
+        if (_billRules == null)
+        {
+            _billRules = new BillData[0];
+        }
     }
 
     private void OnDestroy()
@@ -34,30 +60,102 @@ public class BillManager : MonoBehaviour
 
     #region 커스텀 (Public)
     /// <summary>
-    /// 새 청구서를 발행하고 UI 에 알림
-    /// 요셉: 청구서 이름과 금액을 표시할 때 OnBillIssued를 사용
+    /// [BILL-01-02] 명시된 게임 일차에 청구서 발행
     /// </summary>
-    public bool IssueBill(BillData billData, int cycle)
+    private bool IssueBill(BillData billData, int cycle)
     {
+        if (billData == null || cycle < 1 || GetIssuedCount(billData) >= Mathf.Max(1, billData.MaxIssues) || !billData.TryGetAmount(cycle, out int amount))
+        {
+            return false;
+        }
+
+        BillRecord bill = new BillRecord(billData, _currentDay, cycle, amount);
+        _bills.Add(bill);
+        SetIssuedCount(billData, GetIssuedCount(billData) + 1);
+        OnBillIssued?.Invoke(bill);
+        OnBillChanged?.Invoke(bill);
         return true;
     }
 
     /// <summary>
-    /// 보유 재화가 충분할 때 청구서를 납부하고, 부족하면 실패 이벤트를 발생
-    /// 요셉: 납부 입력에서 호출하고 결과 이벤트로 성공/실패를 처리
+    /// [BILL-01-02] 게임 일차를 갱신하고 해당 일자 청구서 발행
+    /// </summary>
+    public void NotifyDayAdvanced(int gameDay)
+    {
+        if (gameDay <= _currentDay)
+        {
+            return;
+        }
+
+        for (int day = _currentDay + 1; day <= gameDay; day++)
+        {
+            _currentDay = day;
+            IssueBillsForDay(day);
+        }
+    }
+
+    /// <summary>
+    /// [BILL-01-02] 현재 대기 청구서 한 건 납부 시도
     /// </summary>
     public bool TryPayCurrentBill()
     {
+        BillRecord bill = GetNextUnpaidBill();
+        if (bill == null || CurrencyManager.Instance == null || !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, bill.Amount))
+        {
+            return false;
+        }
 
+        bill.SetStatus(EBillStatus.Paid);
+        OnBillPaid?.Invoke(bill);
+        OnBillChanged?.Invoke(bill);
         return true;
     }
 
     /// <summary>
-    /// 미납 청구서를 취소하고 청구 상태를 비우기
+    /// [BILL-01-02] 런 청구서 발행 기록 초기화
     /// </summary>
-    public void CancelCurrentBill()
+    public void ResetRunBills()
     {
-    } 
+        _bills.Clear();
+        _issuedCounts.Clear();
+        _currentDay = 0;
+    }
+    #endregion
+
+    #region 커스텀 (Private)
+    private void IssueBillsForDay(int gameDay)
+    {
+        for (int i = 0; i < _billRules.Length; i++)
+        {
+            BillData billData = _billRules[i];
+            if (billData != null && billData.IssueDay == gameDay && GetIssuedCount(billData) == 0)
+            {
+                IssueBill(billData, GetIssuedCount(billData) + 1);
+            }
+        }
+    }
+
+    private int GetIssuedCount(BillData billData)
+    {
+        return _issuedCounts.TryGetValue(billData, out int count) ? count : 0;
+    }
+
+    private void SetIssuedCount(BillData billData, int count)
+    {
+        _issuedCounts[billData] = count;
+    }
+
+    private BillRecord GetNextUnpaidBill()
+    {
+        for (int i = 0; i < _bills.Count; i++)
+        {
+            if (_bills[i].Status == EBillStatus.Unpaid)
+            {
+                return _bills[i];
+            }
+        }
+
+        return null;
+    }
     #endregion
 }
-
