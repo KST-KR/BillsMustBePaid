@@ -63,6 +63,8 @@ public class RandomRewardManager : MonoBehaviour
         DropCoins();
 
         PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
+
+        FragmentObjectPoolManager.Instance.SpawnRandomFragments(transform.position);
     }
 
     private void DropCoins()
@@ -82,7 +84,7 @@ public class RandomRewardManager : MonoBehaviour
             Debug.Log("★ 잭팟! 코인 대량 드랍!");
         }
 
-        for(int i = 0; i < coinCount; i++)
+        for (int i = 0; i < coinCount; i++)
         {
             //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
         }
