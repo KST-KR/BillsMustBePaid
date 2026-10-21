@@ -185,6 +185,9 @@ public class PlayerStamina : MonoBehaviour
         OnStaminaChanged?.Invoke(_currentStamina, _cachedMaxStamina);
     }
 
+    /// <summary>
+    /// [PL-Stamina-07] 스태미나 변경 이벤트 알림
+    /// </summary>
     private void NotifyDepletedOnce()
     {
         if (_isDepleted)
