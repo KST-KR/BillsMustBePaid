@@ -15,7 +15,7 @@ public class PigBankObjectPoolManager : MonoBehaviour
     [Header("등록된 돼지 저금통 리스트")]
     [SerializeField] private PigBankDataBaseSO _pigDatabase;
 
-    [Header("기본 생성 개수")]
+    [Header("생성 개수")]
     [SerializeField] private int _generationCount = 30;
     #endregion
 
