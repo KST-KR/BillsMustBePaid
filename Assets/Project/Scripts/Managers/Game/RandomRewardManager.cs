@@ -7,15 +7,8 @@ using UnityEngine;
 /// </summary>
 public class RandomRewardManager : MonoBehaviour
 {
-    #region 인스펙터
-    [Header("데이터")]
-    [SerializeField] private PigBankGameDataSO _pigData;
-
-    [Header("스폰위치")]
-    [SerializeField] private Transform _spawnPoint;
-    #endregion
-
     #region 내부변수
+    private PigBankGameDataSO _pigData;
     private int _currentHP;
     #endregion
 
@@ -29,15 +22,27 @@ public class RandomRewardManager : MonoBehaviour
         }
 
         _currentHP = _pigData.PigBankHP;
-
-        if (_spawnPoint == null)
-        {
-            _spawnPoint = transform;
-        }
     }
     #endregion
 
     #region 커스텀 메소드 (Public)
+    /// <summary>
+    /// 스폰될 때 데이터 세팅
+    /// </summary>
+    public void Initialize(PigBankGameDataSO pigData)
+    {
+        _pigData = pigData;
+
+        if (_pigData == null)
+        {
+            Debug.LogWarning("PigData가 null입니다!");
+            _currentHP = 5; 
+            return;
+        }
+
+        _currentHP = _pigData.PigBankHP;
+    }
+
     public void TakeDamage(int damage)
     {
         if (_currentHP <= 0)
