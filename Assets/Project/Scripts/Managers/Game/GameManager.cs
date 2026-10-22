@@ -123,5 +123,12 @@ public class GameManager : MonoBehaviour
         ChangeGameState(EGameState.GameOver);
     }
 
+    /// <summary>
+    /// 게임을 완전히 종료합니다.
+    /// </summary>
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
     #endregion
-}
+}   
