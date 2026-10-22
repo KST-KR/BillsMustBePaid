@@ -24,6 +24,7 @@ public class GrowthManager : MonoBehaviour
     public event Action<UpgradeData, float> OnApplyStatGrowth;
     public event Action OnGrowthChanged;
     public event Action<string> OnSelectionChanged;
+    public event Action OnResetRunGrowth;
     #endregion
 
     #region 내부 변수
@@ -287,6 +288,7 @@ public class GrowthManager : MonoBehaviour
         _selectedUpgradeId = null;
         OnGrowthChanged?.Invoke();
         OnSelectionChanged?.Invoke(null);
+        OnResetRunGrowth?.Invoke();
     }
 
     /// <summary>
