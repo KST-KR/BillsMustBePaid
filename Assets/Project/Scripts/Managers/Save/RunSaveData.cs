@@ -9,7 +9,7 @@ public class RunSaveData
     public bool isRunActive;
     public int currentStage;
 
-    public int currenctGold;
+    public int currentGold;
     public float currentStamina;
 
     public RunGrowthSaveData runGrowth;

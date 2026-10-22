@@ -241,6 +241,11 @@ public class UIManager : MonoBehaviour
         {
             ShowGameUI();
         }
+
+        if (_playerStamina != null)
+        {
+            UpdateStaminaUI(_playerStamina.CurrentStamina, _playerStamina.MaxStamina);
+        }
     }
 
     /// <summary>
