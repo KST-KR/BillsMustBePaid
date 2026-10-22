@@ -187,7 +187,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 저장된 게임 데이터를 불러옵니다.
+    /// 지정한 슬롯을 읽고 해당 데이터의 복원을 알림.
     /// </summary>
     public SaveSlotData LoadGame(int slotIndex)
     {
@@ -197,42 +197,18 @@ public class SaveManager : MonoBehaviour
             return null;
         }
 
-        string path = GetSavePath(slotIndex);
+        // 내부 메서드를 이용해 데이터를 읽고 검증
+        SaveSlotData saveData = ReadSaveData(slotIndex);
 
-        if (!File.Exists(path))
+        if (saveData == null)
         {
             return null;
         }
 
-        try
-        {
-            string json = File.ReadAllText(path);
-            SaveSlotData saveData = JsonUtility.FromJson<SaveSlotData>(json);
+        // 지정한 슬롯의 데이터만 외부에 알림
+        OnGameLoaded?.Invoke(saveData);
 
-            if (saveData == null)
-            {
-                Debug.LogError($"저장 데이터가 비어 있음: 슬롯 {slotIndex}");
-                return null;
-            }
-
-            // 파일 이름과 실제 데이터의 슬롯 번혹 일치하는지 확인
-            if (saveData.slotIndex != slotIndex)
-            {
-                Debug.LogError($"저장 슬롯 정보가 일치하지 않음: 슬롯 {slotIndex}");
-                return null;
-            }
-
-            EnsureValidData(saveData);
-
-            OnGameLoaded?.Invoke(saveData);
-
-            return saveData;
-        }
-        catch (Exception exception)
-        {
-            Debug.LogError($"게임 불러오기 실패: {exception.Message}");
-            return null;
-        }
+        return saveData;
     }
 
     /// <summary>
@@ -292,7 +268,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 가장 최근에 플레이한 슬롯의 데이터를 불러오기
+    /// 진행 중인 런 중 가장 최근에 저장된 데이터를 불러오기
     /// </summary>
     public SaveSlotData LoadMostRecentlyPlayedGame()
     {
@@ -301,15 +277,15 @@ public class SaveManager : MonoBehaviour
 
         for (int slotIndex = MinSlotIndex; slotIndex <= MaxSlotIndex; slotIndex++)
         {
-            // 슬롯을 검색하는 동안에는 불러오기 이벤트를 발생시키지 않음.
-            SaveSlotData saveData = LoadGame(slotIndex);
+            // 검색 중에는 불러오기 이벤트를 발생시키지 않음.
+            SaveSlotData saveData = ReadSaveData(slotIndex);
 
             if (saveData == null)
             {
                 continue;
             }
 
-            // 진행 중인 런이 있을 슬롯만 이어하기 대항으로 취급
+            // 진행 중인 런만 이어하기 대항으로 취급
             if (!saveData.runData.isRunActive)
             {
                 continue;
@@ -327,7 +303,7 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // 최종 선택된 슬롯의 데이터만 외부에 알립니다.
+        // 검색이 끝난 뒤 최종 선택된 데이터만 알림.
         if (latestData != null)
         {
             OnGameLoaded?.Invoke(latestData);
