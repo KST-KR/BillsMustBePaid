@@ -44,6 +44,11 @@ public class StageManager : MonoBehaviour
         }
 
         Instance = this;
+
+        if (_playerStamina == null)
+        {
+            _playerStamina = FindAnyObjectByType<PlayerStamina>();
+        }
     }
 
     /// <summary>

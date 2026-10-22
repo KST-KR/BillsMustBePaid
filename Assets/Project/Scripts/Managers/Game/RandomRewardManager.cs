@@ -81,13 +81,16 @@ public class RandomRewardManager : MonoBehaviour
         if(isJacpot)
         {
             coinCount *= 3;
-            Debug.Log("★ 잭팟! 코인 대량 드랍!");
+            Debug.Log($"★ 잭팟! 코인 대량 드랍! (3배)(총 {coinCount}개)");
         }
 
-        for (int i = 0; i < coinCount; i++)
+        else
         {
-            //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
+            Debug.Log($"[Reward] 기본 코인 보상 계산: {coinCount}개");
         }
+
+        StageRewardManager.Instance.TryAddStageGold(coinCount);
+        //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
     }
     #endregion
 
