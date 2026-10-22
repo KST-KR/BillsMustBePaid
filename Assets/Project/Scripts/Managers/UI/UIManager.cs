@@ -1,46 +1,46 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// °ÔÀÓ UIÀÇ Ç¥½Ã ¹× °»½ÅÀ» °ü¸®ÇÕ´Ï´Ù.
-/// ÆĞ³Î Ç¥½Ã´Â GameManagerÀÇ °ÔÀÓ »óÅÂ(EGameState)¸¦ ´ÜÀÏ ±âÁØÀ¸·Î »ï°í,
-/// ½ºÅ×ÀÌÁö ÀÌº¥Æ®´Â »óÅÂ°¡ ¹Ù²îÁö ¾Ê´Â °æ¿ì(¿¹: Playing ¡æ Playing)ÀÇ º¸Á¤¿¡¸¸ »ç¿ë
+/// ê²Œì„ UIì˜ í‘œì‹œ ë° ê°±ì‹ ì„ ê´€ë¦¬í•©ë‹ˆë‹¤.
+/// íŒ¨ë„ í‘œì‹œëŠ” GameManagerì˜ ê²Œì„ ìƒíƒœ(EGameState)ë¥¼ ë‹¨ì¼ ê¸°ì¤€ìœ¼ë¡œ ì‚¼ê³ ,
+/// ìŠ¤í…Œì´ì§€ ì´ë²¤íŠ¸ëŠ” ìƒíƒœê°€ ë°”ë€Œì§€ ì•ŠëŠ” ê²½ìš°(ì˜ˆ: Playing â†’ Playing)ì˜ ë³´ì •ì—ë§Œ ì‚¬ìš©
 /// </summary>
 public class UIManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
 
     public static UIManager Instance { get; private set; }
 
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
-    [Header("È­¸é ÆĞ³Î")]
+    #region ì¸ìŠ¤í™í„°
+    [Header("í™”ë©´ íŒ¨ë„")]
     [SerializeField] private GameObject _pausePanel;
     [SerializeField] private GameObject _stageClearPanel;
     [SerializeField] private GameObject _gameOverPanel;
 
-    [Header("ÇÃ·¹ÀÌ¾î ½ºÅÂ¹Ì³ª")]
+    [Header("í”Œë ˆì´ì–´ ìŠ¤íƒœë¯¸ë‚˜")]
     [SerializeField] private PlayerStamina _playerStamina;
 
-    [Header("½ºÅÂ¹Ì³ª UI")]
+    [Header("ìŠ¤íƒœë¯¸ë‚˜ UI")]
     [SerializeField] private GameObject _staminaPanel;
     [SerializeField] private TMP_Text _staminaText;
     [SerializeField] private Image _staminaBar;
 
-    [Header("°á°ú È­¸é ÀçÈ­ UI")]
+    [Header("ê²°ê³¼ í™”ë©´ ì¬í™” UI")]
     [SerializeField] private TMP_Text _stageRewardGoldText;
     [SerializeField] private TMP_Text _resultTotalGoldText;
 
-    [Header("¾÷±×·¹ÀÌµå È­¸é ÀçÈ­ UI")]
+    [Header("ì—…ê·¸ë ˆì´ë“œ í™”ë©´ ì¬í™” UI")]
     [SerializeField] private TMP_Text _upgradeGoldText;
     [SerializeField] private TMP_Text _upgradeLegacyPointText;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
 
-    // ±¸µ¶ ½ÃÁ¡ÀÇ ÂüÁ¶¸¦ º¸°üÇÏ¿©, ÆÄ±« ¼ø¼­¿Í »ó°ü¾øÀÌ Á¤È®È÷ ±¸µ¶À» ÇØÁ¦
+    // êµ¬ë… ì‹œì ì˜ ì°¸ì¡°ë¥¼ ë³´ê´€í•˜ì—¬, íŒŒê´´ ìˆœì„œì™€ ìƒê´€ì—†ì´ ì •í™•íˆ êµ¬ë…ì„ í•´ì œ
     private GameManager _gameManager;
     private StageManager _stageManager;
     private CurrencyManager _currencyManager;
@@ -49,10 +49,10 @@ public class UIManager : MonoBehaviour
     private bool _isSubscribed;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
 
     /// <summary>
-    /// UIManager ½Ì±ÛÅæÀ» µî·ÏÇÕ´Ï´Ù.
+    /// UIManager ì‹±ê¸€í†¤ì„ ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
     private void Awake()
     {
@@ -66,12 +66,12 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÌº¥Æ® ±¸µ¶°ú ÇöÀç »óÅÂÀÇ UI¸¦ °»½Å
-    /// (´Ù¸¥ ¸Å´ÏÀúÀÇ Awake°¡ ³¡³­ µÚÀÎ Start¿¡¼­ ±¸µ¶)
+    /// ì´ë²¤íŠ¸ êµ¬ë…ê³¼ í˜„ì¬ ìƒíƒœì˜ UIë¥¼ ê°±ì‹ 
+    /// (ë‹¤ë¥¸ ë§¤ë‹ˆì €ì˜ Awakeê°€ ëë‚œ ë’¤ì¸ Startì—ì„œ êµ¬ë…)
     /// </summary>
     private void Start()
     {
-        // Áßº¹ ÀÎ½ºÅÏ½º´Â Destroy ¿¹¾à »óÅÂ¿¡¼­µµ Start°¡ È£ÃâµÉ ¼ö ÀÖÀ¸¹Ç·Î Â÷´Ü
+        // ì¤‘ë³µ ì¸ìŠ¤í„´ìŠ¤ëŠ” Destroy ì˜ˆì•½ ìƒíƒœì—ì„œë„ Startê°€ í˜¸ì¶œë  ìˆ˜ ìˆìœ¼ë¯€ë¡œ ì°¨ë‹¨
         if (Instance != this)
         {
             return;
@@ -82,7 +82,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// UIManager°¡ ÆÄ±«µÉ ¶§ ±¸µ¶°ú ½Ì±ÛÅæ ÂüÁ¶¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+    /// UIManagerê°€ íŒŒê´´ë  ë•Œ êµ¬ë…ê³¼ ì‹±ê¸€í†¤ ì°¸ì¡°ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
     /// </summary>
     private void OnDestroy()
     {
@@ -96,9 +96,9 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
-    #region Ä¿½ºÅÒ (private)
+    #region ì»¤ìŠ¤í…€ (private)
     /// <summary>
-    /// ±¸µ¶
+    /// êµ¬ë…
     /// </summary>
     private void SubscribeEvents()
     {
@@ -137,7 +137,7 @@ public class UIManager : MonoBehaviour
         {
             _playerStamina.OnStaminaChanged += HandleStaminaChanged;
 
-            // ±¸µ¶ ÀÌÀü¿¡ º¯°æµÈ °ª±îÁö ÃÊ±â UI¿¡ ¹İ¿µ
+            // êµ¬ë… ì´ì „ì— ë³€ê²½ëœ ê°’ê¹Œì§€ ì´ˆê¸° UIì— ë°˜ì˜
             UpdateStaminaUI(_playerStamina.CurrentStamina, _playerStamina.MaxStamina);
         }
 
@@ -145,7 +145,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ±¸µ¶ ÇØÁ¦ (±¸µ¶ ¶§ º¸°üÇÑ ÂüÁ¶ ±âÁØ)
+    /// êµ¬ë… í•´ì œ (êµ¬ë… ë•Œ ë³´ê´€í•œ ì°¸ì¡° ê¸°ì¤€)
     /// </summary>
     private void UnsubscribeEvents()
     {
@@ -189,7 +189,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// °ÔÀÓ »óÅÂ º¯°æ ÀÌº¥Æ® Ã³¸®
+    /// ê²Œì„ ìƒíƒœ ë³€ê²½ ì´ë²¤íŠ¸ ì²˜ë¦¬
     /// </summary>
     private void HandleGameStateChanged(EGameState state)
     {
@@ -197,14 +197,14 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// °ÔÀÓ »óÅÂ¿¡ ¸Â´Â ÆĞ³Î¸¸ Ç¥½Ã
+    /// ê²Œì„ ìƒíƒœì— ë§ëŠ” íŒ¨ë„ë§Œ í‘œì‹œ
     /// </summary>
     private void ApplyState(EGameState state)
     {
         switch (state)
         {
             case EGameState.Title:
-                // Å¸ÀÌÆ² È­¸éÀº º°µµ ¾À¿¡¼­ °ü¸®
+                // íƒ€ì´í‹€ í™”ë©´ì€ ë³„ë„ ì”¬ì—ì„œ ê´€ë¦¬
                 HideAllPanels();
                 break;
 
@@ -227,9 +227,9 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö ½ÃÀÛ ½Ã ÇöÀç »óÅÂ ±âÁØÀ¸·Î UI¸¦ ´Ù½Ã Àû¿ë
-    /// ·± ½ÃÀÛ Á÷ÈÄÃ³·³ »óÅÂ°¡ ÀÌ¹Ì PlayingÀÌ¸é »óÅÂ º¯°æ ÀÌº¥Æ®°¡ ¿ÀÁö ¾ÊÀ¸¹Ç·Î
-    /// ½ºÅÂ¹Ì³ª UI Ç¥½Ã¸¦ ÀÌ ÀÌº¥Æ®¿¡¼­ º¸Á¤
+    /// ìŠ¤í…Œì´ì§€ ì‹œì‘ ì‹œ í˜„ì¬ ìƒíƒœ ê¸°ì¤€ìœ¼ë¡œ UIë¥¼ ë‹¤ì‹œ ì ìš©
+    /// ëŸ° ì‹œì‘ ì§í›„ì²˜ëŸ¼ ìƒíƒœê°€ ì´ë¯¸ Playingì´ë©´ ìƒíƒœ ë³€ê²½ ì´ë²¤íŠ¸ê°€ ì˜¤ì§€ ì•Šìœ¼ë¯€ë¡œ
+    /// ìŠ¤íƒœë¯¸ë‚˜ UI í‘œì‹œë¥¼ ì´ ì´ë²¤íŠ¸ì—ì„œ ë³´ì •
     /// </summary>
     private void HandleStageStarted(int stageNumber)
     {
@@ -249,8 +249,8 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö ½ÇÆĞ ½Ã ½ºÅÂ¹Ì³ª UI¸¦ ¼û±è
-    /// (ÀÌÈÄ GameOver »óÅÂ º¯°æÀ¸·Î °ÔÀÓ ¿À¹ö UI°¡ Ç¥½ÃµÊ)
+    /// ìŠ¤í…Œì´ì§€ ì‹¤íŒ¨ ì‹œ ìŠ¤íƒœë¯¸ë‚˜ UIë¥¼ ìˆ¨ê¹€
+    /// (ì´í›„ GameOver ìƒíƒœ ë³€ê²½ìœ¼ë¡œ ê²Œì„ ì˜¤ë²„ UIê°€ í‘œì‹œë¨)
     /// </summary>
     private void HandleStageFailed()
     {
@@ -271,19 +271,19 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö º¸»ó Á¤»ê °á°ú¸¦ UI¿¡ ¹İ¿µÇÕ´Ï´Ù.
+    /// ìŠ¤í…Œì´ì§€ ë³´ìƒ ì •ì‚° ê²°ê³¼ë¥¼ UIì— ë°˜ì˜í•©ë‹ˆë‹¤.
     /// </summary>
     private void HandleStageRewardSettled(int rewardGold, int totalGold)
     {
         UpdateStageRewardGoldUI(rewardGold);
         UpdateResultTotalGoldUI(totalGold);
 
-        // CurrencyManagerÀÇ ½ÇÁ¦ ÀÜ°í¿Í UI¸¦ µ¿±âÈ­
+        // CurrencyManagerì˜ ì‹¤ì œ ì”ê³ ì™€ UIë¥¼ ë™ê¸°í™”
         RefreshCurrencyUI();
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ½ºÅÂ¹Ì³ª º¯°æ ÀÌº¥Æ® Ã³¸®
+    /// í”Œë ˆì´ì–´ ìŠ¤íƒœë¯¸ë‚˜ ë³€ê²½ ì´ë²¤íŠ¸ ì²˜ë¦¬
     /// </summary>
     private void HandleStaminaChanged(float currentStamina, float maxStamina)
     {
@@ -301,7 +301,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÆĞ³Î ¿Â¿ÀÇÁ °ü¸®
+    /// íŒ¨ë„ ì˜¨ì˜¤í”„ ê´€ë¦¬
     /// </summary>
     private void SetPanelActive(GameObject panel, bool isActive)
     {
@@ -323,11 +323,11 @@ public class UIManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ ¸Ş¼­µå (Public)
+    #region ì»¤ìŠ¤í…€ ë©”ì„œë“œ (Public)
 
     /// <summary>
-    /// ÇöÀç °ÔÀÓ »óÅÂ¿Í º¸À¯ ÀçÈ­¸¦ ±âÁØÀ¸·Î UI¸¦ ÃÊ±âÈ­
-    /// ºÒ·¯¿À±â(Load) Á÷ÈÄ¿¡µµ È£ÃâÇØ¼­ UI¸¦ µ¿±âÈ­ÇÒ ¼ö ÀÖÀ½
+    /// í˜„ì¬ ê²Œì„ ìƒíƒœì™€ ë³´ìœ  ì¬í™”ë¥¼ ê¸°ì¤€ìœ¼ë¡œ UIë¥¼ ì´ˆê¸°í™”
+    /// ë¶ˆëŸ¬ì˜¤ê¸°(Load) ì§í›„ì—ë„ í˜¸ì¶œí•´ì„œ UIë¥¼ ë™ê¸°í™”í•  ìˆ˜ ìˆìŒ
     /// </summary>
     public void RefreshCurrentUI()
     {
@@ -337,7 +337,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            // °ÔÀÓ »óÅÂ¸¦ È®ÀÎÇÒ ¼ö ¾øÀ» ¶§´Â UI¸¦ Ç¥½ÃÇÏÁö ¾Ê½À´Ï´Ù.
+            // ê²Œì„ ìƒíƒœë¥¼ í™•ì¸í•  ìˆ˜ ì—†ì„ ë•ŒëŠ” UIë¥¼ í‘œì‹œí•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
             HideAllPanels();
         }
 
@@ -345,7 +345,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç °ÔÀÓ ÇÃ·¹ÀÌ UI¸¦ Ç¥½Ã
+    /// í˜„ì¬ ê²Œì„ í”Œë ˆì´ UIë¥¼ í‘œì‹œ
     /// </summary>
     public void ShowGameUI()
     {
@@ -355,8 +355,8 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÏ½ÃÁ¤Áö UI¸¦ Ç¥½Ã
-    /// ½ºÅ×ÀÌÁö°¡ ÁøÇà ÁßÀÌ¸é ½ºÅÂ¹Ì³ª UIµµ À¯Áö
+    /// ì¼ì‹œì •ì§€ UIë¥¼ í‘œì‹œ
+    /// ìŠ¤í…Œì´ì§€ê°€ ì§„í–‰ ì¤‘ì´ë©´ ìŠ¤íƒœë¯¸ë‚˜ UIë„ ìœ ì§€
     /// </summary>
     public void ShowPauseUI()
     {
@@ -367,7 +367,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö Á¾·á ÈÄ °á°ú È­¸éÀ» Ç¥½ÃÇÕ´Ï´Ù.
+    /// ìŠ¤í…Œì´ì§€ ì¢…ë£Œ í›„ ê²°ê³¼ í™”ë©´ì„ í‘œì‹œí•©ë‹ˆë‹¤.
     /// </summary>
     public void ShowStageClearUI()
     {
@@ -378,7 +378,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÆÄ»ê ¼±°í È­¸éÀ» Ç¥½Ã
+    /// íŒŒì‚° ì„ ê³  í™”ë©´ì„ í‘œì‹œ
     /// </summary>
     public void ShowGameOverUI()
     {
@@ -388,7 +388,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// °ü¸® ´ë»ó UI¸¦ ¸ğµÎ ¼û±è.
+    /// ê´€ë¦¬ ëŒ€ìƒ UIë¥¼ ëª¨ë‘ ìˆ¨ê¹€.
     /// </summary>
     public void HideAllPanels()
     {
@@ -399,7 +399,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ½ºÅÂ¹Ì³ª¿Í ÃÖ´ë ½ºÅÂ¹Ì³ª¸¦ UI¿¡ ¹İ¿µ
+    /// í˜„ì¬ ìŠ¤íƒœë¯¸ë‚˜ì™€ ìµœëŒ€ ìŠ¤íƒœë¯¸ë‚˜ë¥¼ UIì— ë°˜ì˜
     /// </summary>
     public void UpdateStaminaUI(float currentStamina, float maxStamina)
     {
@@ -415,7 +415,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¾÷±ÛÀÌµå È­¸éÀÇ º¸À¯ ÀçÈ­¸¦ UI¿¡ ¹İ¿µ
+    /// ì—…ê¸€ì´ë“œ í™”ë©´ì˜ ë³´ìœ  ì¬í™”ë¥¼ UIì— ë°˜ì˜
     /// </summary>
     public void UpdateMoneyUI(int amount)
     {
@@ -426,7 +426,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¾÷±×·¹ÀÌµå È­¸éÀÇ º¸À¯ ·¹°Å½Ã Æ÷ÀÎÆ®¸¦ UI¿¡ ¹İ¿µ
+    /// ì—…ê·¸ë ˆì´ë“œ í™”ë©´ì˜ ë³´ìœ  ë ˆê±°ì‹œ í¬ì¸íŠ¸ë¥¼ UIì— ë°˜ì˜
     /// </summary>
     public void UpdateLegacyPointUI(int amount)
     {
@@ -437,7 +437,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÌ¹ø ½ºÅ×ÀÌÁö È¹µæ °ñµå¸¦ °»½Å
+    /// ì´ë²ˆ ìŠ¤í…Œì´ì§€ íšë“ ê³¨ë“œë¥¼ ê°±ì‹ 
     /// </summary>
     public void UpdateStageRewardGoldUI(int amount)
     {
@@ -448,7 +448,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Á¤»ê ÈÄ º¸À¯ °ñµå¸¦ °á°ú È­¸é¿¡ Ç¥½Ã
+    /// ì •ì‚° í›„ ë³´ìœ  ê³¨ë“œë¥¼ ê²°ê³¼ í™”ë©´ì— í‘œì‹œ
     /// </summary>
     public void UpdateResultTotalGoldUI(int amount)
     {
@@ -459,39 +459,57 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö ¹øÈ£´Â ³»ºÎ ÁøÇà Á¤º¸·Î¸¸ »ç¿ë
-    /// ÇÃ·¹ÀÌ¾î¿¡°Ô´Â Ç¥½ÃÇÏÁö ¾ÊÀ½.
+    /// ìŠ¤í…Œì´ì§€ ë²ˆí˜¸ëŠ” ë‚´ë¶€ ì§„í–‰ ì •ë³´ë¡œë§Œ ì‚¬ìš©
+    /// í”Œë ˆì´ì–´ì—ê²ŒëŠ” í‘œì‹œí•˜ì§€ ì•ŠìŒ.
     /// </summary>
     public void UpdateStageUI(int stageNumber)
     {
-        // ÇöÀç ÇÃ·¹ÀÌ¾î¿¡°Ô Ç¥½ÃÇÒ ½ºÅ×ÀÌÁö ¹øÈ£ UI´Â ¾øÀ½.
+        // í˜„ì¬ í”Œë ˆì´ì–´ì—ê²Œ í‘œì‹œí•  ìŠ¤í…Œì´ì§€ ë²ˆí˜¸ UIëŠ” ì—†ìŒ.
     }
 
     /// <summary>
-    /// Àú±İÅë ÆÄ±«¿¡ µû¸¥ ·¹º§ ¼öÄ¡¸¦ °»½Å
+    /// ì €ê¸ˆí†µ íŒŒê´´ì— ë”°ë¥¸ ë ˆë²¨ ìˆ˜ì¹˜ë¥¼ ê°±ì‹ 
     /// </summary>
     public void UpdateLevelUI(int level)
     {
-        // TODO: ·¹º§ UI °»½Å
-        // ·¹º§ UI ±¸Çö ´Ü°è¿¡¼­ ¿¬°á
+        // TODO: ë ˆë²¨ UI ê°±ì‹ 
+        // ë ˆë²¨ UI êµ¬í˜„ ë‹¨ê³„ì—ì„œ ì—°ê²°
     }
 
     /// <summary>
-    /// Ã»±¸¼­ ±İ¾×À» °»½Å
+    /// ì²­êµ¬ì„œ ê¸ˆì•¡ì„ ê°±ì‹ 
     /// </summary>
     public void UpdateBillUI(int amount)
     {
-        // TODO: Ã»±¸¼­ UI °»½Å
-        // Ã»±¸¼­ UI ±¸Çö ´Ü°è¿¡¼­ ¿¬°á
+        // TODO: ì²­êµ¬ì„œ UI ê°±ì‹ 
+        // ì²­êµ¬ì„œ UI êµ¬í˜„ ë‹¨ê³„ì—ì„œ ì—°ê²°
     }
 
     /// <summary>
-    /// ¼ºÀå ¹× º¸»ó ¼±ÅÃ UI¸¦ Ç¥½ÃÇÕ´Ï´Ù.
+    /// ì„±ì¥ ë° ë³´ìƒ ì„ íƒ UIë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
     /// </summary>
     public void ShowRewardUI()
     {
-        // TODO: ¼ºÀå ¹× º¸»ó UI Ç¥½Ã
-        // º¸»ó ¼±ÅÃ UI ±¸Çö ´Ü°è¿¡¼­ ¿¬°á
+        // TODO: ì„±ì¥ ë° ë³´ìƒ UI í‘œì‹œ
+        // ë³´ìƒ ì„ íƒ UI êµ¬í˜„ ë‹¨ê³„ì—ì„œ ì—°ê²°
+    }
+
+    /// <summary>
+    /// ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´ í™”ë©´ì—ì„œ ë‹¤ìŒ ìŠ¤í…Œì´ì§€ë¥¼ ì‹œì‘í•©ë‹ˆë‹¤.
+    /// </summary>
+    public void OnContinueButtonClicked()
+    {
+        if (_stageManager == null)
+        {
+            _stageManager = StageManager.Instance;
+        }
+
+        if (_stageManager == null)
+        {
+            Debug.LogError("StageManagerë¥¼ ì°¾ì„ ìˆ˜ ì—†ì–´ ë‹¤ìŒ ìŠ¤í…Œì´ì§€ë¥¼ ì‹œì‘í•  ìˆ˜ ì—†ìŒ.");
+        }
+
+        _stageManager.NextStage();
     }
 
     #endregion
