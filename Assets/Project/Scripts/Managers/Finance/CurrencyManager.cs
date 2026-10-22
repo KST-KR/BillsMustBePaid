@@ -44,8 +44,21 @@ public class CurrencyManager : MonoBehaviour
         InitializeBalances();
     }
 
+    private void Start()
+    {
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.OnStageRewardChanged += OnStageRewardChanged; ;
+        }
+    }    
+
     private void OnDestroy()
     {
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.OnStageRewardChanged -= OnStageRewardChanged;
+        }
+
         if (Instance == this)
         {
             Instance = null;
@@ -156,6 +169,15 @@ public class CurrencyManager : MonoBehaviour
         }
 
         OnBalanceChanged?.Invoke(type, previousAmount, amount);
+    }
+
+    /// <summary>
+    /// 스테이지 진행중 보상 변경 이벤트 처리
+    /// </summary>
+    /// <param name="reward">스테이지 보상 금액</param>
+    private void OnStageRewardChanged(int reward)
+    {
+        TryAdd(ECurrencyType.Gold, reward);
     }
     #endregion
 }
