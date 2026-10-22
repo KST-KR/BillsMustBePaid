@@ -39,7 +39,7 @@ public class MainMenuUI : MonoBehaviour
     private bool CheckSaveData()
     {
         // 나중에 실제 저장 데이터 확인 로직으로 교체
-        return true;
+        return false;
     }
 
     /// <summary>
@@ -94,5 +94,16 @@ public class MainMenuUI : MonoBehaviour
     {
         _settingsPanel.SetActive(false);
         _mainMenuPanel.SetActive(true);
+    }
+
+    public void OnNewGameButtonClicked()
+    {
+        if (SceneTransitionManager.Instance == null)
+        {
+            Debug.LogError("SceneManager를 찾을 수 없음.");
+            return;
+        }
+
+        SceneTransitionManager.Instance.LoadGameScene();
     }
 }

@@ -6,13 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerStats))]
 public class PlayerStamina : MonoBehaviour
 {
-    #region 인스펙터
-    [Header("스태미나 설정")]
-    [SerializeField] float _initialStamina = 100f;
-    #endregion
-
     #region 내부 변수
     private PlayerStats _playerStats;
+    private StageManager _stageManager;
 
     private float _currentStamina;
     private float _cachedMaxStamina;
@@ -62,8 +58,9 @@ public class PlayerStamina : MonoBehaviour
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
+
         _cachedMaxStamina = Mathf.Max(0f, _playerStats.MaxStamina);
-        _currentStamina = Mathf.Clamp(_initialStamina, 0f, _cachedMaxStamina);
+        _currentStamina = _cachedMaxStamina;
     }
 
     /// <summary>
@@ -71,9 +68,18 @@ public class PlayerStamina : MonoBehaviour
     /// </summary>
     private void OnEnable()
     {
-        _playerStats.OnStateChanged += HandleStatsChanged;
+        if (_playerStats != null)
+        {
+            _playerStats.OnStateChanged += HandleStatsChanged;
+            HandleStatsChanged();
+        }
 
-        HandleStatsChanged();
+        _stageManager = StageManager.Instance;
+
+        if (_stageManager != null)
+        {
+            _stageManager.OnStageStarted += HandleStageStarted;
+        }
     }
 
     private void OnDisable()
@@ -81,6 +87,12 @@ public class PlayerStamina : MonoBehaviour
         if (_playerStats != null)
         {
             _playerStats.OnStateChanged -= HandleStatsChanged;
+        }
+
+        if (_stageManager != null)
+        {
+            _stageManager.OnStageStarted -= HandleStageStarted;
+            _stageManager = null;
         }
     }
     #endregion
@@ -146,6 +158,15 @@ public class PlayerStamina : MonoBehaviour
         
         return recoveredAmount;
     }
+
+    public void ResetStamina()
+    {
+        _cachedMaxStamina = Mathf.Max(0f, _playerStats.MaxStamina);
+        _currentStamina = _cachedMaxStamina;
+        _isDepleted = false;
+
+        NotifyStaminaChanged();
+    }
     #endregion
 
     #region 커스텀 (private)
@@ -198,6 +219,11 @@ public class PlayerStamina : MonoBehaviour
         _isDepleted = true;
 
         OnStaminaDepleted?.Invoke();
+    }
+
+    private void HandleStageStarted(int stageNumber)
+    {
+        ResetStamina();
     }
     #endregion
 }
