@@ -238,12 +238,12 @@ public class GrowthManager : MonoBehaviour
             return;
         }
 
-        _levels.Clear();
-        _unlockedIds.Clear();
         if (saveData.Skills == null)
         {
             saveData.Skills = new List<GrowthSkillSaveEntry>();
         }
+
+        ResetRunGrowth();
 
         for (int i = 0; i < saveData.Skills.Count; i++)
         {
