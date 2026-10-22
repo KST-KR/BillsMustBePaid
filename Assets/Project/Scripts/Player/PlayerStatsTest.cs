@@ -23,14 +23,14 @@ public class PlayerStatsTest : MonoBehaviour
         Debug.Log($"기본 공격 간격 : {_playerStats.AttackInterval}");
 
         // 성장 적용
-        _playerStats.AddAttackPowerGrowth(5f);
+        //_playerStats.AddAttackPowerGrowth(5f);
 
         _playerStats.OnStateChanged += HandleStateChanged;
 
         Debug.Log($"성장 후 공격력 : {_playerStats.AttackPower}");
 
         // 성장값 초기화
-        _playerStats.ResetRunGrowth();
+        //_playerStats.ResetRunGrowth();
         Debug.Log($"초기화 후 공격력 : {_playerStats.AttackPower}");
     }
 
