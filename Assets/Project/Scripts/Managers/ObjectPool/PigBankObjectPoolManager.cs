@@ -68,6 +68,16 @@ public class PigBankObjectPoolManager : MonoBehaviour
         pig.transform.SetParent(null);
         pig.SetActive(true);
 
+        RandomRewardManager rewardManager = pig.GetComponent<RandomRewardManager>();
+        if (rewardManager != null)
+        {
+            rewardManager.Initialize(pigData);
+        }
+        else
+        {
+            Debug.LogWarning($"돼지 프리팹에 RandomRewardManager가 없습니다: {pig.name}");
+        }
+
         return pig;
     }
 
