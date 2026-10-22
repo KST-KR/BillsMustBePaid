@@ -31,53 +31,17 @@ public class PlayerStats : MonoBehaviour
     /// <summary>
     /// 각 기본 능력치 + 성장 능력치 합
     /// </summary>
-    public float AttackPower
-    {
-        get
-        {
-            return _baseAttackPower + _attackPowerGrowth;
-        }
-    }
+    public float AttackPower => _baseAttackPower + _attackPowerGrowth;
 
-    public float AttackInterval
-    {
-        get
-        {
-            return _baseAttackInterval + _attackIntervalModifier;
-        }
-    }
+    public float AttackInterval => _baseAttackInterval + _attackIntervalModifier;
 
-    public float AttackRange
-    {
-        get
-        {
-            return _baseAttackRange + _attackRangeGrowth;
-        }
-    }
+    public float AttackRange => _baseAttackRange + _attackRangeGrowth;
 
-    public float CriticalChance
-    {
-        get
-        {
-            return Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth);
-        }
-    }
+    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth);
 
-    public float Luck
-    {
-        get
-        {
-            return _baseLuck + _luckGrowth;
-        }
-    }
+    public float Luck => _baseLuck + _luckGrowth;
 
-    public float MaxStamina
-    {
-        get
-        {
-            return _baseMaxStamina + _maxStaminaGrowth;
-        }
-    }
+    public float MaxStamina => _baseMaxStamina + _maxStaminaGrowth;
     #endregion
 
     #region 이벤트
@@ -154,6 +118,7 @@ public class PlayerStats : MonoBehaviour
         _maxStaminaGrowth += amount;
         OnStateChanged?.Invoke();
     }
+
     #endregion
 
 }
