@@ -17,7 +17,7 @@ public class PlayerStamina : MonoBehaviour
     [SerializeField, Range(0.01f, 1f)] private float _initialRatio = 1f;
 
     [Tooltip("스테이지 진행 중 초당 소모량")]
-    [SerializeField, Min(0f)] private float _drainPerSecond = 1f;
+    [SerializeField, Min(0f)] private float _drainPerSecond = 5f;
     #endregion
 
     #region 내부 변수
@@ -227,7 +227,7 @@ public class PlayerStamina : MonoBehaviour
         _current = clamped;
         NotifyChanged();
 
-        if (_current <0f && !_isExhausted)
+        if (_current <= 0f && !_isExhausted)
         {
             Exhaust();
         }

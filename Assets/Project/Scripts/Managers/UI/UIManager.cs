@@ -415,7 +415,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 업글이드 화면의 보유 재화를 UI에 반영
+    /// 업그레이드 화면의 보유 재화를 UI에 반영
     /// </summary>
     public void UpdateMoneyUI(int amount)
     {
@@ -443,7 +443,7 @@ public class UIManager : MonoBehaviour
     {
         if (_stageRewardGoldText != null)
         {
-            _stageRewardGoldText.text = amount.ToString();
+            _stageRewardGoldText.text = "$ " + amount.ToString();
         }
     }
 
@@ -507,6 +507,7 @@ public class UIManager : MonoBehaviour
         if (_stageManager == null)
         {
             Debug.LogError("StageManager를 찾을 수 없어 다음 스테이지를 시작할 수 없음.");
+            return;
         }
 
         _stageManager.NextStage();
