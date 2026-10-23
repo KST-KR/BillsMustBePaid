@@ -59,7 +59,7 @@ public class StageManager : MonoBehaviour
         /// </summary>
         if (_playerStamina != null)
         {
-            _playerStamina.OnStaminaDepleted += HandleStaminaDepleted;
+            _playerStamina.OnExhausted += HandleStaminaDepleted;
         }
 
         if (GameManager.Instance != null)
@@ -73,7 +73,7 @@ public class StageManager : MonoBehaviour
     {
         if (_playerStamina != null)
         {
-            _playerStamina.OnStaminaDepleted -= HandleStaminaDepleted;
+            _playerStamina.OnExhausted -= HandleStaminaDepleted;
         }
 
         if (GameManager.Instance != null)

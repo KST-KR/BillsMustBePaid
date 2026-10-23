@@ -22,13 +22,7 @@ public class SpawnPigBank : MonoBehaviour
             return;
         }
 
-        if (StageManager.Instance != null && StageManager.Instance.IsStageActive)
-        {
-            SpawnPigForStage(StageManager.Instance.CurrentStage);
-        }
-
-        // 에디터에서 씬을 단독 실행(테스트)할 때 StageManager가 아직 시작되지 않았다면 강제로 1스테이지를 스폰해 테스트합니다.
-        else
+        if (StageManager.Instance == null || !StageManager.Instance.IsStageActive)
         {
             Debug.LogWarning("에디터 단독 테스트 감지: 1스테이지 기준으로 강제 스폰합니다.");
             SpawnPigForStage(1);
