@@ -138,7 +138,7 @@ public class UIManager : MonoBehaviour
             _playerStamina.OnStaminaChanged += HandleStaminaChanged;
 
             // 구독 이전에 변경된 값까지 초기 UI에 반영
-            UpdateStaminaUI(_playerStamina.CurrentStamina, _playerStamina.MaxStamina);
+            UpdateStaminaUI(_playerStamina.Current, _playerStamina.Max);
         }
 
         _isSubscribed = true;
@@ -244,7 +244,7 @@ public class UIManager : MonoBehaviour
 
         if (_playerStamina != null)
         {
-            UpdateStaminaUI(_playerStamina.CurrentStamina, _playerStamina.MaxStamina);
+            UpdateStaminaUI(_playerStamina.Current, _playerStamina.Max);
         }
     }
 

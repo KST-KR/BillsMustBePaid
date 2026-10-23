@@ -1,229 +1,267 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerStats))]
+/// <summary>
+/// [PL-STAMINA-01 ~ 09] 플레이어 스태미나 관리
+/// 스테이지 시작 시 초기화하고, 진행시간에 따라 소모하며, 고갈되면 게임오버 요청
+/// 최대 스태미나는 PlayerStats이 계산한 값 사용
+/// </summary>
 public class PlayerStamina : MonoBehaviour
 {
+    #region 인스펙터
+    [Header("참조")]
+    [SerializeField] private PlayerStats _playerStats;
+
+    [Header("스태미나 설정")]
+    [Tooltip("스테이지 시작시 현재 스태미나 = 최대 스태미나")]
+    [SerializeField, Range(0.01f, 1f)] private float _initialRatio = 1f;
+
+    [Tooltip("스테이지 진행 중 초당 소모량")]
+    [SerializeField, Min(0f)] private float _drainPerSecond = 1f;
+    #endregion
+
     #region 내부 변수
-    private PlayerStats _playerStats;
+    private float _current;
+    private float _lastMax;
+    private bool _isExhausted;
+    
+    // 구독 시점의 참조를 보관하여, 파괴 순서와 상관없이 구독 해제
     private StageManager _stageManager;
-
-    private float _currentStamina;
-    private float _cachedMaxStamina;
-
-    private bool _isDepleted;
+    private GameManager _gameManager;
     #endregion
 
     #region 프로퍼티
-    public float CurrentStamina
-    {
-        get
-        {
-            return _currentStamina;
-        }
-    }
+    public float Current => _current;
 
-    public float MaxStamina
-    {
-        get
-        {
-            return _cachedMaxStamina;
-        }
-    }
+    public float Max => _playerStats != null ? _playerStats.MaxStamina : 0f;
 
-    public bool IsDepleted
-    {
-        get
-        {
-            return _isDepleted;
-        }
-    }
+    public bool IsExhausted => _isExhausted;
     #endregion
 
     #region 이벤트
     /// <summary>
-    /// 현재 또는 최대 스태미나가 변경되었을 때 UI에 알림 
+    /// [PL-STAMINA-06] 현재 스태미나 또는 최대 스태미나가 변경되면 (현재, 최대) 전달
     /// </summary>
     public event Action<float, float> OnStaminaChanged;
 
     /// <summary>
-    /// 스태미나가 0이 되었을 떄 사망 조건을 전달 
+    /// [PL-STAMINA-07] 스태미나가 0에 도달하면 고갈 상태로 전환하며 한 번만 발생
     /// </summary>
-    public event Action OnStaminaDepleted;
+    public event Action OnExhausted;
     #endregion
 
     #region 이벤트 함수
     private void Awake()
     {
-        _playerStats = GetComponent<PlayerStats>();
-
-        _cachedMaxStamina = Mathf.Max(0f, _playerStats.MaxStamina);
-        _currentStamina = _cachedMaxStamina;
+        if (_playerStats == null)
+        {
+            _playerStats = GetComponent<PlayerStats>();
+        }
     }
 
     /// <summary>
-    /// 비활성화된 동안 변경된 최대 스태미나도 반영
+    /// 다른 매니저의 Awake가 끝난 뒤인 Start에서 구독
     /// </summary>
-    private void OnEnable()
+    private void Start()
     {
-        if (_playerStats != null)
+        if (_playerStats == null)
         {
-            _playerStats.OnStateChanged += HandleStatsChanged;
-            HandleStatsChanged();
+            Debug.LogError("[PlayerStamina] PlayerStats가 없어 스태미나를 사용할 수 없음");
+            enabled = false;
+            return;
         }
 
         _stageManager = StageManager.Instance;
+        _gameManager = GameManager.Instance;
 
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted += HandleStageStarted;
         }
+
+        // [PL-STAMINA-05] 최대 스태미나가 바뀌면 현재 값을 조정
+        _playerStats.OnStateChanged += HandleStatsChanged;
+
+        // 스테이지 시작 이벤트보다 늦게 생성돼도 초기 상태를 갖도록 한 번 초기화
+        ResetForStage();
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
-        if (_playerStats != null)
-        {
-            _playerStats.OnStateChanged -= HandleStatsChanged;
-        }
-
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted -= HandleStageStarted;
             _stageManager = null;
         }
+
+        if (_playerStats != null)
+        {
+            _playerStats.OnStateChanged -= HandleStatsChanged;
+        }
+
+        _gameManager = null;
+    }
+
+    /// <summary>
+    /// [PL-STAMINA-02] 스테이지 진행 중에만 시간에 따라 스태미나를 감소
+    /// </summary>
+    private void Update()
+    {
+        if (!CanDrain())
+        {
+            return;
+        }
+
+        SetCurrent(_current - _drainPerSecond * Time.deltaTime);
     }
     #endregion
 
     #region 커스텀 (public)
     /// <summary>
-    /// 스태미나 소모
+    /// [PL-STAMINA-02] 초당 소모량 설정
     /// </summary>
-    public float ConsumeStamina(float amount)
+    public void SetDrainPerSecond(float amountPerSecond)
     {
-        if (amount < 0f)
-        {
-            return 0f;
-        }
-
-        // 이미 고갈된 경우 추가 소모를 처리하지 않음.
-        if (_isDepleted)
-        {
-            return 0f;
-        }
-
-        float consumedAmount = Mathf.Min(amount, _currentStamina);
-
-        if (consumedAmount <= 0f)
-        {
-            NotifyDepletedOnce();
-            return 0f;
-        }
-
-        _currentStamina -= consumedAmount;
-
-        NotifyStaminaChanged();
-
-        if (_currentStamina <= 0f)
-        {
-            _currentStamina = 0f;
-            NotifyDepletedOnce();
-        }
-
-        return consumedAmount;
+        _drainPerSecond = Mathf.Max(0f, amountPerSecond);
     }
 
     /// <summary>
-    /// 스태미나 회복
+    /// [PL-STAMINA-03] 지정한 양을 소모. 현재 잔량보다 많이 소모하지 않으며 실제 소모량을 반환
     /// </summary>
-    public float RecoverStamina(float amount)
+    public float Consume(float amount)
     {
-        if (amount <= 0f || _isDepleted)
+        if (amount < 0f || _isExhausted)
         {
             return 0f;
         }
 
-        float previousStamina = _currentStamina;
-
-        _currentStamina = Mathf.Min(_currentStamina + amount, _cachedMaxStamina);
-
-        float recoveredAmount = _currentStamina - previousStamina;
-
-        if (recoveredAmount > 0f)
-        {
-            NotifyStaminaChanged();
-        }
-        
-        return recoveredAmount;
+        float consumed = Mathf.Min(amount, _current);
+        SetCurrent(_current - consumed);
+        return consumed;
     }
 
-    public void ResetStamina()
+    /// <summary>
+    /// [PL-STAMINA-04] 스태미나를 회복. 최대치를 넘지 않으며 실제 회복량을 반환
+    /// [PL-STAMINA-08] 고갈 이후에는 회복해도 되살아나지 않음
+    /// </summary>
+    public float Recover(float amount)
     {
-        _cachedMaxStamina = Mathf.Max(0f, _playerStats.MaxStamina);
-        _currentStamina = _cachedMaxStamina;
-        _isDepleted = false;
+        if (amount <= 0f || _isExhausted)
+        {
+            return 0f;
+        }
 
-        NotifyStaminaChanged();
+        float before = _current;
+        SetCurrent(_current + amount);
+        return _current - before;
     }
     #endregion
 
     #region 커스텀 (private)
     /// <summary>
-    /// 능력치 변경
+    /// [PL-STAMINA-01] 스테이지 시작 시 현재 스태미나를 초기화하고 고갈 상태를 해제
+    /// [PL-STAMINA-08] 고갈 상태는 새 스테이지(재시작)에서만 초기화됨
+    /// </summary>
+    private void ResetForStage()
+    {
+        float max = Max;
+
+        _isExhausted = false;
+        _lastMax = max;
+        _current = Mathf.Clamp(max * _initialRatio, 0f, max);
+
+        NotifyChanged();
+    }
+
+    private void HandleStageStarted(int stageNumber)
+    {
+        ResetForStage();
+    }
+
+    /// <summary>
+    /// [PL-STAMINA-05] 최대 스태미나가 변경되면 현재 스태미나를 새 최대값 이하로 조정
+    /// 최대값이 바뀌었으면 UI 갱신을 위해 변경 이벤트도 전달
     /// </summary>
     private void HandleStatsChanged()
     {
-        float newMaxStamina = Mathf.Max(0f, _playerStats.MaxStamina);
+        float max = Max;
+        bool maxChanged = !Mathf.Approximately(_lastMax, max);
+        _lastMax = max;
 
-        bool maxChanged = !Mathf.Approximately(_cachedMaxStamina, newMaxStamina);
+        if (_current > max)
+        {
+            SetCurrent(max);
+            return;
+        }
 
-        if (!maxChanged)
+        if (maxChanged)
+        {
+            NotifyChanged();
+        }
+    }
+
+    /// <summary>
+    /// 스테이지가 진행 중이고 게임이 Playing 상태일 때만 소모
+    /// </summary>
+    /// <returns></returns>
+    private bool CanDrain()
+    {
+        return !_isExhausted && _drainPerSecond > 0f
+            && _gameManager != null && _gameManager.State == EGameState.Playing
+            && _stageManager != null && _stageManager.IsStageActive;
+    }
+
+    /// <summary>
+    /// 현재 스태미나 0~최대 범위로 제한 설정, 변경 시 이벤트 발생
+    /// 0에 도달하면 고갈 처리
+    /// </summary>
+    /// <param name="value"></param>
+    private void SetCurrent(float value)
+    {
+        float clamped = Mathf.Clamp(value, 0f, Max);
+        if (Mathf.Approximately(_current, clamped))
         {
             return;
         }
 
-        // 변경된 최대 스태미나를 반영
-        _cachedMaxStamina = newMaxStamina;
+        _current = clamped;
+        NotifyChanged();
 
-        // 최대 스태미나가 감소하면 현재 스태미나도 제한한다.
-        _currentStamina = Mathf.Min(_currentStamina, _cachedMaxStamina);
-
-        NotifyStaminaChanged();
-
-        if (_currentStamina <= 0f)
+        if (_current <0f && !_isExhausted)
         {
-            NotifyDepletedOnce();
+            Exhaust();
+        }
+    }
+
+    private void Exhaust()
+    {
+        _isExhausted = true;
+        OnExhausted?.Invoke();
+
+        // 스테이지 실패는 현재 게임 규칙상 게임오버로 처리
+        if (_stageManager != null)
+        {
+            _stageManager.FailStage();
         }
     }
 
     /// <summary>
     /// 이벤트 전달
     /// </summary>
-    private void NotifyStaminaChanged()
+    private void NotifyChanged()
     {
-        OnStaminaChanged?.Invoke(_currentStamina, _cachedMaxStamina);
+        OnStaminaChanged?.Invoke(_current, Max);
     }
+    #endregion
 
-    /// <summary>
-    /// [PL-Stamina-07] 스태미나 변경 이벤트 알림
-    /// </summary>
-    private void NotifyDepletedOnce()
-    {
-        if (_isDepleted)
-        {
-            return;
-        }
+    #region 테스트
+    [ContextMenu("테스트: 10 소모")]
+    private void TestConsume() => Consume(10f);
 
-        _isDepleted = true;
+    [ContextMenu("테스트: 10 회복")]
+    private void TestRecover() => Recover(10f);
 
-        OnStaminaDepleted?.Invoke();
-    }
-
-    private void HandleStageStarted(int stageNumber)
-    {
-        ResetStamina();
-    }
+    [ContextMenu("테스트: 즉시 고갈")]
+    private void TestExhaust() => Consume(float.MaxValue);
     #endregion
 }
