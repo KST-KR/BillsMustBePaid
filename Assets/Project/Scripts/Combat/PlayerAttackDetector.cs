@@ -6,6 +6,10 @@ using UnityEngine;
 public class PlayerAttackDetector : MonoBehaviour
 {
     #region 인스펙터
+    [Header("참조")]
+    [Tooltip("마우스가 가리키는 지면 좌표 제공, 비워두면 같은 오브젝트나 부모에서 찾음.")]
+    [SerializeField] private PlayerInputHandler _inputHandler;
+    
     [Header("공격 범위 위치")]
     [SerializeField] private float _forwardOffset = 1f;
     [SerializeField] private float _heightOffset = 0.5f;
@@ -23,6 +27,16 @@ public class PlayerAttackDetector : MonoBehaviour
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
+
+        if (_inputHandler == null)
+        {
+            _inputHandler = GetComponentInParent<PlayerInputHandler>();
+        }
+
+        if (_inputHandler == null)
+        {
+            Debug.LogWarning("PlayerInputHandler를 찾을 수 없음.");
+        }
     }
     #endregion
 
@@ -75,11 +89,19 @@ public class PlayerAttackDetector : MonoBehaviour
 
     #region 커스텀 (private)
     /// <summary>
-    /// 공격 범위
+    /// 공격 범위의 중심
+    /// 손은 지면 위 높이(PlayerHandPosition)에 떠 있으므로, 손 위치가 아니라
+    /// 마우스가 가리키는 지면 좌표를 기준으로 판정한다. (커서가 지면을 벗어나면 마지막 지면 좌표 유지)
     /// </summary>
     private Vector3 GetAttackCenter()
     {
-        return transform.position + transform.forward * _forwardOffset + Vector3.up * _heightOffset;
+        if (_inputHandler != null && Application.isPlaying)
+        {
+            return _inputHandler.MouseWorldPosition + Vector3.up * _heightOffset;
+        }
+
+        // 입력 참조가 없거나 에디터(재생 전)에서는 이 오브젝트 위치 기준
+        return transform.position + Vector3.up * _heightOffset;
     }
 
     #endregion

@@ -1,69 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [RequireComponent(typeof(PlayerStats))]
 public class PlayerCombat : MonoBehaviour
 {
-    #region ÀÎ½ºÆåÅÍ
-    [Header("ÀÓ½Ã °ø°İ Å¸ÀÌ¹Ö")]
-    [SerializeField] private float _attackDuration = 0.8f;
-    [SerializeField] private float _hitTime = 0.4f;
-
-    [Header("Å×½ºÆ® ¼³Á¤")]
-    [SerializeField] private bool _startCombatOnEnable = true;
-    #endregion
-
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private PlayerStats _playerStats;
     private PlayerAttackDetector _attackDetector;
+    private PlayerStageActivator _activator;
 
-    private bool _combatEnabled;
     private bool _isAttacking;
     private bool _hasHitThisAttack;
 
     private float _attackElapsed;
-    private float _cooldownRemaining;
+    private float _nextAttackTime;
     #endregion
 
-    #region ÇÁ·ÎÆÛÆ¼
-    public bool IsAttacking
-    {
-        get
-        {
-            return _isAttacking;
-        }
-    }
+    #region í”„ë¡œí¼í‹°
+    public bool IsAttacking => _isAttacking;
+
+    /// <summary>
+    /// ìŠ¤í…Œì´ì§€ê°€ ì§„í–‰ ì¤‘ì´ê³  Playing ìƒíƒœì¼ ë•Œë§Œ true
+    /// </summary>
+    public bool CanAct => _activator != null && _activator.CanAct;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
         _attackDetector = GetComponent<PlayerAttackDetector>();
-    }
-
-    private void OnEnable()
-    {
-        _combatEnabled = _startCombatOnEnable;
+        _activator = GetComponent<PlayerStageActivator>();
     }
 
     private void OnDisable()
     {
-        _combatEnabled = false;
         _isAttacking = false;
         _hasHitThisAttack = false;
 
         _attackElapsed = 0f;
-        _cooldownRemaining = 0f;
+        _nextAttackTime = 0f;
     }
 
     /// <summary>
-    /// °ø°İ ÁøÇà
+    /// í–‰ë™ ê°€ëŠ¥í•œ ìƒíƒœì—ì„œ ìë™ ê³µê²©ì„ ì§„í–‰í•œë‹¤.
     /// </summary>
-    void Update()
+    private void Update()
     {
-        if (!_combatEnabled || _attackDetector == null)
+        if (!CanAct || _attackDetector == null)
         {
             return;
         }
@@ -74,50 +57,68 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        if (_cooldownRemaining > 0f)
+        if (Time.time < _nextAttackTime)
         {
-            _cooldownRemaining -= Time.deltaTime;
-
-            if (_cooldownRemaining > 0f)
-            {
-                return;
-            }
-
-            _cooldownRemaining = 0f;
+            return;
         }
 
         BeginAttack();
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (private)
+    #region ì»¤ìŠ¤í…€ (private)
+    /// <summary>
+    /// [PL-COMBAT-01] ìë™ ê³µê²© ì‹œì‘ ì¡°ê±´
+    /// </summary>
+    private bool CanStartAttack()
+    {
+        return CanAct
+            && _attackDetector != null
+            && !_isAttacking
+            && Time.time >= _nextAttackTime;
+    }
+
     private void BeginAttack()
     {
+        if (!CanStartAttack())
+        {
+            return;
+        }
+
         _isAttacking = true;
         _hasHitThisAttack = false;
         _attackElapsed = 0f;
 
-        Debug.Log("¸ÁÄ¡ °ø°İ ½ÃÀÛ");
+        // ê³µê²© ì‹œì‘ ì‹œì ì„ ê¸°ì¤€ìœ¼ë¡œ ë‹¤ìŒ ê³µê²© ì‹œê°ì„ ì˜ˆì•½í•œë‹¤.
+        _nextAttackTime = Time.time + _playerStats.AttackInterval;
+
+        Debug.Log("ë§ì¹˜ ê³µê²© ì‹œì‘");
     }
 
     private void UpdateAttack()
     {
         _attackElapsed += Time.deltaTime;
 
-        float attackDuration = Mathf.Max(0f, _attackDuration);
-        float hitTime = Mathf.Clamp(_hitTime, 0f, attackDuration);
+        float attackDuration = _playerStats.AttackDuration;
+        float hitTime = _playerStats.HitTime;
 
-        // Å¸°İ ½ÃÁ¡¿¡ ÇÑ ¹ø¸¸ ¹üÀ§ ÆÇÁ¤À» ½ÇÇà
+        // íƒ€ê²© ì‹œì ì— í•œ ë²ˆë§Œ ë²”ìœ„ íŒì •ì„ ì‹¤í–‰í•œë‹¤.
         if (!_hasHitThisAttack && _attackElapsed >= hitTime)
         {
             _hasHitThisAttack = true;
 
             int hitCount = _attackDetector.PerformAttack();
 
-            Debug.Log($"¸ÁÄ¡ °ø°İ ÆÇÁ¤ ¿Ï·á : {hitCount}°³ ´ë»ó Å¸°İ");
+            Debug.Log($"ë§ì¹˜ ê³µê²© íŒì • ì™„ë£Œ: {hitCount}ê°œ ëŒ€ìƒ íƒ€ê²©");
+
+            // íƒ€ê²© íŒì • ì¤‘ ì»´í¬ë„ŒíŠ¸ê°€ ë¹„í™œì„±í™”ëë‹¤ë©´
+            // ì´í›„ ê³µê²© ì²˜ë¦¬ë¥¼ ì§„í–‰í•˜ì§€ ì•ŠëŠ”ë‹¤.
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
         }
 
-        // °ø°İ µ¿ÀÛÀÌ ³¡³­ µÚ ´ÙÀ½ °ø°İ °£°İÀ» °è»ê
         if (_attackElapsed >= attackDuration)
         {
             EndAttack();
@@ -129,26 +130,8 @@ public class PlayerCombat : MonoBehaviour
         _isAttacking = false;
         _attackElapsed = 0f;
 
-        _cooldownRemaining = Mathf.Max(0f, _playerStats.AttackInterval);
-
-        Debug.Log($"¸ÁÄ¡ °ø°İ ¿Ï·á : ´ÙÀ½ °ø°İ ±îÁö {_cooldownRemaining:F2}ÃÊ");
+        // ë‹¤ìŒ ê³µê²© ì‹œê°ì€ BeginAttackì—ì„œ ì´ë¯¸ ì˜ˆì•½í–ˆë‹¤.
+        Debug.Log("ë§ì¹˜ ê³µê²© ì™„ë£Œ");
     }
     #endregion
-
-    #region Ä¿½ºÅÒ (public)
-    public void SetCombatEnabled(bool isEnabled)
-    {
-        _combatEnabled = isEnabled;
-
-        if (!isEnabled)
-        {
-            _isAttacking = false;
-            _hasHitThisAttack = false;
-
-            _attackElapsed = 0f;
-            _cooldownRemaining = 0f;
-        }
-    }
-    #endregion
-
 }

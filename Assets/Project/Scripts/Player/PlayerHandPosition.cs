@@ -15,9 +15,27 @@ public class PlayerHandPosition : MonoBehaviour
     [SerializeField] private float _handHeight = 10.0f;
     #endregion
 
+    #region 내부 변수
+    private PlayerStageActivator _activator;
+    #endregion
+
+    #region 프로퍼티
+    private bool CanAct => _activator == null || _activator.CanAct;
+    #endregion
+
     #region 이벤트
+    private void Awake()
+    {
+        _activator = GetComponent<PlayerStageActivator>();
+    }
+
     private void LateUpdate()
     {
+        if (!CanAct)
+        {
+            return;
+        }
+
         UpdateHandPosition();
     }
     #endregion
