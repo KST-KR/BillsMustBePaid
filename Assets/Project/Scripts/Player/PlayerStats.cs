@@ -23,6 +23,10 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float _minAttackInterval = 0.05f;
     [SerializeField] private float _minAttackRange = 0.1f;
     [SerializeField] private float _minMaxStamina = 1f;
+
+    [Header("공격 동작 설정")]
+    [SerializeField] private float _attackDuration = 0.8f;
+    [SerializeField] private float _hitTime = 0.4f;
     #endregion
 
     #region 내부 변수
@@ -52,6 +56,16 @@ public class PlayerStats : MonoBehaviour
     public float Luck => _baseLuck + _luckGrowth;
 
     public float MaxStamina => Mathf.Max(_minMaxStamina, _baseMaxStamina + _maxStaminaGrowth);
+
+    /// <summary>
+    /// 한 번의 공격 동작 시간
+    /// </summary>
+    public float AttackDuration => Mathf.Max(0f, _attackDuration);
+
+    /// <summary>
+    /// 공격 시작 후 타격 판정 시점
+    /// </summary>
+    public float HitTime => Mathf.Clamp(_hitTime, 0f, AttackDuration);
     #endregion
 
     #region 이벤트

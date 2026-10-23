@@ -28,6 +28,11 @@ public class PlayerInputHandler : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        UpdateMouseWorldPosition();
+    }
+
     void Update()
     {
         UpdateMouseWorldPosition();
