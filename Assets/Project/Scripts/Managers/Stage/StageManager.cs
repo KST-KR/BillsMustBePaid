@@ -143,6 +143,8 @@ public class StageManager : MonoBehaviour
             OnStageChanged?.Invoke(_currentStage);
         }
 
+        Debug.Log($"StartStage : 지정한 번호의 스테이지를 시작합니다. / 스테이지 넘버 : {_currentStage}");
+
         OnStageStarted?.Invoke(_currentStage);
     }
 
@@ -157,6 +159,8 @@ public class StageManager : MonoBehaviour
         }
 
         _isStageActive = false;
+
+        Debug.Log("ClearStage : 현재 스테이지를 클리어 처리합니다.");
 
         if (GameManager.Instance != null)
         {
@@ -176,6 +180,8 @@ public class StageManager : MonoBehaviour
             return;
         }
 
+        Debug.Log("NextStage : 다음 스테이지로 전환합니다.");
+
         StartStage(_currentStage + 1);
     }
 
@@ -190,6 +196,8 @@ public class StageManager : MonoBehaviour
         }
 
         _isStageActive = false;
+
+        Debug.Log("FailStage : 현재 스테이지의 실패를 처리합니다.");
 
         OnStageFailed?.Invoke();
 
@@ -210,6 +218,8 @@ public class StageManager : MonoBehaviour
 
         _currentStage = 0;
         _isStageActive = false;
+
+        Debug.Log("ResetStage : 스테이지 진행 정보를 초기화 합니다.");
 
         if (stageChanged)
         {

@@ -77,6 +77,8 @@ public class GameManager : MonoBehaviour
 
         _isRunActive = true;
 
+        Debug.Log("GameManager : StartRun 새로운 런을 시작합니다.");
+
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }
@@ -92,6 +94,9 @@ public class GameManager : MonoBehaviour
         }
 
         _isRunActive = false;
+
+        Debug.Log("GameManager : EndRun 현재 런을 종료합니다.");
+
         OnRunEnded?.Invoke();
     }
 
@@ -106,6 +111,9 @@ public class GameManager : MonoBehaviour
         }
 
         _state = nextState;
+
+        Debug.Log("GameManager : ChangeGameState 게임 상태를 변경 이벤트를 발생");
+
         OnGameStateChanged?.Invoke(_state);
     }
 
@@ -119,6 +127,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        Debug.Log("GameManager : GameOver 현재 런을 게임 오버 상태로 종료합니다.");
+
         EndRun();
         ChangeGameState(EGameState.GameOver);
     }
@@ -128,6 +138,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void QuitGame()
     {
+        Debug.Log("GameManager : QuitGame 게임을 완전히 종료합니다.");
         Application.Quit();
     }
     #endregion
