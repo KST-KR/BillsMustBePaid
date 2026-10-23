@@ -64,15 +64,10 @@ public class SpawnPigBank : MonoBehaviour
 
         Vector3 spawnPosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
 
-        if (PigBankObjectPoolManager.Instance != null)
+        if (StageManager.Instance == null || !StageManager.Instance.IsStageActive)
         {
-            PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
-            Debug.Log($"성공적으로 {pigID} 돼지를 {spawnPosition}에 스폰했습니다");
-        }
-
-        else
-        {
-            Debug.LogError("PigBankObjectPoolManager Instance가 Null입니다!");
+            Debug.LogWarning("에디터 단독 테스트 감지: 1스테이지 기준으로 강제 스폰합니다.");
+            SpawnPigForStage(1);
         }
     }
 
