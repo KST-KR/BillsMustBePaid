@@ -68,6 +68,19 @@ public class PigBankObjectPoolManager : MonoBehaviour
         pig.transform.SetParent(null);
         pig.SetActive(true);
 
+        // 돼지 저금통 체력 초기화
+        PigBankHealth health = pig.GetComponent<PigBankHealth>();
+
+        if (health != null)
+        {
+            health.Initialize(pigData);
+        }
+        else
+        {
+            Debug.LogWarning($"돼지 프리팹에 PigBankHealth가 없음: {pig.name}", pig);
+        }
+
+        // 기존 보상 시스템 초기화
         RandomRewardManager rewardManager = pig.GetComponent<RandomRewardManager>();
         if (rewardManager != null)
         {

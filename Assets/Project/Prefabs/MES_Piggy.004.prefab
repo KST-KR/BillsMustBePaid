@@ -10,7 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6546715155342706090}
   - component: {fileID: -7953228954195822865}
-  m_Layer: 0
+  - component: {fileID: 7995894921422296563}
+  - component: {fileID: 1435380928431481864}
+  m_Layer: 7
   m_Name: MES_Piggy.004
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,6 +48,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cff83d02820a20a469efea89db757922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7995894921422296563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727750011497123723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b03ba6a926fcc949a5c0771c736c4e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &1435380928431481864
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727750011497123723}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.4270911, y: 2.6541343, z: 3.0119116}
+  m_Center: {x: -0.0002465248, y: -0.007771492, z: 0.0051983595}
 --- !u!1 &894245988516401612
 GameObject:
   m_ObjectHideFlags: 0
@@ -57,7 +92,7 @@ GameObject:
   - component: {fileID: 1877590392127910320}
   - component: {fileID: 5702931337067872524}
   - component: {fileID: 174255648380879002}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Piggy.004_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -140,7 +175,7 @@ GameObject:
   - component: {fileID: 3171561971416651248}
   - component: {fileID: 1781822829096266342}
   - component: {fileID: 2121763776556105826}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Piggy.004_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerStats))]
@@ -42,7 +41,8 @@ public class PlayerAttackDetector : MonoBehaviour
 
     #region 커스텀 (public)
     /// <summary>
-    /// 공격 판정
+    /// 공격 범위 안의 대상을 탐색하고 공격한다.
+    /// 한 번의 공격에서 대상 하나당 한 번만 타격한다.
     /// </summary>
     public int PerformAttack()
     {
@@ -53,6 +53,8 @@ public class PlayerAttackDetector : MonoBehaviour
         // 구형 범위 안의 콜라이더를 찾는다.
         Collider[] colliders = Physics.OverlapSphere(attackCenter, attackRange, _targetLayers, QueryTriggerInteraction.Collide);
 
+        Debug.Log($"[공격 탐색] 중심={attackCenter}, " +$"반경={attackRange}, " +$"검색된 콜라이더={colliders.Length}", this);
+
         // 같은 대상이 중복 타격되는 것을 방지
         HashSet<IPlayerAttackTarget> hitTargets = new HashSet<IPlayerAttackTarget>();
 
@@ -60,27 +62,17 @@ public class PlayerAttackDetector : MonoBehaviour
 
         for (int i = 0; i < colliders.Length; i++)
         {
-            MonoBehaviour[] components = colliders[i].GetComponentsInParent<MonoBehaviour>();
+            IPlayerAttackTarget target = FindAttackTarget(colliders[i]);
 
-            for (int j = 0; j < components.Length; j++)
+            Debug.Log( $"[공격 대상 확인] 콜라이더={colliders[i].name}, " +$"레이어={LayerMask.LayerToName(colliders[i].gameObject.layer)}, " +$"공격 대상={target != null}",colliders[i]);
+
+            if (target == null || !hitTargets.Add(target))
             {
-                if (!(components[j] is IPlayerAttackTarget target))
-                {
-                    continue;
-                }
-
-                // 같은 대상은 한 번의 공격에서 한 번만 타격한다.
-                if (!hitTargets.Add(target))
-                {
-                    break;
-                }
-
-                target.ReceivePlayerAttack(damage);
-                hitCount++;
-
-                // 가장 가까운 부모 대상 하나만 처리한다.
-                break;
+                continue;
             }
+
+            target.TakePlayerAttack(damage);
+            hitCount++;
         }
 
         return hitCount;
@@ -88,20 +80,61 @@ public class PlayerAttackDetector : MonoBehaviour
     #endregion
 
     #region 커스텀 (private)
+    private IPlayerAttackTarget FindAttackTarget(Collider targetcollider)
+    {
+        if (targetcollider == null)
+        {
+            return null;
+        }
+
+        MonoBehaviour[] components = targetcollider.GetComponentsInParent<MonoBehaviour>();
+
+        for (int i = 0; i < components.Length; i++)
+        {
+            if (components[i] is IPlayerAttackTarget target)
+            {
+                return target;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// 공격 범위의 중심
-    /// 손은 지면 위 높이(PlayerHandPosition)에 떠 있으므로, 손 위치가 아니라
+    /// 손은 지면 위 높이(PlayerHandPosition)에 떠 있으므로, 손 위치가 아님.
     /// 마우스가 가리키는 지면 좌표를 기준으로 판정한다. (커서가 지면을 벗어나면 마지막 지면 좌표 유지)
     /// </summary>
     private Vector3 GetAttackCenter()
     {
+        Vector3 attackCenter;
+
         if (_inputHandler != null && Application.isPlaying)
         {
-            return _inputHandler.MouseWorldPosition + Vector3.up * _heightOffset;
+            Vector3 mousePosition = _inputHandler.MouseWorldPosition;
+
+            // 플레이어에서 마우스 지면 좌표로 향하는 방향
+            Vector3 direction = mousePosition - transform.position;
+
+            // 지면 기준으로 계산하므로 높이 차이는 제외
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0f)
+            {
+                direction.Normalize();
+            }
+
+            attackCenter = mousePosition + direction * Mathf.Max(0f, _forwardOffset);
+        }
+        else
+        {
+            // 입력 참조가 없거나 에디터(재생 전)에서는 이 오브젝트 위치 기준
+            attackCenter = transform.position + transform.forward * Mathf.Max(0f, _forwardOffset);
         }
 
-        // 입력 참조가 없거나 에디터(재생 전)에서는 이 오브젝트 위치 기준
-        return transform.position + Vector3.up * _heightOffset;
+        attackCenter.y += _heightOffset;
+
+        return attackCenter;
     }
 
     #endregion
