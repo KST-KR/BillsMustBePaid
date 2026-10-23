@@ -3,5 +3,8 @@
 /// </summary>
 public interface IPlayerAttackTarget
 {
-    void ReceivePlayerAttack(float damage);
+    /// <summary>
+    /// 플레이어의 공격을 받았을 때 호출
+    /// </summary>
+    void TakePlayerAttack(float damage);
 }
