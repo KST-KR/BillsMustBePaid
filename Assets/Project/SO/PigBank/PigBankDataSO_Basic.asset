@@ -18,7 +18,7 @@ MonoBehaviour:
   _moveSpeed: 0
   _pigPrefab: {fileID: 727750011497123723, guid: 6391059b7c7c44042a6464940a140655, type: 3}
   _crashLevel: 0
-  _rewardCoin: 0
+  _rewardCoin: 100
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
