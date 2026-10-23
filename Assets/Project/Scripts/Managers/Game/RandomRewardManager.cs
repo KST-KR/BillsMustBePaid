@@ -67,9 +67,16 @@ public class RandomRewardManager : MonoBehaviour
 
         DropCoins();
 
-        PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
+        if(PigBankObjectPoolManager.Instance != null)
+        {
+            PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
+        }
 
-        FragmentObjectPoolManager.Instance.SpawnRandomFragments(transform.position);
+        if(FragmentObjectPoolManager.Instance != null)
+        {
+            FragmentObjectPoolManager.Instance.SpawnRandomFragments(transform.position);
+        }
+
     }
 
     private void DropCoins()
@@ -94,7 +101,11 @@ public class RandomRewardManager : MonoBehaviour
             Debug.Log($"[Reward] 기본 코인 보상 계산: {coinCount}개");
         }
 
-        StageRewardManager.Instance.TryAddStageGold(coinCount);
+
+        if(StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.TryAddStageGold(coinCount);
+        }
         //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
     }
     #endregion
