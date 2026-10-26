@@ -426,6 +426,8 @@ public class UIManager : MonoBehaviour
     {
         SetPanelActive(_pausePanel, false);
         SetPanelActive(_settingsPanel, false);
+        SetPanelActive(_runEndConfirmPanel, false);
+        SetPanelActive(_mainMenuConfirmPanel, false);
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_gameOverPanel, false);
         SetStaminaUIVisible(false);
@@ -622,6 +624,31 @@ public class UIManager : MonoBehaviour
     public void OnRunEndButtonClicked()
     {
         SetPanelActive(_runEndConfirmPanel, true);
+    }
+
+    /// <summary>
+    /// [UI-04-02] 런 종료 확인을 확정하고 현재 스테이지를 종료
+    /// </summary>
+    public void OnRunEndConfirmYesButtonClicked()
+    {
+        if (_stageManager == null)
+        {
+            _stageManager = StageManager.Instance;
+        }
+
+        if (_stageManager == null)
+        {
+            Debug.LogError("StageManager를 찾을 수 없어 스테이지를 종료할 수 없음.");
+            return;
+        }
+
+        if (!_stageManager.IsStageActive)
+        {
+            Debug.LogWarning("진행 중인 스테이지가 없어 종료할 수 없음.");
+            return;
+        }
+
+        _stageManager.ClearStage();
     }
 
     /// <summary>
