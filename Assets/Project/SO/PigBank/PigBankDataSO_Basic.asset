@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: PigBank_Basic
   _pigBankName: Basic
-  _pigBankHP: 5
-  _moveSpeed: 0
+  _pigBankHP: 20
+  _moveSpeed: 7
   _pigPrefab: {fileID: 727750011497123723, guid: 6391059b7c7c44042a6464940a140655, type: 3}
   _crashLevel: 0
   _rewardCoin: 100
