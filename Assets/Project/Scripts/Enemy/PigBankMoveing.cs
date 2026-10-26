@@ -11,22 +11,17 @@ public class PigBankMoveing : MonoBehaviour
     [Header("데이터 참조")]
     [SerializeField] private PigBankGameDataSO _pigData;
 
-    [Header("통통 튀는 설정")]
+    [Header("점프 설정")]
     [SerializeField] private float _jumpHeight = 0.5f;
     [SerializeField] private float _jumpSpeed = 3f;
     #endregion
 
     #region 내부 변수
-    private Rigidbody _rd;
     private float _startY;
+    private Vector3 _moveDir;
     #endregion
 
     #region 이벤트
-    private void Awake()
-    {
-        _rd = GetComponent<Rigidbody>();
-    }
-
     void Start()
     {
         if (_pigData == null)
@@ -35,13 +30,11 @@ public class PigBankMoveing : MonoBehaviour
             return;
         }
 
-        if (_rd == null)
-        {
-            Debug.Log("Rigidbody가 없음 확인 필요");
-            return;
-        }
-
         _startY = transform.position.y;
+
+        // 게임 시작시 무작위 방향 설정
+        float randomAngle = Random.Range(0f, 360f);
+        _moveDir = new Vector3(Mathf.Sin(randomAngle * Mathf.Deg2Rad), 0, Mathf.Cos(randomAngle * Mathf.Deg2Rad)).normalized;
     }
 
 
@@ -60,25 +53,37 @@ public class PigBankMoveing : MonoBehaviour
             return;
         }
 
-        if (_rd == null)
-        {
-            Debug.Log("Rigidbody가 없음 확인 필요");
-            return;
-        }
-
-        // TODO : Y축 점프는 구현 성공 앞으로 안가는 문제를 해결해야 함
-
         float currentSpeed = _pigData.MoveSpeed;
 
-        Vector3 moverDir = Vector3.forward;
-        Vector3 nextVelocity = moverDir * currentSpeed;
+        // 진행 방향 앞에 보이지 않는 벽(Wall)이 있는지 레이캐스트로 검사
+        if (Physics.Raycast(transform.position, _moveDir, out RaycastHit hit, 0.6f))
+        {
+            if (hit.collider.CompareTag("Wall"))
+            {
+                // 벽에 부딪히면 반사각(Reflect)으로 자연스럽게 방향 전환
+                _moveDir = Vector3.Reflect(_moveDir, hit.normal);
+                _moveDir.y = 0;
+                _moveDir.Normalize();
+            }
+        }
 
-        _rd.velocity = new Vector3(nextVelocity.x * _rd.velocity.y, nextVelocity.z);
+        Vector3 finalDir = _moveDir.normalized;
 
+        // 전진
+        transform.Translate(finalDir * currentSpeed * Time.deltaTime, Space.World);
+
+        // 회전
+        if (finalDir != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(new Vector3(finalDir.x, 0, finalDir.z));
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
+
+        // Y축 점프 연출
         float newY = _startY + Mathf.Abs(Mathf.Sin(Time.time * _jumpSpeed)) * _jumpHeight;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-
-        // TODO : 막다른 벽을 만나면 다른 각도로 움직일 수 있게 해주어야 함
     }
+
+   
     #endregion
 }

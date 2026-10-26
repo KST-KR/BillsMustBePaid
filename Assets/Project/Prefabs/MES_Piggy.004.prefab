@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6546715155342706090}
   - component: {fileID: -7953228954195822865}
   - component: {fileID: 7995894921422296563}
+  - component: {fileID: -1109432764024298058}
   - component: {fileID: 1435380928431481864}
   m_Layer: 7
   m_Name: MES_Piggy.004
@@ -60,6 +61,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b03ba6a926fcc949a5c0771c736c4e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-1109432764024298058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727750011497123723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1e97f04ca44259429226e858c16c6f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pigData: {fileID: 11400000, guid: 3bacb39c0a27431499f351b15756f872, type: 2}
+  _jumpHeight: 0.6
+  _jumpSpeed: 8
 --- !u!65 &1435380928431481864
 BoxCollider:
   m_ObjectHideFlags: 0
