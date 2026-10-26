@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ccd48a08e06cbd488b6ac8763210cce, type: 3}
+  m_Name: "ATS_01_\uACF5\uACA9\uC18D\uB3C4 I"
+  m_EditorClassIdentifier: 
+  _upgradeId: ATS_01
+  _displayName: "\uBE60\uB978 \uC190"
+  _description: "\uACF5\uACA9 \uAC04\uACA9 \uAC10\uC18C"
+  _targetStat: 2
+  _cost: 40
+  _valuePerLevel: -0.05
+  _maxLevel: 5
+  _prerequisiteIds:
+  - upgradeId: ATT_01
+    requiredLevel: 1
+  _icon: {fileID: 21300000, guid: 493eb836182b9e1439f63c0b069d791b, type: 3}
+  _treePosition: {x: -300, y: 250}
+  _effectMode: 0

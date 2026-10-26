@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// [GROW-01-01][GROW-01-05] ½ºÅ³ Æ®¸® ÁøÇà µ¥ÀÌÅÍ ¹× ÀúÀå ¿¬µ¿ °è¾à °ü¸®
+/// [GROW-01-01][GROW-01-05] ìŠ¤í‚¬ íŠ¸ë¦¬ ì§„í–‰ ë°ì´í„° ë° ì €ì¥ ì—°ë™ ê³„ì•½ ê´€ë¦¬
 /// </summary>
 public class GrowthManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static GrowthManager Instance { get; private set; }
     #endregion
 
-    #region ¼Ó¼º
+    #region ì†ì„±
     public IReadOnlyList<UpgradeData> Upgrades => _upgrades;
     public string SelectedUpgradeId => _selectedUpgradeId;
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region ì´ë²¤íŠ¸
     public event Action<string, int, float> OnUpgradePurchased;
     /// <summary>
-    /// [GROW-01-04] ½ºÅİÂÊ¿¡¼­ È£ÃâÇÊ¿ä ½ºÅ³ ¼ºÀå°ªÀ» Àû¿ë, amount´Â º¯°æµÈ °ª
+    /// [GROW-01-04] ìŠ¤í…Ÿìª½ì—ì„œ í˜¸ì¶œí•„ìš” ìŠ¤í‚¬ ì„±ì¥ê°’ì„ ì ìš©, amountëŠ” ë³€ê²½ëœ ê°’
     /// </summary>
     public event Action<UpgradeData, float> OnApplyStatGrowth;
     public event Action OnGrowthChanged;
@@ -27,14 +27,17 @@ public class GrowthManager : MonoBehaviour
     public event Action OnResetRunGrowth;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
-    private UpgradeData[] _upgrades = new UpgradeData[0];
+    #region ì¸ìŠ¤í™í„°
+    [SerializeField] private UpgradeData[] _upgrades = new UpgradeData[0];
+    #endregion
+
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private readonly Dictionary<string, int> _levels = new Dictionary<string, int>();
     private readonly HashSet<string> _unlockedIds = new HashSet<string>();
     private string _selectedUpgradeId;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -44,7 +47,10 @@ public class GrowthManager : MonoBehaviour
         }
 
         Instance = this;
-        _upgrades = CreateMockUpgrades();
+        if (_upgrades == null)
+        {
+            _upgrades = new UpgradeData[0];
+        }
     }
 
     private void Start()
@@ -69,9 +75,9 @@ public class GrowthManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Public)
+    #region ì»¤ìŠ¤í…€ (Public)
     /// <summary>
-    /// [GROW-01-01] ID¿¡ ÇØ´çÇÏ´Â ½ºÅ³ µ¥ÀÌÅÍ ¹İÈ¯
+    /// [GROW-01-01] IDì— í•´ë‹¹í•˜ëŠ” ìŠ¤í‚¬ ë°ì´í„° ë°˜í™˜
     /// </summary>
     public UpgradeData GetUpgrade(string upgradeId)
     {
@@ -87,7 +93,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ÇØ±İ Á¶°Ç, ÃÖ´ë ·¹º§, °ñµå ÀÜ°í ±âÁØ ±¸¸Å °¡´É ¿©ºÎ ¹İÈ¯
+    /// [GROW-01-01] í•´ê¸ˆ ì¡°ê±´, ìµœëŒ€ ë ˆë²¨, ê³¨ë“œ ì”ê³  ê¸°ì¤€ êµ¬ë§¤ ê°€ëŠ¥ ì—¬ë¶€ ë°˜í™˜
     /// </summary>
     public bool CanPurchase(string upgradeId)
     {
@@ -101,28 +107,31 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-03] Á¶°Ç°ú ÀçÈ­¸¦ È®ÀÎÇØ ½ºÅ³ ·¹º§À» ¿Ã¸®°í È¿°ú ¹İ¿µ
+    /// [GROW-01-03] ì¡°ê±´ê³¼ ì¬í™”ë¥¼ í™•ì¸í•´ ìŠ¤í‚¬ ë ˆë²¨ì„ ì˜¬ë¦¬ê³  íš¨ê³¼ ë°˜ì˜
     /// </summary>
     public bool PurchaseUpgrade(string upgradeId)
     {
-        // TODO Ãß°¡ ·ÎÁ÷ ÇÊ¿äÇÔ (½ºÅ³ º¯°æ°ª Àü´ŞÀ» À§ÇÑ ÃÊ¾È»óÅÂ)
-
         UpgradeData upgrade = GetUpgrade(upgradeId);
         if (upgrade == null || !CanPurchase(upgradeId) || !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, upgrade.Cost))
         {
             return false;
         }
 
+        int level = GetLevel(upgradeId) + 1;
+        _levels[upgradeId] = level;
+        _unlockedIds.Add(upgradeId);
         if (upgrade.EffectMode == ESkillEffectMode.PlayerStat)
         {
             ApplyStatGrowth(upgrade, upgrade.ValuePerLevel);
         }
 
+        OnUpgradePurchased?.Invoke(upgradeId, level, upgrade.ValuePerLevel);
+        OnGrowthChanged?.Invoke();
         return true;
     }
 
     /// <summary>
-    /// [GROW-01-01] ½ºÅ³ÀÇ ÇöÀç ·¹º§ ¹İÈ¯
+    /// [GROW-01-01] ìŠ¤í‚¬ì˜ í˜„ì¬ ë ˆë²¨ ë°˜í™˜
     /// </summary>
     public int GetLevel(string upgradeId)
     {
@@ -130,7 +139,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ½ºÅ³ ÇĞ½À ¿©ºÎ ¹İÈ¯ (·¹º§ 1 ÀÌ»ó)
+    /// [GROW-01-01] ìŠ¤í‚¬ í•™ìŠµ ì—¬ë¶€ ë°˜í™˜ (ë ˆë²¨ 1 ì´ìƒ)
     /// </summary>
     public bool IsLearned(string upgradeId)
     {
@@ -138,7 +147,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ½ºÅ³ ÇĞ½À ¿©ºÎ ¹İÈ¯ (½ºÅ³ ÇØ±İ Á¶°Ç Æ÷ÇÔ)
+    /// [GROW-01-01] ìŠ¤í‚¬ í•™ìŠµ ì—¬ë¶€ ë°˜í™˜ (ìŠ¤í‚¬ í•´ê¸ˆ ì¡°ê±´ í¬í•¨)
     /// </summary>
     public bool IsLearned(PrerequisiteUpgrade item)
     {
@@ -146,7 +155,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ½ºÅ³ ÇØ±İ ¿©ºÎ ¹İÈ¯
+    /// [GROW-01-01] ìŠ¤í‚¬ í•´ê¸ˆ ì—¬ë¶€ ë°˜í™˜
     /// </summary>
     public bool IsUnlocked(string upgradeId)
     {
@@ -154,7 +163,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ½ºÅ³ ³ëµåÀÇ ÇöÀç »óÅÂ ¹İÈ¯
+    /// [GROW-01-01] ìŠ¤í‚¬ ë…¸ë“œì˜ í˜„ì¬ ìƒíƒœ ë°˜í™˜
     /// </summary>
     public EUpgradeNodeStatus GetNodeStatus(string upgradeId)
     {
@@ -178,7 +187,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-02-01] »ó¼¼ ÆĞ³Î¿¡ Ç¥½ÃÇÒ ½ºÅ³ ¼±ÅÃ
+    /// [GROW-02-01] ìƒì„¸ íŒ¨ë„ì— í‘œì‹œí•  ìŠ¤í‚¬ ì„ íƒ
     /// </summary>
     public void SelectUpgrade(string upgradeId)
     {
@@ -192,7 +201,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-01] ÁöÁ¤ ´É·ÂÄ¡¿¡ Àû¿ëµÈ ½ºÅ³ ¼ºÀå°ª ÇÕ»ê
+    /// [GROW-01-01] ì§€ì • ëŠ¥ë ¥ì¹˜ì— ì ìš©ëœ ìŠ¤í‚¬ ì„±ì¥ê°’ í•©ì‚°
     /// </summary>
     public float GetStatValue(EUpgradeStat stat)
     {
@@ -210,7 +219,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-05] ½ºÅ³ ¼±ÅÃ¡¤·¹º§¡¤ÇØ±İ Á¤º¸¸¦ ÀúÀå DTO·Î ³»º¸³¿
+    /// [GROW-01-05] ìŠ¤í‚¬ ì„ íƒÂ·ë ˆë²¨Â·í•´ê¸ˆ ì •ë³´ë¥¼ ì €ì¥ DTOë¡œ ë‚´ë³´ëƒ„
     /// </summary>
     public RunGrowthSaveData ExportSaveData()
     {
@@ -229,7 +238,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-05] ÀúÀå DTOÀÇ ½ºÅ³ ÁøÇà Á¤º¸¸¦ º¹¿ø
+    /// [GROW-01-05] ì €ì¥ DTOì˜ ìŠ¤í‚¬ ì§„í–‰ ì •ë³´ë¥¼ ë³µì›
     /// </summary>
     public void ImportSaveData(RunGrowthSaveData saveData)
     {
@@ -279,7 +288,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-05] ´ÙÀ½ »çÀÌÅ¬ ÁøÇàÀ» À§ÇØ ¸ğµç ½ºÅ³ ·¹º§°ú ÇØ±İ ÀÌ·Â ÃÊ±âÈ­
+    /// [GROW-01-05] ë‹¤ìŒ ì‚¬ì´í´ ì§„í–‰ì„ ìœ„í•´ ëª¨ë“  ìŠ¤í‚¬ ë ˆë²¨ê³¼ í•´ê¸ˆ ì´ë ¥ ì´ˆê¸°í™”
     /// </summary>
     public void ResetRunGrowth()
     {
@@ -292,7 +301,7 @@ public class GrowthManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-01-04] ´É·ÂÄ¡ ÃÊ±âÈ­ Á÷ÈÄ º¸À¯ ½ºÅ³ÀÇ ¼ºÀå°ª ÀçÀû¿ë
+    /// [GROW-01-04] ëŠ¥ë ¥ì¹˜ ì´ˆê¸°í™” ì§í›„ ë³´ìœ  ìŠ¤í‚¬ì˜ ì„±ì¥ê°’ ì¬ì ìš©
     /// </summary>
     public void ReapplyPlayerStatSkills()
     {
@@ -312,70 +321,9 @@ public class GrowthManager : MonoBehaviour
 
     #endregion
 
-    #region Ä¿½ºÅÒ (Private)
+    #region ì»¤ìŠ¤í…€ (Private)
     /// <summary>
-    /// [GROW-01-01] ÄÚµå¿¡¼­ »ç¿ëÇÒ ¸ñ¾÷ ½ºÅ³ µ¥ÀÌÅÍ »ı¼º
-    /// </summary>
-    private UpgradeData[] CreateMockUpgrades()
-    {
-        return new UpgradeData[]
-        {
-            new UpgradeData(
-                "attack_power",
-                "±âº» °ø°İ·Â",
-                "°ø°İ·Â Áõ°¡",
-                EUpgradeStat.Attack,
-                50,
-                2.0f,
-                5,
-                ESkillEffectMode.PlayerStat,
-                new Vector2(-250.0f, 100.0f)),
-
-            new UpgradeData(
-                "attack_speed",
-                "ºü¸¥ ¼Õ",
-                "°ø°İ °£°İ °¨¼Ò",
-                EUpgradeStat.AttackSpeed,
-                40,
-                -0.05f,
-                5,
-                ESkillEffectMode.PlayerStat,
-                new Vector2(0f, 0f),
-                new PrerequisiteUpgrade[]
-                {
-                    new PrerequisiteUpgrade { upgradeId = "attack_power", requiredLevel = 1 }
-                }),
-
-            new UpgradeData(
-                "luck",
-                "Çà¿î",
-                "Çà¿î Áõ°¡",
-                EUpgradeStat.Luck,
-                60,
-                1.0f,
-                5,
-                ESkillEffectMode.PlayerStat,
-                new Vector2(0f, 0f)),
-
-            new UpgradeData(
-                "attack_range",
-                "³ĞÀº Å¸°İ",
-                "°ø°İ ¹üÀ§ Áõ°¡",
-                EUpgradeStat.AttackRange,
-                45,
-                0.5f,
-                3,
-                ESkillEffectMode.PlayerStat,
-                new Vector2(0f, 0f),
-                new PrerequisiteUpgrade[]
-                {
-                    new PrerequisiteUpgrade { upgradeId = "luck", requiredLevel = 1 }
-                })
-        };
-    }
-
-    /// <summary>
-    /// [GROW-01-04] ´É·ÂÄ¡Çü ½ºÅ³°ú º¯°æºĞÀ» ÇÃ·¹ÀÌ¾î ´ã´ç ÀÌº¥Æ® ±¸µ¶ÀÚ¿¡°Ô Àü´Ş
+    /// [GROW-01-04] ëŠ¥ë ¥ì¹˜í˜• ìŠ¤í‚¬ê³¼ ë³€ê²½ë¶„ì„ í”Œë ˆì´ì–´ ë‹´ë‹¹ ì´ë²¤íŠ¸ êµ¬ë…ìì—ê²Œ ì „ë‹¬
     /// </summary>
     private void ApplyStatGrowth(UpgradeData upgrade, float amount)
     {
