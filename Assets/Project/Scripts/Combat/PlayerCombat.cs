@@ -5,6 +5,7 @@ public class PlayerCombat : MonoBehaviour
 {
     #region 내부 변수
     private PlayerStats _playerStats;
+    private PlayerStamina _playerStamina;
     private PlayerAttackDetector _attackDetector;
     private PlayerStageActivator _activator;
 
@@ -20,14 +21,16 @@ public class PlayerCombat : MonoBehaviour
 
     /// <summary>
     /// 스테이지가 진행 중이고 Playing 상태일 때만 true
+    /// 스태미나가 고갈되지 않았을 때만 행동 가능
     /// </summary>
-    public bool CanAct => _activator != null && _activator.CanAct;
+    public bool CanAct => _activator != null && _activator.CanAct && _playerStamina != null && !_playerStamina.IsExhausted;
     #endregion
 
     #region 이벤트 함수
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
+        _playerStamina = GetComponent<PlayerStamina>();
         _attackDetector = GetComponent<PlayerAttackDetector>();
         _activator = GetComponent<PlayerStageActivator>();
 
@@ -35,15 +38,35 @@ public class PlayerCombat : MonoBehaviour
         {
             Debug.LogWarning("PlayerStageActivator가 없어 공격하지 않음.");
         }
+
+        if (_playerStamina == null)
+        {
+            Debug.LogWarning("PlayerStamina가 없어 공격하지 않음.");
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnExhausted += HandleStaminaExhausted;
+
+            // 이미 고갈된 상태에서 활성화된 경우도 처리
+            if (_playerStamina.IsExhausted)
+            {
+                HandleStaminaExhausted();
+            }
+        }
     }
 
     private void OnDisable()
     {
-        _isAttacking = false;
-        _hasHitThisAttack = false;
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnExhausted -= HandleStaminaExhausted;
+        }
 
-        _attackElapsed = 0f;
-        _cooldownRemaining = 0f;
+        ResetAttackState();
     }
 
     /// <summary>
@@ -84,26 +107,12 @@ public class PlayerCombat : MonoBehaviour
     /// </summary>
     private bool CanStartAttack()
     {
-        // 1. 스테이지가 진행 중이고 게임 상태가 Playing인가?
-        if (!CanAct)
+        if (!CanAct || _attackDetector == null)
         {
             return false;
         }
 
-        // 2. 공격 판정기가 존재하는가?
-        if (_attackDetector == null)
-        {
-            return false;
-        }
-
-        // 3. 현재 공격 중이지 않은가?
-        if (_isAttacking)
-        {
-            return false;
-        }
-
-        // 4. 다음 공격을 시작할 시간이 되었는가?
-        if (_cooldownRemaining > 0f)
+        if (_isAttacking || _cooldownRemaining > 0f)
         {
             return false;
         }
@@ -127,6 +136,12 @@ public class PlayerCombat : MonoBehaviour
 
     private void UpdateAttack()
     {
+        // 공격 도중 스태미나가 고갈되면 타격 판정을 진행 X
+        if (!CanAct)
+        {
+            ResetAttackState();
+        }
+
         _attackElapsed += Time.deltaTime;
 
         float attackDuration = _playerStats.AttackDuration;
@@ -147,12 +162,35 @@ public class PlayerCombat : MonoBehaviour
             {
                 return;
             }
+
+            // 타격 판정 중 스태미나가 고갈된 경우에도 종료 처리
+            if (!CanAct)
+            {
+                ResetAttackState();
+            }
         }
 
         if (_attackElapsed >= attackDuration)
         {
             EndAttack();
         }
+    }
+
+    /// <summary>
+    /// 스태미나 고갈 이벤트가 발생하면 현재 공격을 즉시 중단
+    /// </summary>
+    private void HandleStaminaExhausted()
+    {
+        ResetAttackState();
+    }
+
+    private void ResetAttackState()
+    {
+        _isAttacking = false;
+        _hasHitThisAttack = false;
+
+        _attackElapsed = 0f;
+        _cooldownRemaining = 0f;
     }
 
     /// <summary>
