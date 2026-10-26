@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// 스킬 트리 UI를 관리하는 클래스
+/// [GROW-02-01] 스킬 트리 UI를 관리하는 클래스
 /// GrowthManager의 업그레이드 데이터를 연결선, 스킬 노드, 상세 패널로 렌더링
 /// </summary>
 public class GrowthTreeUI : MonoBehaviour
@@ -147,9 +147,34 @@ public class GrowthTreeUI : MonoBehaviour
             _detailsRoot = detailsTransform as RectTransform;
         }
 
+        ClearChildren(_nodeRoot);
+        if (_connecitonRoot != _nodeRoot)
+        {
+            ClearChildren(_connecitonRoot);
+        }
+
+        _nodeButtons.Clear();
+        _connections.Clear();
         BindDetailsPanel();
 
-        // TODO CreateNode 및 CreateConnections 구현 필요
+        IReadOnlyList<UpgradeData> upgrades = _growthManager.Upgrades;
+        for (int i = 0; i < upgrades.Count; i++)
+        {
+            UpgradeData upgrade = upgrades[i];
+            if (upgrade != null)
+            {
+                CreateConnections(upgrade, i);
+            }
+        }
+
+        for (int i = 0; i < upgrades.Count; i++)
+        {
+            UpgradeData upgrade = upgrades[i];
+            if (upgrade != null)
+            {
+                CreateNode(upgrade);
+            }
+        }
     }
 
     private void BindDetailsPanel()
@@ -200,17 +225,90 @@ public class GrowthTreeUI : MonoBehaviour
 
     private void CreateNode(UpgradeData upgrade)
     {
+        GameObject nodeObject = new GameObject("Node_" + upgrade.UpgradeId, typeof(RectTransform), typeof(Image), typeof(Button));
+        nodeObject.transform.SetParent(_nodeRoot, false);
+        RectTransform rect = nodeObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = upgrade.TreePosition;
+        rect.sizeDelta = _nodeSize;
 
+        Image background = nodeObject.GetComponent<Image>();
+        background.sprite = _uiSprite;
+        Button button = nodeObject.GetComponent<Button>();
+        button.targetGraphic = background;
+        button.transition = Selectable.Transition.ColorTint;
+        string upgradeId = upgrade.UpgradeId;
+        button.onClick.AddListener(delegate { _growthManager.SelectUpgrade(upgradeId); });
+
+        //GameObject iconObject = new GameObject("Icon");
+        GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        iconObject.transform.SetParent(nodeObject.transform, false);
+        RectTransform iconRect = iconObject.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+        iconRect.sizeDelta = new Vector2(52.0f, 52.0f);
+        Image icon = iconObject.GetComponent<Image>();
+        icon.sprite = upgrade.Icon;
+        icon.preserveAspect = true;
+        icon.raycastTarget = false;
+
+        GameObject labelObject = CreateText("Name", nodeObject.transform, upgrade.DisplayName, 18, TextAlignmentOptions.Center, Color.white);
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(-0.12f, 0.0f);
+        labelRect.anchorMax = new Vector2(1.12f, 0.0f);
+        labelRect.pivot = new Vector2(0.5f, 1.0f);
+        labelRect.anchoredPosition = new Vector2(0.0f, -3.0f);
+        labelRect.sizeDelta = new Vector2(20.0f, 34.0f);
+
+        _nodeButtons.Add(upgradeId, button);
+        RefreshNode(upgrade, button);
     }
 
     private void CreateConnections(UpgradeData upgrade, int skillIndex)
     {
-
+        PrerequisiteUpgrade[] prerequisites = upgrade.PrerequisiteIds;
+        for (int i = 0; i < prerequisites.Length; i++)
+        {
+            UpgradeData prerequisite = _growthManager.GetUpgrade(prerequisites[i].upgradeId);
+            if (prerequisite != null)
+            {
+                CreateConnection(skillIndex, i, prerequisite.TreePosition, upgrade.TreePosition);
+            }
+        }
     }
 
     private void CreateConnection(int skillIndex, int lineIndex, Vector2 start, Vector2 end)
     {
+        GameObject lineObject = new GameObject(GetConnectionName(skillIndex, lineIndex), typeof(RectTransform), typeof(Image));
+        lineObject.transform.SetParent(_connecitonRoot, false);
+        lineObject.transform.SetAsFirstSibling();
+        RectTransform rect = lineObject.GetComponent<RectTransform>();
+        Vector2 difference = end - start;
 
+        //rect.anchorMin = new Vector2(0.3f, 0.7f);
+        //rect.anchorMax = new Vector2(0.3f, 0.7f);
+        //rect.pivot = new Vector2(0, 0.7f);
+
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.0f, 0.5f);
+        rect.anchoredPosition = start;
+        rect.sizeDelta = new Vector2(difference.magnitude, 3.0f);
+
+        //float angle = 0f;
+        //if (difference.x > 0 && difference.y == 0) angle = 0f;
+        //else if (difference.x > 0 && difference.y > 0) angle = 45f;
+        //else if (difference.x == 0 && difference.y > 0) angle = 90f;
+        //else if (difference.x < 0 && difference.y > 0) angle = 135f;
+        //rect.localRotation = Quaternion.Euler(0, 0, angle);
+
+        rect.localRotation = Quaternion.Euler(0.0f, 0.0f, Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg);
+        Image image = lineObject.GetComponent<Image>();
+        image.sprite = _uiSprite;
+        image.color = ColorWoodBrown;
+        image.raycastTarget = false;
+        _connections.Add(image);
     }
 
     private string GetConnectionName(int skillIndex, int lineIndex)
@@ -221,12 +319,45 @@ public class GrowthTreeUI : MonoBehaviour
 
     private void RefreshNode(UpgradeData upgrade, Button button)
     {
-        
+        EUpgradeNodeStatus status = _growthManager.GetNodeStatus(upgrade.UpgradeId);
+        button.GetComponent<Image>().color = GetStatusColor(status, upgrade.TargetStat);
+        TMP_Text label = button.transform.Find("Name").GetComponent<TMP_Text>();
+        label.text = upgrade.DisplayName + "\n" + _growthManager.GetLevel(upgrade.UpgradeId) + "/" + upgrade.MaxLevel;
+        Image icon = button.transform.Find("Icon").GetComponent<Image>();
+        icon.sprite = upgrade.Icon;
+        icon.enabled = upgrade.Icon != null;
+        Color iconColor = Color.white;
+        if (status == EUpgradeNodeStatus.Locked)
+        {
+            iconColor = ColorSlateGray;
+        }
+        else if (status == EUpgradeNodeStatus.Learned || status == EUpgradeNodeStatus.MaxLevel)
+        {
+            iconColor = ColorLightGold;
+        }
+        icon.color = iconColor;
     }
 
     private void RefreshConnections()
     {
-        
+        IReadOnlyList<UpgradeData> upgrades = _growthManager.Upgrades;
+        int connectionIndex = 0;
+        for (int i = 0; i < upgrades.Count; i++)
+        {
+            UpgradeData upgrade = upgrades[i];
+            PrerequisiteUpgrade[] prerequisites = upgrade.PrerequisiteIds;
+            for (int j = 0; j < prerequisites.Length; j++)
+            {
+                if (connectionIndex >= _connections.Count)
+                {
+                    return;
+                }
+
+                _connections[connectionIndex++].color = _growthManager.IsLearned(prerequisites[j])
+                    ? ColorAmber
+                    : ColorDeepBrown;
+            }
+        }
     }
 
     private void RefreshDetails(string upgradeId)
@@ -330,6 +461,35 @@ public class GrowthTreeUI : MonoBehaviour
         }
     }
 
+    private Color GetStatusColor(EUpgradeNodeStatus status, EUpgradeStat stat)
+    {
+        Color branchColor;
+        switch (stat)
+        {
+            case EUpgradeStat.Stamina:
+                branchColor = ColorDeepGreen;
+                break;
+            case EUpgradeStat.Luck:
+                branchColor = ColorBurgundy;
+                break;
+            default:
+                branchColor = ColorDarkNavy;
+                break;
+        }
+
+        if (status == EUpgradeNodeStatus.Locked)
+        {
+            return Color.Lerp(branchColor, ColorDarkCharcoal, 0.48f);
+        }
+
+        if (status == EUpgradeNodeStatus.Learned || status == EUpgradeNodeStatus.MaxLevel)
+        {
+            return Color.Lerp(branchColor, ColorBronzeGold, 0.34f);
+        }
+
+        return branchColor;
+    }
+
     private string GetStatusText(EUpgradeNodeStatus status)
     {
         switch (status)
@@ -363,5 +523,25 @@ public class GrowthTreeUI : MonoBehaviour
         }
     }
 
+    private GameObject CreateText(string name, Transform parent, string value, int size, TextAlignmentOptions alignment, Color color)
+    {
+        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(parent, false);
+        TMP_Text text = textObject.GetComponent<TMP_Text>();
+        text.font = _fontAsset != null ? _fontAsset : TMP_Settings.defaultFontAsset;
+        text.fontSize = size;
+        text.alignment = alignment;
+        text.color = color;
+        text.raycastTarget = false;
+        return textObject;
+    }
+
+    private void ClearChildren(Transform parent)
+    {
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(parent.GetChild(i).gameObject);
+        }
+    }
     #endregion
 }

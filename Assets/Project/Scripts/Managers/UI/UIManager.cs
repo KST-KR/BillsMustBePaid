@@ -19,6 +19,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _pausePanel;
     [SerializeField] private GameObject _stageClearPanel;
     [SerializeField] private GameObject _gameOverPanel;
+    [SerializeField] private GameObject _upgradePanel;
 
     // [UI-04-02] 일시정지 메뉴
     [Header("일시정지 메뉴")]
@@ -578,7 +579,18 @@ public class UIManager : MonoBehaviour
             return;
         }
 
+        HideAllPanels();        
         _stageManager.NextStage();
+    }
+
+    /// <summary>
+    /// [GROW-02-01] 스킬 트리 패널 켬
+    /// </summary>
+    public void OnUpgradeButtonClicked()
+    {
+        HideAllPanels();
+        SetPanelActive(_upgradePanel, true);
+        RefreshCurrencyUI();
     }
 
     /// <summary>
