@@ -101,25 +101,6 @@ public class UIManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // 확인 창, 설정 패널이 열려 있으면 먼저 닫고 일시정지는 유지
-            if (IsPanelOpen(_runEndConfirmPanel))
-            {
-                SetPanelActive(_runEndConfirmPanel, false);
-                return;
-            }
-
-            if (IsPanelOpen(_mainMenuConfirmPanel))
-            {
-                SetPanelActive(_mainMenuConfirmPanel, false);
-                return;
-            }
-
-            if (IsPanelOpen(_settingsPanel))
-            {
-                SetPanelActive(_settingsPanel, false);
-                return;
-            }
-
             GameManager gameManager = GameManager.Instance;
 
             if (gameManager != null)
@@ -372,15 +353,31 @@ public class UIManager : MonoBehaviour
         UpdateLegacyPointUI(_currencyManager.LegacyPoints);
     }
 
+
+    /// <summary>
+    /// [UI-04-02] 메인 메뉴 이동: 런을 종료하고 타이틀 씬으로 이동
+    /// 런 종료시 시간 정지(timeScale)도 함께 해제됨.
+    /// </summary>
+    private void MoveToMainMenu()
+    {
+        if (string.IsNullOrEmpty(_titleSceneName))
+        {
+            Debug.LogError("타이틀 씬 이름이 설정도지 않아 메인메뉴로 이동할 수 없음.");
+            return;
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReturnToTitle();
+        }
+
+        SceneManager.LoadScene(_titleSceneName);
+    }
+
     private bool SaveProgress()
     {
         // TODO: SaveManager의 저장 메서드 연결
         return true;
-    }
-
-    private bool IsPanelOpen(GameObject panel)
-    {
-        return panel != null && panel.activeSelf;
     }
     #endregion
 
@@ -629,26 +626,6 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [UI-04-02] 메인 메뉴 이동: 런을 종료하고 타이틀 씬으로 이동
-    /// 런 종료시 시간 정지(timeScale)도 함께 해제됨.
-    /// </summary>
-    public void OnMainMenuButtonClicked()
-    {
-        if (string.IsNullOrEmpty(_titleSceneName))
-        {
-            Debug.LogError("타이틀 씬 이름이 설정도지 않아 메인메뉴로 이동할 수 없음.");
-            return;
-        }
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.ReturnToTitle();
-        }
-
-        SceneManager.LoadScene(_titleSceneName);
-    }
-
-    /// <summary>
     /// 런 종료 확인 창을 표시
     /// </summary>
     public void OnRunEndButtonClicked()
@@ -675,7 +652,6 @@ public class UIManager : MonoBehaviour
         if (!_stageManager.IsStageActive)
         {
             Debug.LogWarning("진행 중인 스테이지가 없어 종료할 수 없음.");
-            SetPanelActive(_runEndConfirmPanel, false);
             return;
         }
 
@@ -714,7 +690,7 @@ public class UIManager : MonoBehaviour
     public void OnMainMenuConfirmYesButtonClicked()
     {
         SetPanelActive(_mainMenuConfirmPanel, false);
-        OnMainMenuButtonClicked();
+        MoveToMainMenu();
     }
 
     public void OnQuitButtonClicked()
