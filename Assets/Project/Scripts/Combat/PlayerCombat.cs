@@ -5,6 +5,7 @@ public class PlayerCombat : MonoBehaviour
 {
     #region 내부 변수
     private PlayerStats _playerStats;
+    private PlayerStamina _playerStamina;
     private PlayerAttackDetector _attackDetector;
     private PlayerStageActivator _activator;
 
@@ -12,7 +13,7 @@ public class PlayerCombat : MonoBehaviour
     private bool _hasHitThisAttack;
 
     private float _attackElapsed;
-    private float _nextAttackTime;
+    private float _cooldownRemaining;
     #endregion
 
     #region 프로퍼티
@@ -20,29 +21,56 @@ public class PlayerCombat : MonoBehaviour
 
     /// <summary>
     /// 스테이지가 진행 중이고 Playing 상태일 때만 true
+    /// 스태미나가 고갈되지 않았을 때만 행동 가능
     /// </summary>
-    public bool CanAct => _activator != null && _activator.CanAct;
+    public bool CanAct => _activator != null && _activator.CanAct && _playerStamina != null && !_playerStamina.IsExhausted;
     #endregion
 
     #region 이벤트 함수
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
+        _playerStamina = GetComponent<PlayerStamina>();
         _attackDetector = GetComponent<PlayerAttackDetector>();
         _activator = GetComponent<PlayerStageActivator>();
+
+        if (_activator == null)
+        {
+            Debug.LogWarning("PlayerStageActivator가 없어 공격하지 않음.");
+        }
+
+        if (_playerStamina == null)
+        {
+            Debug.LogWarning("PlayerStamina가 없어 공격하지 않음.");
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnExhausted += HandleStaminaExhausted;
+
+            // 이미 고갈된 상태에서 활성화된 경우도 처리
+            if (_playerStamina.IsExhausted)
+            {
+                HandleStaminaExhausted();
+            }
+        }
     }
 
     private void OnDisable()
     {
-        _isAttacking = false;
-        _hasHitThisAttack = false;
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnExhausted -= HandleStaminaExhausted;
+        }
 
-        _attackElapsed = 0f;
-        _nextAttackTime = 0f;
+        ResetAttackState();
     }
 
     /// <summary>
-    /// 행동 가능한 상태에서 자동 공격을 진행한다.
+    /// 행동 가능한 상태에서 자동 공격을 진행
     /// </summary>
     private void Update()
     {
@@ -57,9 +85,16 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        if (Time.time < _nextAttackTime)
+        if (_cooldownRemaining > 0f)
         {
-            return;
+            _cooldownRemaining -= Time.deltaTime;
+
+            if (_cooldownRemaining > 0f)
+            {
+                return;
+            }
+
+            _cooldownRemaining = 0f;
         }
 
         BeginAttack();
@@ -72,10 +107,17 @@ public class PlayerCombat : MonoBehaviour
     /// </summary>
     private bool CanStartAttack()
     {
-        return CanAct
-            && _attackDetector != null
-            && !_isAttacking
-            && Time.time >= _nextAttackTime;
+        if (!CanAct || _attackDetector == null)
+        {
+            return false;
+        }
+
+        if (_isAttacking || _cooldownRemaining > 0f)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void BeginAttack()
@@ -89,20 +131,23 @@ public class PlayerCombat : MonoBehaviour
         _hasHitThisAttack = false;
         _attackElapsed = 0f;
 
-        // 공격 시작 시점을 기준으로 다음 공격 시각을 예약한다.
-        _nextAttackTime = Time.time + _playerStats.AttackInterval;
-
         Debug.Log("망치 공격 시작");
     }
 
     private void UpdateAttack()
     {
+        // 공격 도중 스태미나가 고갈되면 타격 판정을 진행 X
+        if (!CanAct)
+        {
+            ResetAttackState();
+        }
+
         _attackElapsed += Time.deltaTime;
 
         float attackDuration = _playerStats.AttackDuration;
         float hitTime = _playerStats.HitTime;
 
-        // 타격 시점에 한 번만 범위 판정을 실행한다.
+        // 타격 시점에 한 번만 범위 판정을 실행
         if (!_hasHitThisAttack && _attackElapsed >= hitTime)
         {
             _hasHitThisAttack = true;
@@ -112,10 +157,16 @@ public class PlayerCombat : MonoBehaviour
             Debug.Log($"망치 공격 판정 완료: {hitCount}개 대상 타격");
 
             // 타격 판정 중 컴포넌트가 비활성화됐다면
-            // 이후 공격 처리를 진행하지 않는다.
+            // 이후 공격 처리를 진행하지 않음.
             if (!isActiveAndEnabled)
             {
                 return;
+            }
+
+            // 타격 판정 중 스태미나가 고갈된 경우에도 종료 처리
+            if (!CanAct)
+            {
+                ResetAttackState();
             }
         }
 
@@ -125,13 +176,34 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 스태미나 고갈 이벤트가 발생하면 현재 공격을 즉시 중단
+    /// </summary>
+    private void HandleStaminaExhausted()
+    {
+        ResetAttackState();
+    }
+
+    private void ResetAttackState()
+    {
+        _isAttacking = false;
+        _hasHitThisAttack = false;
+
+        _attackElapsed = 0f;
+        _cooldownRemaining = 0f;
+    }
+
+    /// <summary>
+    /// [PL-COMBAT-03] 공격 동작이 끝난 뒤 최종 공격 간격만큼 대기
+    /// </summary>
     private void EndAttack()
     {
         _isAttacking = false;
         _attackElapsed = 0f;
 
-        // 다음 공격 시각은 BeginAttack에서 이미 예약했다.
-        Debug.Log("망치 공격 완료");
+        _cooldownRemaining = Mathf.Max(0f, _playerStats.AttackInterval);
+
+        Debug.Log($"망치 공격 완료: 다음 공격까지 {_cooldownRemaining:F2}초");
     }
     #endregion
 }

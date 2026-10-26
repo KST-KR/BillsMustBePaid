@@ -1,18 +1,17 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// 게임 UI의 표시 및 갱신을 관리합니다.
+/// 게임 UI의 표시 및 갱신을 관리
 /// 패널 표시는 GameManager의 게임 상태(EGameState)를 단일 기준으로 삼고,
 /// 스테이지 이벤트는 상태가 바뀌지 않는 경우(예: Playing → Playing)의 보정에만 사용
 /// </summary>
 public class UIManager : MonoBehaviour
 {
     #region 싱글톤
-
     public static UIManager Instance { get; private set; }
-
     #endregion
 
     #region 인스펙터
@@ -20,6 +19,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _pausePanel;
     [SerializeField] private GameObject _stageClearPanel;
     [SerializeField] private GameObject _gameOverPanel;
+
+    // [UI-04-02] 일시정지 메뉴
+    [Header("일시정지 메뉴")]
+    [SerializeField] private GameObject _settingsPanel;
+    [SerializeField] private GameObject _runEndConfirmPanel;
+    [SerializeField] private GameObject _mainMenuConfirmPanel;
+    [SerializeField] private string _titleSceneName = "MainMenu";
 
     [Header("플레이어 스태미나")]
     [SerializeField] private PlayerStamina _playerStamina;
@@ -39,6 +45,7 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region 내부 변수
+    private int _currentStage;
 
     // 구독 시점의 참조를 보관하여, 파괴 순서와 상관없이 정확히 구독을 해제
     private GameManager _gameManager;
@@ -50,9 +57,8 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-
     /// <summary>
-    /// UIManager 싱글톤을 등록합니다.
+    /// UIManager 싱글톤을 등록
     /// </summary>
     private void Awake()
     {
@@ -82,7 +88,30 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// UIManager가 파괴될 때 구독과 싱글톤 참조를 해제합니다.
+    /// [UI-04-01] ESC키로 일시정지와 재개를 전환
+    /// Update는 일시정지(timeScale 0) 중에도 호출되므로 재개도 이 키로 가능
+    /// 클리어, 게임 오버, 타이틀 상태에서는 GameManager가 일시정지 허용X
+    /// </summary>
+    private void Update()
+    {
+        if (Instance != this)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            GameManager gameManager = GameManager.Instance;
+
+            if (gameManager != null)
+            {
+                gameManager.TogglePause();
+            }
+        }
+    }
+
+    /// <summary>
+    /// UIManager가 파괴될 때 구독과 싱글톤 참조를 해제합
     /// </summary>
     private void OnDestroy()
     {
@@ -233,6 +262,8 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void HandleStageStarted(int stageNumber)
     {
+        UpdateStageUI(stageNumber);
+
         if (_gameManager != null)
         {
             ApplyState(_gameManager.State);
@@ -355,7 +386,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 일시정지 UI를 표시
+    /// [UI-04-01] 일시정지 UI를 표시
     /// 스테이지가 진행 중이면 스태미나 UI도 유지
     /// </summary>
     public void ShowPauseUI()
@@ -389,10 +420,14 @@ public class UIManager : MonoBehaviour
 
     /// <summary>
     /// 관리 대상 UI를 모두 숨김.
+    /// 설정 패널도 함께 닫히므로 일시정지를 해제하면 설정 패널이 남지 않음.
     /// </summary>
     public void HideAllPanels()
     {
         SetPanelActive(_pausePanel, false);
+        SetPanelActive(_settingsPanel, false);
+        SetPanelActive(_runEndConfirmPanel, false);
+        SetPanelActive(_mainMenuConfirmPanel, false);
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_gameOverPanel, false);
         SetStaminaUIVisible(false);
@@ -464,7 +499,13 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void UpdateStageUI(int stageNumber)
     {
-        // 현재 플레이어에게 표시할 스테이지 번호 UI는 없음.
+        if (stageNumber < 0)
+        {
+            Debug.LogWarning("스테이지 번호는 음수가 될 수 없음.");
+            return;
+        }
+
+        _currentStage = stageNumber;
     }
 
     /// <summary>
@@ -495,7 +536,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 스테이지 클리어 화면에서 다음 스테이지를 시작합니다.
+    /// 스테이지 클리어 화면에서 다음 스테이지를 시작
     /// </summary>
     public void OnContinueButtonClicked()
     {
@@ -513,5 +554,135 @@ public class UIManager : MonoBehaviour
         _stageManager.NextStage();
     }
 
+    /// <summary>
+    /// [UI-04-01] 인게임 일시정지 버튼 (ESC 키와 같은 동작, HUD에 버튼이 있을 때만 연결)
+    /// </summary>
+    public void OnPauseButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PauseGame();
+        }
+    }
+
+    /// <summary>
+    /// [UI-04-02] 계속하기: 일시정지를 해제하고 진행 중이던 플레이로 복귀
+    /// </summary>
+    public void OnResumeButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ResumeGame();
+        }
+    }
+
+    /// <summary>
+    /// [UI-04-02] 설정: 설정 패널을 열기(일시정지 패널 위에 표시)
+    /// </summary>
+    public void OnSettingsButtonClicked()
+    {
+        if (_settingsPanel == null)
+        {
+            Debug.LogWarning("설정 패널이 연결되지 않음.");
+            return;
+        }
+
+        SetPanelActive(_settingsPanel, true);
+    }
+
+    /// <summary>
+    /// [UI-04-02] 설정 패널의 닫기 버튼: 일시정지 메뉴로 돌아감.
+    /// </summary>
+    public void OnSettingsCloseButtonClicked()
+    {
+        SetPanelActive(_settingsPanel, false);
+    }
+
+    /// <summary>
+    /// [UI-04-02] 메인 메뉴 이동: 런을 종료하고 타이틀 씬으로 이동
+    /// 런 종료시 시간 정지(timeScale)도 함께 해제됨.
+    /// </summary>
+    public void OnMainMenuButtonClicked()
+    {
+        if (string.IsNullOrEmpty(_titleSceneName))
+        {
+            Debug.LogError("타이틀 씬 이름이 설정도지 않아 메인메뉴로 이동할 수 없음.");
+            return;
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReturnToTitle();
+        }
+
+        SceneManager.LoadScene(_titleSceneName);
+    }
+
+    /// <summary>
+    /// 런 종료 확인 창을 표시
+    /// </summary>
+    public void OnRunEndButtonClicked()
+    {
+        SetPanelActive(_runEndConfirmPanel, true);
+    }
+
+    /// <summary>
+    /// [UI-04-02] 런 종료 확인을 확정하고 현재 스테이지를 종료
+    /// </summary>
+    public void OnRunEndConfirmYesButtonClicked()
+    {
+        if (_stageManager == null)
+        {
+            _stageManager = StageManager.Instance;
+        }
+
+        if (_stageManager == null)
+        {
+            Debug.LogError("StageManager를 찾을 수 없어 스테이지를 종료할 수 없음.");
+            return;
+        }
+
+        if (!_stageManager.IsStageActive)
+        {
+            Debug.LogWarning("진행 중인 스테이지가 없어 종료할 수 없음.");
+            return;
+        }
+
+        _stageManager.ClearStage();
+    }
+
+    /// <summary>
+    /// 런 종료 확인을 취소하고 일시정지 메뉴로 돌아가기
+    /// </summary>
+    public void OnRunEndCancelButtonClicked()
+    {
+        SetPanelActive(_runEndConfirmPanel, false);
+    }
+
+    /// <summary>
+    /// 메인 메뉴 이동 확인 창을 표시
+    /// </summary>
+    public void OnMainMenuConfirmButtonClicked()
+    {
+        SetPanelActive(_mainMenuConfirmPanel, true);
+    }
+
+    /// <summary>
+    /// 메인 메뉴 이동을 취소하고 일시정지 메뉴로 돌아가기
+    /// </summary>
+    public void OnMainMenuCancelButtonClicked()
+    {
+        SetPanelActive(_mainMenuConfirmPanel, false);
+    }
+
+    /// <summary>
+    /// 메인 메뉴 이동을 확정합니다.
+    /// 기존 씬 전환 처리를 재사용합니다.
+    /// </summary>
+    public void OnMainMenuConfirmYesButtonClicked()
+    {
+        SetPanelActive(_mainMenuConfirmPanel, false);
+        OnMainMenuButtonClicked();
+    }
     #endregion
 }

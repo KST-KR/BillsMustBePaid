@@ -237,12 +237,6 @@ public class PlayerStamina : MonoBehaviour
     {
         _isExhausted = true;
         OnExhausted?.Invoke();
-
-        // 스테이지 실패는 현재 게임 규칙상 게임오버로 처리
-        if (_stageManager != null)
-        {
-            _stageManager.FailStage();
-        }
     }
 
     /// <summary>
