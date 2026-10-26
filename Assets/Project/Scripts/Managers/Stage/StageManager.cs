@@ -51,8 +51,7 @@ public class StageManager : MonoBehaviour
         }
     }
 
-
-    private void OnEnable()
+    private void Start()
     {
         /// <summary>
         /// 스태미나에 따른 스테이지 실패 이벤트 구독과 해제
@@ -67,19 +66,10 @@ public class StageManager : MonoBehaviour
             GameManager.Instance.OnRunStarted += HandleRunStarted;
             GameManager.Instance.OnRunEnded += HandleRunEnded;
         }
-    }
 
-    private void OnDisable()
-    {
-        if (_playerStamina != null)
+        if (_playerStamina == null)
         {
-            _playerStamina.OnExhausted -= HandleStaminaDepleted;
-        }
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnRunStarted -= HandleRunStarted;
-            GameManager.Instance.OnRunEnded -= HandleRunEnded;
+            Debug.LogError("PlayerStamina가 없음.");
         }
     }
 
@@ -91,6 +81,17 @@ public class StageManager : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+        }
+
+        if (_playerStamina != null)
+        {
+            _playerStamina.OnExhausted -= HandleStaminaDepleted;
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnRunStarted -= HandleRunStarted;
+            GameManager.Instance.OnRunEnded -= HandleRunEnded;
         }
     }
     #endregion

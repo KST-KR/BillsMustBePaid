@@ -92,7 +92,6 @@ public class PlayerStats : MonoBehaviour
         }
 
         _growthManager.OnApplyStatGrowth += HandleApplyStatGrowth;
-        // GrowthManager에 OnResetRunGrowth 이벤트가 추가되면 활성화 (런 초기화, 불러오기 시작 시점에 호출됨)
         _growthManager.OnResetRunGrowth += ResetGrowth;
 
         RebuildGrowth();

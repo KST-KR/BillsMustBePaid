@@ -14,7 +14,7 @@ public class PlayerStageActivator : MonoBehaviour
 
     [Header("스테이지 진행 중에만 켜 둘 컴포넌트")]
     [Tooltip("클리어/게임 오버/타이틀에서는 꺼지고 다음 스테이지 시작시 다시 켜짐.")]
-    [SerializeField] private Behaviour[] _gameplayBehavers;
+    [SerializeField] private Behaviour[] _gameplayBehaviours;
     #endregion
 
     #region 내부 변수
@@ -111,14 +111,14 @@ public class PlayerStageActivator : MonoBehaviour
 
     private void SetGamePlayEnabled(bool isEnabled)
     {
-        if (_gameplayBehavers == null)
+        if (_gameplayBehaviours == null)
         {
             return;
         }
 
-        for (int i = 0; i < _gameplayBehavers.Length; i++)
+        for (int i = 0; i < _gameplayBehaviours.Length; i++)
         {
-            Behaviour behaviour = _gameplayBehavers[i];
+            Behaviour behaviour = _gameplayBehaviours[i];
 
             if (behaviour != null && behaviour != this)
             {
@@ -138,17 +138,17 @@ public class PlayerStageActivator : MonoBehaviour
             _visualRoot = null;
         }
 
-        if (_gameplayBehavers == null)
+        if (_gameplayBehaviours == null)
         {
             return;
         }
 
-        for (int i = 0; i<_gameplayBehavers.Length; i++)
+        for (int i = 0; i< _gameplayBehaviours.Length; i++)
         {
-            if (_gameplayBehavers[i] is PlayerStats || _gameplayBehavers[i] is PlayerStamina)
+            if (_gameplayBehaviours[i] is PlayerStats || _gameplayBehaviours[i] is PlayerStamina)
             {
-                Debug.LogWarning($"{_gameplayBehavers[i].GetType().Name}은 목록에서 빼야 함.");
-                _gameplayBehavers[i] = null;
+                Debug.LogWarning($"{_gameplayBehaviours[i].GetType().Name}은 목록에서 빼야 함.");
+                _gameplayBehaviours[i] = null;
             }
         }
     }

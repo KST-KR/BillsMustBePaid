@@ -17,16 +17,18 @@ public class PlayerHandPosition : MonoBehaviour
 
     #region 내부 변수
     private PlayerStageActivator _activator;
+    private PlayerStamina _playerStamina;
     #endregion
 
     #region 프로퍼티
-    private bool CanAct => _activator == null || _activator.CanAct;
+    private bool CanAct => _activator != null && _activator.CanAct && _playerStamina != null && !_playerStamina.IsExhausted;
     #endregion
 
     #region 이벤트
     private void Awake()
     {
         _activator = GetComponent<PlayerStageActivator>();
+        _playerStamina = GetComponent<PlayerStamina>();
     }
 
     private void LateUpdate()
