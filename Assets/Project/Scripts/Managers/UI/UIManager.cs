@@ -101,6 +101,25 @@ public class UIManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            // 확인 창, 설정 패널이 열려 있으면 먼저 닫고 일시정지는 유지
+            if (IsPanelOpen(_runEndConfirmPanel))
+            {
+                SetPanelActive(_runEndConfirmPanel, false);
+                return;
+            }
+
+            if (IsPanelOpen(_mainMenuConfirmPanel))
+            {
+                SetPanelActive(_mainMenuConfirmPanel, false);
+                return;
+            }
+
+            if (IsPanelOpen(_settingsPanel))
+            {
+                SetPanelActive(_settingsPanel, false);
+                return;
+            }
+
             GameManager gameManager = GameManager.Instance;
 
             if (gameManager != null)
@@ -351,6 +370,17 @@ public class UIManager : MonoBehaviour
 
         UpdateMoneyUI(_currencyManager.Gold);
         UpdateLegacyPointUI(_currencyManager.LegacyPoints);
+    }
+
+    private bool SaveProgress()
+    {
+        // TODO: SaveManager의 저장 메서드 연결
+        return true;
+    }
+
+    private bool IsPanelOpen(GameObject panel)
+    {
+        return panel != null && panel.activeSelf;
     }
     #endregion
 
@@ -645,6 +675,7 @@ public class UIManager : MonoBehaviour
         if (!_stageManager.IsStageActive)
         {
             Debug.LogWarning("진행 중인 스테이지가 없어 종료할 수 없음.");
+            SetPanelActive(_runEndConfirmPanel, false);
             return;
         }
 
@@ -664,6 +695,7 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void OnMainMenuConfirmButtonClicked()
     {
+        SaveProgress();
         SetPanelActive(_mainMenuConfirmPanel, true);
     }
 
@@ -683,6 +715,14 @@ public class UIManager : MonoBehaviour
     {
         SetPanelActive(_mainMenuConfirmPanel, false);
         OnMainMenuButtonClicked();
+    }
+
+    public void OnQuitButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.QuitGame();
+        }
     }
     #endregion
 }

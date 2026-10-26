@@ -1,35 +1,35 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 /// <summary>
-/// °ÔÀÓ ÀüÃ¼ »óÅÂ¿Í ·±ÀÇ ½ÃÀÛ ¹× Á¾·á¸¦ °ü¸®ÇÕ´Ï´Ù.
+/// ê²Œì„ ì „ì²´ ìƒíƒœì™€ ëŸ°ì˜ ì‹œì‘ ë° ì¢…ë£Œë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static GameManager Instance { get; private set; }
     #endregion
 
-    #region ¼Ó¼º
+    #region ì†ì„±
     public EGameState State => _state;
     public bool IsRunActive => _isRunActive;
     public bool CanPause => _isRunActive && _state == EGameState.Playing;
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region ì´ë²¤íŠ¸
     public event Action<EGameState> OnGameStateChanged;
     public event Action OnRunStarted;
     public event Action OnRunEnded;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private EGameState _state = EGameState.Title;
     private bool _isRunActive;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     /// <summary>
-    /// GameManager ½Ì±ÛÅæÀ» µî·Ï
+    /// GameManager ì‹±ê¸€í†¤ì„ ë“±ë¡
     /// </summary>
     private void Awake()
     {
@@ -43,22 +43,22 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// GameManager°¡ ÆÄ±«µÉ ¶§ ½Ì±ÛÅæ ÂüÁ¶¸¦ ÇØÁ¦
+    /// GameManagerê°€ íŒŒê´´ë  ë•Œ ì‹±ê¸€í†¤ ì°¸ì¡°ë¥¼ í•´ì œ
     /// </summary>
     private void OnDestroy()
     {
         if (Instance == this)
         {
-            // ÀÏ½Ã Á¤Áö Áß ¾ÀÀÌ ¹Ù²î¾îµµ ½Ã°£ÀÌ ¸ØÃáÃ¤·Î ³²Áö ¾Êµµ·Ï º¹±¸
+            // ì¼ì‹œ ì •ì§€ ì¤‘ ì”¬ì´ ë°”ë€Œì–´ë„ ì‹œê°„ì´ ë©ˆì¶˜ì±„ë¡œ ë‚¨ì§€ ì•Šë„ë¡ ë³µêµ¬
             Time.timeScale = 1f;
             Instance = null;
         }
     }
     #endregion
 
-    #region Ä¿½ºÅÒ ¸Ş¼­µå (Public)
+    #region ì»¤ìŠ¤í…€ ë©”ì„œë“œ (Public)
     /// <summary>
-    /// »õ·Î¿î ·±À» ½ÃÀÛ
+    /// ìƒˆë¡œìš´ ëŸ°ì„ ì‹œì‘
     /// </summary>
     public void StartRun()
     {
@@ -69,14 +69,14 @@ public class GameManager : MonoBehaviour
 
         _isRunActive = true;
 
-        Debug.Log("GameManager : StartRun »õ·Î¿î ·±À» ½ÃÀÛ");
+        Debug.Log("GameManager : StartRun ìƒˆë¡œìš´ ëŸ°ì„ ì‹œì‘");
 
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }
 
     /// <summary>
-    /// ÇöÀç ·±À» Á¾·á
+    /// í˜„ì¬ ëŸ°ì„ ì¢…ë£Œ
     /// </summary>
     public void EndRun()
     {
@@ -87,16 +87,16 @@ public class GameManager : MonoBehaviour
 
         _isRunActive = false;
 
-        // ÀÏ½ÃÁ¤Áö Áß¿¡ ·±ÀÌ Á¾·áµÇ¾îµµ ½Ã°£ÀÌ ¸ØÃáÃ¤·Î ³²Áö ¾Êµµ·Ï º¹±¸
+        // ì¼ì‹œì •ì§€ ì¤‘ì— ëŸ°ì´ ì¢…ë£Œë˜ì–´ë„ ì‹œê°„ì´ ë©ˆì¶˜ì±„ë¡œ ë‚¨ì§€ ì•Šë„ë¡ ë³µêµ¬
         Time.timeScale = 1f;
 
-        Debug.Log("GameManager : EndRun ÇöÀç ·±À» Á¾·á");
+        Debug.Log("GameManager : EndRun í˜„ì¬ ëŸ°ì„ ì¢…ë£Œ");
 
         OnRunEnded?.Invoke();
     }
 
     /// <summary>
-    /// °ÔÀÓ »óÅÂ¸¦ º¯°æÇÏ°í º¯°æ ÀÌº¥Æ®¸¦ ¹ß»ı½ÃÅ´.
+    /// ê²Œì„ ìƒíƒœë¥¼ ë³€ê²½í•˜ê³  ë³€ê²½ ì´ë²¤íŠ¸ë¥¼ ë°œìƒì‹œí‚´.
     /// </summary>
     public void ChangeGameState(EGameState nextState)
     {
@@ -105,9 +105,15 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // ì¼ì‹œì •ì§€ì—ì„œ ë²—ì–´ë‚˜ëŠ” ëª¨ë“  ê²½ë¡œì—ì„œ ì‹œê°„ ì •ì§€ë¥¼ í•´ì œ
+        if (_state == EGameState.Paused && nextState != EGameState.Paused)
+        {
+            Time.timeScale = 1f;
+        }
+
         _state = nextState;
 
-        Debug.Log("GameManager : ChangeGameState °ÔÀÓ »óÅÂ¸¦ º¯°æ ÀÌº¥Æ®¸¦ ¹ß»ı");
+        Debug.Log("GameManager : ChangeGameState ê²Œì„ ìƒíƒœë¥¼ ë³€ê²½ ì´ë²¤íŠ¸ë¥¼ ë°œìƒ");
 
         OnGameStateChanged?.Invoke(_state);
     }
@@ -119,16 +125,16 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // »óÅÂ º¯°æ ÀÌº¥Æ®¸¦ ¹Ş´Â ÂÊÀÌ ÀÌ¹Ì ¸ØÃá ½Ã°£À» ±âÁØÀ¸·Î µ¿ÀÛÇÏµµ·Ï ¸ÕÀú ¼³Á¤
+        // ìƒíƒœ ë³€ê²½ ì´ë²¤íŠ¸ë¥¼ ë°›ëŠ” ìª½ì´ ì´ë¯¸ ë©ˆì¶˜ ì‹œê°„ì„ ê¸°ì¤€ìœ¼ë¡œ ë™ì‘í•˜ë„ë¡ ë¨¼ì € ì„¤ì •
         Time.timeScale = 0f;
 
-        Debug.Log("GameManager: PauseGame °ÔÀÓÀ» ÀÏ½ÃÁ¤Áö");
+        Debug.Log("GameManager: PauseGame ê²Œì„ì„ ì¼ì‹œì •ì§€");
 
         ChangeGameState(EGameState.Paused);
     }
 
     /// <summary>
-    /// ÀÏ½ÃÁ¤Áö¸¦ ÇØÁ¦ÇÏ°í Playing »óÅÂ·Î µ¹¾Æ°¨.
+    /// ì¼ì‹œì •ì§€ë¥¼ í•´ì œí•˜ê³  Playing ìƒíƒœë¡œ ëŒì•„ê°.
     /// </summary>
     public void ResumeGame()
     {
@@ -139,13 +145,13 @@ public class GameManager : MonoBehaviour
 
         Time.timeScale = 1f;
 
-        Debug.Log("GameManager: ResumeGame ÀÏ½ÃÁ¤Áö ÇØÁ¦");
+        Debug.Log("GameManager: ResumeGame ì¼ì‹œì •ì§€ í•´ì œ");
 
         ChangeGameState(EGameState.Playing);
     }
 
     /// <summary>
-    /// ÀÏ½ÃÁ¤Áö ÁßÀÌ¸é ÇØÁ¦, PlayingÀÌ¸é ÀÏ½ÃÁ¤Áö (ESC Å° µî¿¡ ¿¬°á)
+    /// ì¼ì‹œì •ì§€ ì¤‘ì´ë©´ í•´ì œ, Playingì´ë©´ ì¼ì‹œì •ì§€ (ESC í‚¤ ë“±ì— ì—°ê²°)
     /// </summary>
     public void TogglePause()
     {
@@ -160,8 +166,8 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ·±À» Á¾·áÇÏ°í Å¸ÀÌÆ² »óÅÂ·Î µ¹¾Æ°¨ (ÀÏ½ÃÁ¤Áö ¸Ş´ºÀÇ ¸ŞÀÎ ¸Ş´º ÀÌµ¿)
-    /// Å¸ÀÌÆ² ¾ÀÀ¸·ÎÀÇ ÀüÈ¯Àº È£ÃâÇÏ´Â ÂÊ¿¡¼­ Ã³¸®
+    /// í˜„ì¬ ëŸ°ì„ ì¢…ë£Œí•˜ê³  íƒ€ì´í‹€ ìƒíƒœë¡œ ëŒì•„ê° (ì¼ì‹œì •ì§€ ë©”ë‰´ì˜ ë©”ì¸ ë©”ë‰´ ì´ë™)
+    /// íƒ€ì´í‹€ ì”¬ìœ¼ë¡œì˜ ì „í™˜ì€ í˜¸ì¶œí•˜ëŠ” ìª½ì—ì„œ ì²˜ë¦¬
     /// </summary>
     public void ReturnToTitle()
     {
@@ -170,7 +176,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ·±À» °ÔÀÓ ¿À¹ö »óÅÂ·Î Á¾·á
+    /// í˜„ì¬ ëŸ°ì„ ê²Œì„ ì˜¤ë²„ ìƒíƒœë¡œ ì¢…ë£Œ
     /// </summary>
     public void GameOver()
     {
@@ -179,19 +185,23 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("GameManager : GameOver ÇöÀç ·±À» °ÔÀÓ ¿À¹ö »óÅÂ·Î Á¾·áÇÕ´Ï´Ù.");
+        Debug.Log("GameManager : GameOver í˜„ì¬ ëŸ°ì„ ê²Œì„ ì˜¤ë²„ ìƒíƒœë¡œ ì¢…ë£Œí•©ë‹ˆë‹¤.");
 
         EndRun();
         ChangeGameState(EGameState.GameOver);
     }
 
     /// <summary>
-    /// °ÔÀÓÀ» ¿ÏÀüÈ÷ Á¾·áÇÕ´Ï´Ù.
+    /// ê²Œì„ì„ ì™„ì „íˆ ì¢…ë£Œí•©ë‹ˆë‹¤.
     /// </summary>
     public void QuitGame()
     {
-        Debug.Log("GameManager : QuitGame °ÔÀÓÀ» ¿ÏÀüÈ÷ Á¾·áÇÕ´Ï´Ù.");
+        Debug.Log("GameManager : QuitGame ê²Œì„ì„ ì™„ì „íˆ ì¢…ë£Œí•©ë‹ˆë‹¤.");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
         Application.Quit();
+#endif
     }
-    #endregion
+#endregion
 }   
