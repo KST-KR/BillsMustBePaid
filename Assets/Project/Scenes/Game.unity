@@ -1940,6 +1940,7 @@ GameObject:
   m_Component:
   - component: {fileID: 408602939}
   - component: {fileID: 408602938}
+  - component: {fileID: 408602940}
   m_Layer: 0
   m_Name: ObjectPoolManager
   m_TagString: Untagged
@@ -1976,6 +1977,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &408602940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408602937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da11ee825c0511149b0fbd248796d905, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _fragmentPrefabA: {fileID: 3987814852309806043, guid: 18939a80c04e9a140aa8a6aba082a93f, type: 3}
+  _fragmentPrefabB: {fileID: 3550816705152422411, guid: d493c24afba2d1a499d069892085a0d3, type: 3}
+  _fragmentPrefabC: {fileID: 4418607277694165234, guid: 32ca3e7fcbc4f714f812955d22fddf3d, type: 3}
+  _fragmentPrefabD: {fileID: 9206516277384608304, guid: 50c79e46c8e269c44b3079af983f2555, type: 3}
+  _fragmentPrefabE: {fileID: 1202351960221713280, guid: 095ed7e3dac6f754799797c3bdfbb7e4, type: 3}
+  _fragmentCount: 20
+  _minDistance: 0.5
+  _maxDistance: 0.7
+  _upModifier: 0.4
+  _torqueMin: 0.5
+  _torqueMax: 1
+  _removeTime: 2
 --- !u!1 &412094498
 GameObject:
   m_ObjectHideFlags: 0
