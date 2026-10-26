@@ -7,12 +7,27 @@ using UnityEngine;
 /// </summary>
 public class RandomRewardManager : MonoBehaviour
 {
+    #region 싱글톤
+    public static RandomRewardManager Instance {  get; private set; }
+    #endregion
+
     #region 내부변수
     private PigBankGameDataSO _pigData;
-    private int _currentHP;
     #endregion
 
     #region 이벤트
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     void Start()
     {
         if (_pigData == null)
@@ -21,7 +36,6 @@ public class RandomRewardManager : MonoBehaviour
             return;
         }
 
-        _currentHP = _pigData.PigBankHP;
     }
     #endregion
 
@@ -36,49 +50,31 @@ public class RandomRewardManager : MonoBehaviour
         if (_pigData == null)
         {
             Debug.LogWarning("PigData가 null입니다!");
-            _currentHP = 5; 
             return;
         }
 
-        _currentHP = _pigData.PigBankHP;
     }
 
-    public void TakeDamage(int damage)
-    {
-        if (_currentHP <= 0)
-        {
-            return;
-        }
-
-        _currentHP -= damage;
-        Debug.Log($"현재 체력: {_currentHP}");
-
-        if (_currentHP <= 0)
-        {
-            Die();
-        }
-    }
-    #endregion
-
-    #region 커스텀 메소드 (Private)
-    private void Die()
+    public void Die()
     {
         Debug.Log("돼지 저금통 파괴");
 
         DropCoins();
 
-        if(PigBankObjectPoolManager.Instance != null)
+        if (PigBankObjectPoolManager.Instance != null)
         {
             PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
         }
 
-        if(FragmentObjectPoolManager.Instance != null)
+        if (FragmentObjectPoolManager.Instance != null)
         {
             FragmentObjectPoolManager.Instance.SpawnRandomFragments(transform.position);
         }
 
     }
+    #endregion
 
+    #region 커스텀 메소드 (Private)
     private void DropCoins()
     {
         if(_pigData == null)
