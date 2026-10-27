@@ -1,39 +1,47 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
-/// [BILL-01-02] °ÔÀÓ ÀÏÂ÷¿¡ µû¸¥ Ã»±¸¼­ ¹ßÇà ¹× ³³ºÎ »óÅÂ °ü¸®
+/// [BILL-01-02][BILL-01-03] ë°œí–‰ ì¡°ê±´ì— ë”°ë¥¸ ì²­êµ¬ì„œ ìƒì„±ê³¼ ì¤‘ë³µ ë°©ì§€ ê´€ë¦¬
 /// </summary>
 public class BillManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static BillManager Instance { get; private set; }
     #endregion
 
-    #region ¼Ó¼º
+    #region ì†ì„±
     public IReadOnlyList<BillRecord> Bills => _bills;
     public BillRecord CurrentBill => GetNextUnpaidBill();
     public int CurrentDay => _currentDay;
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region ì´ë²¤íŠ¸
     public event Action<BillRecord> OnBillIssued;
     public event Action<BillRecord> OnBillPaid;
     public event Action<BillRecord> OnBillChanged;
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
+    #region ì¸ìŠ¤í™í„°
     [SerializeField] private BillData[] _billRules = new BillData[0];
+
+    [Header("ì²­êµ¬ì„œ ë‚©ë¶€ ë²„íŠ¼")]
+    [SerializeField] private Button _payBillButton;
+    [SerializeField] private Image _payBillButtonImage;
+    [SerializeField] private Sprite _unaffordableButtonSprite;
+    [SerializeField] private Sprite _affordableButtonSprite;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private readonly List<BillRecord> _bills = new List<BillRecord>();
     private readonly Dictionary<BillData, int> _issuedCounts = new Dictionary<BillData, int>();
+    private readonly HashSet<string> _issuedKeys = new HashSet<string>();
     private int _currentDay;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -49,8 +57,33 @@ public class BillManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (_payBillButton != null)
+        {
+            _payBillButton.onClick.AddListener(HandlePayButtonClicked);
+        }
+
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.OnBalanceChanged += HandleBalanceChanged;
+        }
+
+        RefreshPayButtonImage();
+    }
+
     private void OnDestroy()
     {
+        if (_payBillButton != null)
+        {
+            _payBillButton.onClick.RemoveListener(HandlePayButtonClicked);
+        }
+
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.OnBalanceChanged -= HandleBalanceChanged;
+        }
+
         if (Instance == this)
         {
             Instance = null;
@@ -58,27 +91,9 @@ public class BillManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Public)
+    #region ì»¤ìŠ¤í…€ (Public)
     /// <summary>
-    /// [BILL-01-02] ¸í½ÃµÈ °ÔÀÓ ÀÏÂ÷¿¡ Ã»±¸¼­ ¹ßÇà
-    /// </summary>
-    private bool IssueBill(BillData billData, int cycle)
-    {
-        if (billData == null || cycle < 1 || GetIssuedCount(billData) >= Mathf.Max(1, billData.MaxIssues) || !billData.TryGetAmount(cycle, out int amount))
-        {
-            return false;
-        }
-
-        BillRecord bill = new BillRecord(billData, _currentDay, cycle, amount);
-        _bills.Add(bill);
-        SetIssuedCount(billData, GetIssuedCount(billData) + 1);
-        OnBillIssued?.Invoke(bill);
-        OnBillChanged?.Invoke(bill);
-        return true;
-    }
-
-    /// <summary>
-    /// [BILL-01-02] °ÔÀÓ ÀÏÂ÷¸¦ °»½ÅÇÏ°í ÇØ´ç ÀÏÀÚ Ã»±¸¼­ ¹ßÇà
+    /// [BILL-01-02][BILL-01-03] ê²Œì„ ì¼ì°¨ë¥¼ ê°±ì‹ í•˜ê³  í•´ë‹¹ ì¼ì ì²­êµ¬ì„œ ë°œí–‰
     /// </summary>
     public void NotifyDayAdvanced(int gameDay)
     {
@@ -95,7 +110,7 @@ public class BillManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [BILL-01-02] ÇöÀç ´ë±â Ã»±¸¼­ ÇÑ °Ç ³³ºÎ ½Ãµµ
+    /// [BILL-01-02] í˜„ì¬ ëŒ€ê¸° ì²­êµ¬ì„œ í•œ ê±´ ë‚©ë¶€ ì‹œë„
     /// </summary>
     public bool TryPayCurrentBill()
     {
@@ -108,21 +123,79 @@ public class BillManager : MonoBehaviour
         bill.SetStatus(EBillStatus.Paid);
         OnBillPaid?.Invoke(bill);
         OnBillChanged?.Invoke(bill);
+        RefreshPayButtonImage();
         return true;
     }
 
     /// <summary>
-    /// [BILL-01-02] ·± Ã»±¸¼­ ¹ßÇà ±â·Ï ÃÊ±âÈ­
+    /// [BILL-01-02] ëŸ° ì²­êµ¬ì„œ ë°œí–‰ ê¸°ë¡ ì´ˆê¸°í™”
     /// </summary>
     public void ResetRunBills()
     {
         _bills.Clear();
         _issuedCounts.Clear();
+        _issuedKeys.Clear();
         _currentDay = 0;
+        OnBillChanged?.Invoke(CurrentBill);
+        RefreshPayButtonImage();
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Private)
+    #region ì»¤ìŠ¤í…€ (Private)
+    private bool IssueBill(BillData billData, int cycle)
+    {
+        if (billData == null || string.IsNullOrWhiteSpace(billData.BillId) || cycle < 1 ||
+            GetIssuedCount(billData) >= Mathf.Max(1, billData.MaxIssues) ||
+            !billData.TryGetAmount(cycle, out int amount))
+        {
+            return false;
+        }
+
+        string issueKey = billData.BillId + ":" + cycle;
+        if (_issuedKeys.Contains(issueKey))
+        {
+            return false;
+        }
+
+        BillRecord bill = new BillRecord(billData, _currentDay, cycle, amount);
+        _bills.Add(bill);
+        _issuedKeys.Add(issueKey);
+        SetIssuedCount(billData, GetIssuedCount(billData) + 1);
+        OnBillIssued?.Invoke(bill);
+        OnBillChanged?.Invoke(bill);
+        RefreshPayButtonImage();
+        return true;
+    }
+
+    private void HandlePayButtonClicked()
+    {
+        TryPayCurrentBill();
+    }
+
+    private void HandleBalanceChanged(ECurrencyType type, int previousAmount, int currentAmount)
+    {
+        if (type == ECurrencyType.Gold)
+        {
+            RefreshPayButtonImage();
+        }
+    }
+
+    private void RefreshPayButtonImage()
+    {
+        if (_payBillButtonImage == null)
+        {
+            return;
+        }
+
+        BillRecord bill = CurrentBill;
+        bool canPay = bill != null && CurrencyManager.Instance != null && CurrencyManager.Instance.Gold >= bill.Amount;
+        Sprite stateSprite = canPay ? _affordableButtonSprite : _unaffordableButtonSprite;
+        if (stateSprite != null)
+        {
+            _payBillButtonImage.sprite = stateSprite;
+        }
+    }
+
     private void IssueBillsForDay(int gameDay)
     {
         for (int i = 0; i < _billRules.Length; i++)

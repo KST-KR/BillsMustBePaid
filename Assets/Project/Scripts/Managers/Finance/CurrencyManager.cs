@@ -2,36 +2,36 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// [FIN-01-01][FIN-01-02] ÀçÈ­ ÀÜ°í¿Í º¯°æ ÀÌº¥Æ® °ü¸®
+/// [FIN-01-01][FIN-01-02][FIN-01-03] ì¬í™” ì”ê³  ì¡°íšŒì™€ ë³€ê²½ ì´ë²¤íŠ¸ ê´€ë¦¬
 /// </summary>
 public class CurrencyManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static CurrencyManager Instance { get; private set; }
     #endregion
 
-    #region ¼Ó¼º
+    #region ì†ì„±
     public int Gold => _gold;
     public int LegacyPoints => _legacyPoints;
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region ì´ë²¤íŠ¸
     public event Action<int> OnAmountChanged;
     public event Action<ECurrencyType, int, int> OnBalanceChanged;
     #endregion
 
-    #region ÀÎ½ºÆåÅÍ
-    [Header("ÃÊ±â ÀÜ°í")]
+    #region ì¸ìŠ¤í™í„°
+    [Header("ì´ˆê¸° ì”ê³ ")]
     [SerializeField, Min(0)] private int _initialGold = 100;
     [SerializeField, Min(0)] private int _initialLegacyPoints;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private int _gold;
     private int _legacyPoints;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -48,9 +48,9 @@ public class CurrencyManager : MonoBehaviour
     {
         if (StageRewardManager.Instance != null)
         {
-            StageRewardManager.Instance.OnStageRewardChanged += OnStageRewardChanged; ;
+            StageRewardManager.Instance.OnStageRewardChanged += OnStageRewardChanged;
         }
-    }    
+    }
 
     private void OnDestroy()
     {
@@ -66,21 +66,29 @@ public class CurrencyManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Public)
+    #region ì»¤ìŠ¤í…€ (Public)
     /// <summary>
-    /// [FIN-01-02] ÁöÁ¤ÇÑ ÀçÈ­ ÀÜ°í ¹İÈ¯
+    /// [FIN-01-03] ì§€ì •í•œ ì¬í™” ì”ê³  ë°˜í™˜
     /// </summary>
     public int GetBalance(ECurrencyType type)
     {
-        return type == ECurrencyType.Gold ? _gold : _legacyPoints;
+        switch (type)
+        {
+            case ECurrencyType.Gold:
+                return _gold;
+            case ECurrencyType.LegacyPoint:
+                return _legacyPoints;
+            default:
+                return 0;
+        }
     }
 
     /// <summary>
-    /// [FIN-01-02] ÁöÁ¤ÇÑ ÀçÈ­¸¦ Ãß°¡
+    /// [FIN-01-02] ì§€ì •í•œ ì¬í™”ë¥¼ ì¶”ê°€
     /// </summary>
     public bool TryAdd(ECurrencyType type, int amount)
     {
-        if (amount <= 0)
+        if ((type != ECurrencyType.Gold && type != ECurrencyType.LegacyPoint) || amount <= 0)
         {
             return false;
         }
@@ -96,7 +104,7 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [FIN-01-02] ÀÜ°í¸¦ È®ÀÎÇÏ°í ÁöÁ¤ÇÑ ÀçÈ­ Â÷°¨
+    /// [FIN-01-02] ì”ê³ ë¥¼ í™•ì¸í•˜ê³  ì§€ì •í•œ ì¬í™” ì°¨ê°
     /// </summary>
     public bool TrySpend(ECurrencyType type, int amount)
     {
@@ -110,7 +118,7 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [FIN-01-01][FIN-01-02] Inspector ÃÊ±â ÀÜ°í·Î ÀçÈ­ ÀÜ°í ÃÊ±âÈ­
+    /// [FIN-01-01][FIN-01-02] Inspector ì´ˆê¸° ì”ê³ ë¡œ ì¬í™” ì”ê³  ì´ˆê¸°í™”
     /// </summary>
     public void ResetBalances()
     {
@@ -119,7 +127,7 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [FIN-01-02] °ñµå ÀÜ°í¿¡ ÆÄ»ê ÆĞ³ÎÆ¼ Àû¿ë ÈÄ Â÷°¨¾× ¹İÈ¯
+    /// [FIN-01-02] ê³¨ë“œ ì”ê³ ì— íŒŒì‚° íŒ¨ë„í‹° ì ìš© í›„ ì°¨ê°ì•¡ ë°˜í™˜
     /// </summary>
     public int ApplyPenalty(float penaltyRate)
     {
@@ -138,7 +146,7 @@ public class CurrencyManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Private)
+    #region ì»¤ìŠ¤í…€ (Private)
     private void InitializeBalances()
     {
         _gold = Mathf.Max(0, _initialGold);
@@ -146,7 +154,7 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀçÈ­ ÀÜ°í¸¦ Æ¯Á¤ ±İ¾×À¸·Î ÃÊ±âÈ­
+    /// ì¬í™” ì”ê³ ë¥¼ íŠ¹ì • ê¸ˆì•¡ìœ¼ë¡œ ì´ˆê¸°í™”
     /// </summary>
     /// <param name="type"></param>
     /// <param name="amount"></param>
@@ -163,18 +171,22 @@ public class CurrencyManager : MonoBehaviour
             _gold = amount;
             OnAmountChanged?.Invoke(_gold);
         }
-        else
+        else if (type == ECurrencyType.LegacyPoint)
         {
             _legacyPoints = amount;
+        }
+        else
+        {
+            return;
         }
 
         OnBalanceChanged?.Invoke(type, previousAmount, amount);
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö ÁøÇàÁß º¸»ó º¯°æ ÀÌº¥Æ® Ã³¸®
+    /// ìŠ¤í…Œì´ì§€ ì§„í–‰ì¤‘ ë³´ìƒ ë³€ê²½ ì´ë²¤íŠ¸ ì²˜ë¦¬
     /// </summary>
-    /// <param name="reward">½ºÅ×ÀÌÁö º¸»ó ±İ¾×</param>
+    /// <param name="reward">ìŠ¤í…Œì´ì§€ ë³´ìƒ ê¸ˆì•¡</param>
     private void OnStageRewardChanged(int reward)
     {
         TryAdd(ECurrencyType.Gold, reward);
