@@ -3086,7 +3086,7 @@ MonoBehaviour:
   _fragmentPrefabC: {fileID: 4418607277694165234, guid: 32ca3e7fcbc4f714f812955d22fddf3d, type: 3}
   _fragmentPrefabD: {fileID: 9206516277384608304, guid: 50c79e46c8e269c44b3079af983f2555, type: 3}
   _fragmentPrefabE: {fileID: 1202351960221713280, guid: 095ed7e3dac6f754799797c3bdfbb7e4, type: 3}
-  _fragmentCount: 20
+  _fragmentCount: 5
   _minDistance: 0.5
   _maxDistance: 0.7
   _upModifier: 0.4
@@ -15719,7 +15719,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d8748df4cd903d4faf930b2b3758853, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
   _spawnPoint: {fileID: 1958309167}
+  _spawnCount: 1
+  _respawnTime: 0.5
 --- !u!4 &1737088453
 Transform:
   m_ObjectHideFlags: 0
