@@ -5,7 +5,20 @@ using UnityEngine;
 /// </summary>
 public class SpawnPigBank : MonoBehaviour
 {
-    #region 이벤트
+    #region 인스펙터
+    [Header("데이터 베이스 참조")]
+    [SerializeField] private PigBankDataBaseSO _pigDatabase;
+
+    [Header("돼지 저금통 스폰 설정")]
+    [SerializeField] private Transform _spawnPoint;
+    #endregion
+
+    #region 내부 변수
+    private GameObject _spawnedPigBank;
+    private PigBankGameDataSO _pigData;
+    #endregion
+
+    #region 이벤트 함수
     private void OnEnable()
     {
         if (StageManager.Instance != null)
@@ -16,7 +29,7 @@ public class SpawnPigBank : MonoBehaviour
 
     private void Start()
     {
-        if(_spawnPoint == null)
+        if (_spawnPoint == null)
         {
             Debug.LogError("SpawnPoint가 존재 하지 않습니다. 확인 필요");
             return;
@@ -38,17 +51,14 @@ public class SpawnPigBank : MonoBehaviour
     }
     #endregion
 
-    #region 인스펙터
-    [Header("돼지 저금통 스폰 설정")]
-    [SerializeField] private Transform _spawnPoint;
-    #endregion
-
     #region 커스텀 메소드 (Private)
     /// <summary>
     /// 이벤트와 타입을 맞춰주기 위해 int stageNumber를 인자로 받습니다.
     /// </summary>
     private void HandleStageStarted(int stageNumber)
     {
+        ReturnToPool();
+
         SpawnPigForStage(stageNumber);
     }
 
@@ -56,17 +66,47 @@ public class SpawnPigBank : MonoBehaviour
     {
         string pigID = GetPigIDForStage(stageNumber);
 
+        if (_pigDatabase != null)
+        {
+            if (!_pigDatabase.TryGet(pigID, out _pigData))
+            {
+                Debug.LogError($"데이터베이스에서 ID를 찾지 못했습니다: {pigID}");
+                return;
+            }
+        }
+        else
+        {
+            Debug.LogError("SpawnPigBank에 PigBankDataBaseSO가 연결되지 않았습니다!");
+            return;
+        }
+
         Vector3 spawnPosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
 
         if (PigBankObjectPoolManager.Instance != null)
         {
-            PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
+           _spawnedPigBank = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
             Debug.Log($"성공적으로 {pigID} 돼지를 {spawnPosition}에 스폰했습니다");
         }
 
         else
         {
             Debug.LogError("PigBankObjectPoolManager Instance가 Null입니다!");
+        }
+    }
+
+    /// <summary>
+    /// 현재 필드에 있는 돼지를 오브젝트 풀로 반환합니다.
+    /// </summary>
+    private void ReturnToPool()
+    {
+        if(_spawnedPigBank != null && _pigData != null)
+        {
+            if(PigBankObjectPoolManager.Instance != null)
+            {
+                PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, _spawnedPigBank);
+            }
+            _spawnedPigBank = null;
+            _pigData = null;
         }
     }
 
