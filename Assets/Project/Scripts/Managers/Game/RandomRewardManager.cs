@@ -7,27 +7,11 @@ using UnityEngine;
 /// </summary>
 public class RandomRewardManager : MonoBehaviour
 {
-    #region 싱글톤
-    public static RandomRewardManager Instance {  get; private set; }
-    #endregion
-
     #region 내부변수
     private PigBankGameDataSO _pigData;
     #endregion
 
     #region 이벤트
-    private void Awake()
-    {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
-
     void Start()
     {
         if (_pigData == null)

@@ -46,7 +46,15 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
         if (_currentHP <= 0)
         {
             // 파괴 및 보상 처리는 돼지 저금통 담당 로직과 연결
-            RandomRewardManager.Instance.Die();
+            RandomRewardManager rewardManager = GetComponent<RandomRewardManager>();
+            if (rewardManager != null)
+            {
+                rewardManager.Die();
+            }
+            else
+            {
+                Debug.LogError("돼지 저금통에 RandomRewardManager가 없습니다!", this);
+            }
         }
     }
 }

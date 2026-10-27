@@ -40,6 +40,11 @@ public class PigBankMoveing : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.State != EGameState.Playing)
+        {
+            return;
+        }
+
         Moveing();
     }
     #endregion
@@ -84,6 +89,6 @@ public class PigBankMoveing : MonoBehaviour
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
     }
 
-   
+
     #endregion
 }
