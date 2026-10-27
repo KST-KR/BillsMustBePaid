@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [RequireComponent(typeof(PlayerStats))]
 public class PlayerCombat : MonoBehaviour
@@ -13,7 +14,18 @@ public class PlayerCombat : MonoBehaviour
     private bool _hasHitThisAttack;
 
     private float _attackElapsed;
+    // 공격 종료 후 다음 공격까지의 대기 시간곽 남은 시간
+    // 에임의 진행도를 계산할 때 전체 대기 시간이 필요하므로 따로 보관
+    private float _cooldownDuration;
     private float _cooldownRemaining;
+    #endregion
+
+    #region 이벤트
+    /// <summary>
+    /// 타격 판정이 실행될때 발생 (타격한 대상 수 정달)
+    /// 에임의 타격 연출 등에서 구독
+    /// </summary>
+    public event Action<int> OnAttackPerformed;
     #endregion
 
     #region 프로퍼티
@@ -24,6 +36,29 @@ public class PlayerCombat : MonoBehaviour
     /// 스태미나가 고갈되지 않았을 때만 행동 가능
     /// </summary>
     public bool CanAct => _activator != null && _activator.CanAct && _playerStamina != null && !_playerStamina.IsExhausted;
+
+    /// <summary>
+    /// 에임의 실선 링 채움 정도 (0 ~ 1)
+    /// 공격이 끝난 직후 0에서 시작해 대기 시간과 타격 직전까지의 시간동안 채워지고,
+    /// 망치가 내려찍는 타격 시점에 1이 됨. 공격 간격이 짧을수록 빨리 채워짐.
+    /// </summary>
+    public float AimProgress
+    {
+        get
+        {
+            float hitTime = _playerStats.HitTime;
+            float windUp = _cooldownDuration + hitTime;
+
+            if (windUp <= 0f)
+            {
+                return 1f;
+            }
+
+            float elapsed = _isAttacking ? _cooldownDuration + Mathf.Min(_attackElapsed, hitTime) : _cooldownDuration - _cooldownRemaining;
+
+            return Mathf.Clamp01(elapsed / windUp);
+        }
+    }
     #endregion
 
     #region 이벤트 함수
@@ -57,6 +92,8 @@ public class PlayerCombat : MonoBehaviour
                 HandleStaminaExhausted();
             }
         }
+
+        StartCooldown();
     }
 
     private void OnDisable()
@@ -107,12 +144,26 @@ public class PlayerCombat : MonoBehaviour
     /// </summary>
     private bool CanStartAttack()
     {
-        if (!CanAct || _attackDetector == null)
+        // 1. 스테이지가 진행 중이고 게임 상태가 Playing인가?
+        if (!CanAct)
         {
             return false;
         }
 
-        if (_isAttacking || _cooldownRemaining > 0f)
+        // 2. 공격 판정기가 존재하는가?
+        if (_attackDetector == null)
+        {
+            return false;
+        }
+
+        // 3. 현재 공격 중이지 않은가?
+        if (_isAttacking)
+        {
+            return false;
+        }
+
+        // 4. 다음 공격을 시작할 시간이 되었는가?
+        if (_cooldownRemaining > 0f)
         {
             return false;
         }
@@ -154,6 +205,8 @@ public class PlayerCombat : MonoBehaviour
 
             int hitCount = _attackDetector.PerformAttack();
 
+            OnAttackPerformed?.Invoke(hitCount);
+
             Debug.Log($"망치 공격 판정 완료: {hitCount}개 대상 타격");
 
             // 타격 판정 중 컴포넌트가 비활성화됐다면
@@ -190,6 +243,7 @@ public class PlayerCombat : MonoBehaviour
         _hasHitThisAttack = false;
 
         _attackElapsed = 0f;
+        _cooldownDuration = 0f;
         _cooldownRemaining = 0f;
     }
 
@@ -201,9 +255,15 @@ public class PlayerCombat : MonoBehaviour
         _isAttacking = false;
         _attackElapsed = 0f;
 
-        _cooldownRemaining = Mathf.Max(0f, _playerStats.AttackInterval);
+        StartCooldown();
 
         Debug.Log($"망치 공격 완료: 다음 공격까지 {_cooldownRemaining:F2}초");
+    }
+
+    private void StartCooldown()
+    {
+        _cooldownDuration = Mathf.Max(0f, _playerStats.AttackInterval);
+        _cooldownRemaining = _cooldownDuration;
     }
     #endregion
 }
