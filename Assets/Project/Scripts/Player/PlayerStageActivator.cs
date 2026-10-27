@@ -25,7 +25,7 @@ public class PlayerStageActivator : MonoBehaviour
 
     #region 프로퍼티
     /// <summary>
-    /// 플레이어가 화면에 보이는 상태 (Playing 또는 Paused이며 스테이지 진행 중)
+    /// 플레이어가 화면에 보이는 상태 (Playing이고 스테이지 진행 중)
     /// </summary>
     public bool IsVisible { get; private set; }
 
@@ -50,6 +50,7 @@ public class PlayerStageActivator : MonoBehaviour
         if (_gameManager != null)
         {
             _gameManager.OnGameStateChanged += HandleGameStateChanged;
+            _gameManager.OnPauseChanged += HandlePauseChanged;
         }
 
         if (_stageManager != null)
@@ -65,6 +66,7 @@ public class PlayerStageActivator : MonoBehaviour
         if (_gameManager != null)
         {
             _gameManager.OnGameStateChanged -= HandleGameStateChanged;
+            _gameManager.OnPauseChanged -= HandlePauseChanged;
             _gameManager = null;
         }
 
@@ -82,6 +84,11 @@ public class PlayerStageActivator : MonoBehaviour
         Refresh();
     }
 
+    private void HandlePauseChanged(bool isPaused)
+    {
+        Refresh();
+    }
+
     private void HandleStageStarted(int stageNumber)
     {
         Refresh();
@@ -95,8 +102,10 @@ public class PlayerStageActivator : MonoBehaviour
         bool stageActive = _stageManager != null && _stageManager.IsStageActive;
         EGameState state = _gameManager != null ? _gameManager.State : EGameState.Title;
 
-        IsVisible = stageActive && (state == EGameState.Playing || state == EGameState.Paused);
-        CanAct = stageActive && state == EGameState.Playing;
+        bool IsGamePaused = _gameManager != null && _gameManager.IsPaused;
+
+        IsVisible = stageActive && state == EGameState.Playing;
+        CanAct = stageActive && state == EGameState.Playing && !IsGamePaused;
 
         if (_visualRoot != null)
         {

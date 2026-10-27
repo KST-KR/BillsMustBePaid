@@ -33,6 +33,7 @@ public class PlayerHandPosition : MonoBehaviour
 
     private void LateUpdate()
     {
+        // 스테이지 진행 중이 아니거나 일시정지 상태라면 손을 이동하지 않음
         if (!CanAct)
         {
             return;
@@ -48,12 +49,7 @@ public class PlayerHandPosition : MonoBehaviour
     /// </summary>
     private void UpdateHandPosition()
     {
-        if (_inputHandler == null)
-        {
-            return;
-        }
-
-        if (!_inputHandler.HasMouseWorldPosition)
+        if (_inputHandler == null || !_inputHandler.HasMouseWorldPosition)
         {
             return;
         }

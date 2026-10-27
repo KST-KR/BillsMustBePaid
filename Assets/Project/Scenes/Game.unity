@@ -10972,6 +10972,7 @@ MonoBehaviour:
   _settingsPanel: {fileID: 6705740370901679565}
   _runEndConfirmPanel: {fileID: 1302087637}
   _mainMenuConfirmPanel: {fileID: 293182160}
+  _endRunButton: {fileID: 903926122}
   _titleSceneName: MainMenu
   _playerStamina: {fileID: 5489345558399541582}
   _staminaPanel: {fileID: 956883951}
@@ -12005,7 +12006,7 @@ GameObject:
   - component: {fileID: 1302087640}
   - component: {fileID: 1302087639}
   m_Layer: 5
-  m_Name: RunEndConfirmPanelPanel
+  m_Name: RunEndConfirmPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

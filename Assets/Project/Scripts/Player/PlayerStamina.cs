@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// [PL-STAMINA-01 ~ 09] 플레이어 스태미나 관리
-/// 스테이지 시작 시 초기화하고, 진행시간에 따라 소모하며, 고갈되면 게임오버 요청
+/// 스테이지 시작 시 초기화하고, 진행시간에 따라 소모하며, 고갈 이벤트 발생
 /// 최대 스태미나는 PlayerStats이 계산한 값 사용
 /// </summary>
 public class PlayerStamina : MonoBehaviour
@@ -208,7 +208,8 @@ public class PlayerStamina : MonoBehaviour
     {
         return !_isExhausted && _drainPerSecond > 0f
             && _gameManager != null && _gameManager.State == EGameState.Playing
-            && _stageManager != null && _stageManager.IsStageActive;
+            && _stageManager != null && _stageManager.IsStageActive
+            && !_gameManager.IsPaused;
     }
 
     /// <summary>
