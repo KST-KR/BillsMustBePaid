@@ -25,6 +25,7 @@ public class GrowthTreeUI : MonoBehaviour
 
     private readonly Dictionary<string, Button> _nodeButtons = new Dictionary<string, Button>();
     private readonly List<Image> _connections = new List<Image>();
+    private bool _hasUserSelectedUpgrade;
 
     #region 인스펙터
     [SerializeField] private GrowthManager _growthManager;
@@ -45,6 +46,15 @@ public class GrowthTreeUI : MonoBehaviour
     #endregion
 
     #region 이벤트
+    private void OnEnable()
+    {
+        _hasUserSelectedUpgrade = false;
+        if (_detailsRoot != null)
+        {
+            _detailsRoot.gameObject.SetActive(false);
+        }
+    }
+
     private void Start()
     {
         if (_growthManager == null)
@@ -60,7 +70,7 @@ public class GrowthTreeUI : MonoBehaviour
 
         BuildTree();
 
-        _growthManager.OnSelectionChanged += RefreshDetails;
+        _growthManager.OnSelectionChanged += HandleSelectionChanged;
         _growthManager.OnGrowthChanged += RefreshAll;
 
         if (CurrencyManager.Instance != null)
@@ -68,28 +78,14 @@ public class GrowthTreeUI : MonoBehaviour
             CurrencyManager.Instance.OnBalanceChanged += HandleBalanceChanged;
         }
 
-        if (string.IsNullOrEmpty(_growthManager.SelectedUpgradeId))
-        {
-            IReadOnlyList<UpgradeData> upgrades = _growthManager.Upgrades;
-            for (int i = 0; i < upgrades.Count; i++)
-            {
-                if (upgrades[i] != null && _growthManager.GetNodeStatus(upgrades[i].UpgradeId) == EUpgradeNodeStatus.Unlocked)
-                {
-                    _growthManager.SelectUpgrade(upgrades[i].UpgradeId);
-                    break;
-                }
-            }
-        }
-
         RefreshAll();
-        RefreshDetails(_growthManager.SelectedUpgradeId);
     }
 
     private void OnDestroy()
     {
         if (_growthManager != null)
         {
-            _growthManager.OnSelectionChanged -= RefreshDetails;
+            _growthManager.OnSelectionChanged -= HandleSelectionChanged;
             _growthManager.OnGrowthChanged -= RefreshAll;
         }
 
@@ -119,7 +115,10 @@ public class GrowthTreeUI : MonoBehaviour
 
         RefreshConnections();
         RefreshGold();
-        RefreshDetails(_growthManager.SelectedUpgradeId);
+        if (_hasUserSelectedUpgrade)
+        {
+            RefreshDetails(_growthManager.SelectedUpgradeId);
+        }
     }
     #endregion
 
@@ -239,7 +238,7 @@ public class GrowthTreeUI : MonoBehaviour
         button.targetGraphic = background;
         button.transition = Selectable.Transition.ColorTint;
         string upgradeId = upgrade.UpgradeId;
-        button.onClick.AddListener(delegate { _growthManager.SelectUpgrade(upgradeId); });
+        button.onClick.AddListener(delegate { SelectNode(upgradeId); });
 
         //GameObject iconObject = new GameObject("Icon");
         GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
@@ -416,6 +415,21 @@ public class GrowthTreeUI : MonoBehaviour
         if (_purchaseLabel != null)
         {
             _purchaseLabel.text = level > 0 ? "강화 - " + upgrade.Cost + " Gold" : "해금 - " + upgrade.Cost + " Gold";
+        }
+    }
+
+    private void SelectNode(string upgradeId)
+    {
+        _hasUserSelectedUpgrade = true;
+        _growthManager.SelectUpgrade(upgradeId);
+        RefreshDetails(upgradeId);
+    }
+
+    private void HandleSelectionChanged(string upgradeId)
+    {
+        if (_hasUserSelectedUpgrade)
+        {
+            RefreshDetails(upgradeId);
         }
     }
 
