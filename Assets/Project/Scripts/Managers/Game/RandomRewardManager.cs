@@ -9,6 +9,7 @@ public class RandomRewardManager : MonoBehaviour
 {
     #region 내부변수
     private PigBankGameDataSO _pigData;
+    private bool _isDead;
     #endregion
 
     #region 이벤트
@@ -41,6 +42,13 @@ public class RandomRewardManager : MonoBehaviour
 
     public void Die()
     {
+        if(_isDead)
+        {
+            return;
+        }
+
+        _isDead = true;
+
         Debug.Log("돼지 저금통 파괴");
 
         DropCoins();
@@ -81,12 +89,14 @@ public class RandomRewardManager : MonoBehaviour
             Debug.Log($"[Reward] 기본 코인 보상 계산: {coinCount}개");
         }
 
+        //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
 
-        if(StageRewardManager.Instance != null)
+        if (StageRewardManager.Instance != null)
         {
+            // 현재 누적되는 골드 양 확인
+            Debug.LogWarning($"[TryAddStageGold 호출] 추가하려는 코인: {coinCount}, 현재까지 누적된 스테이지 골드: {StageRewardManager.Instance.StageRewardGold}");
             StageRewardManager.Instance.TryAddStageGold(coinCount);
         }
-        //TODO : 설정된 코인 갯수만큼 사방으로 흩뿌리기, 코인 오브젝트 풀에서 코인 가져오기
     }
     #endregion
 

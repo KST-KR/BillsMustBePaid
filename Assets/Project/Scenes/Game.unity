@@ -15721,7 +15721,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
   _spawnPoint: {fileID: 1958309167}
-  _spawnCount: 1
+  _spawnCount: 5
   _respawnTime: 0.5
 --- !u!4 &1737088453
 Transform:
@@ -17983,50 +17983,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1954386992}
   m_CullTransparentMesh: 1
---- !u!1 &1956691286
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1956691288}
-  - component: {fileID: 1956691287}
-  m_Layer: 0
-  m_Name: StageRewardManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1956691287
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1956691286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 133e64b94dd88394882c2aad5145da9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1956691288
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1956691286}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 903.8921, y: 607.8243, z: 3.8536446}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1958309166
 GameObject:
   m_ObjectHideFlags: 0
@@ -35123,7 +35079,6 @@ SceneRoots:
   - {fileID: 1132498279}
   - {fileID: 2111010045}
   - {fileID: 370864698}
-  - {fileID: 1956691288}
   - {fileID: 2104043097}
   - {fileID: 1737088453}
   - {fileID: 408602939}
