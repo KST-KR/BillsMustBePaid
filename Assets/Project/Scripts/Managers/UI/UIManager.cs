@@ -21,6 +21,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _stageClearPanel;
     [SerializeField] private GameObject _gameOverPanel;
     [SerializeField] private GameObject _upgradePanel;
+    [SerializeField] private GameObject _growthSkillTreePanel;
+    [SerializeField] private GameObject _billPanel;
+
+    [Header("업그레이드 탭 선택 표시")]
+    [SerializeField] private GameObject _billTabSelectedImage;
+    [SerializeField] private GameObject _skillTreeTabSelectedImage;
+    [SerializeField] private GameObject _piggyBankTabSelectedImage;
+    [SerializeField] private GameObject _collectionTabSelectedImage;
 
     // [UI-04-02] 일시정지 메뉴
     [Header("일시정지 메뉴")]
@@ -73,6 +81,7 @@ public class UIManager : MonoBehaviour
         }
 
         Instance = this;
+        SetSelectedUpgradeTab(null);
     }
 
     /// <summary>
@@ -402,6 +411,29 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    private void ShowUpgradeSection(GameObject selectedSection)
+    {
+        if (_upgradePanel == null || selectedSection == null)
+        {
+            Debug.LogWarning("업그레이드 패널 또는 선택한 하위 패널이 연결되지 않음.");
+            return;
+        }
+
+        SetPanelActive(_stageClearPanel, false);
+        SetPanelActive(_upgradePanel, true);
+        SetPanelActive(_growthSkillTreePanel, selectedSection == _growthSkillTreePanel);
+        SetPanelActive(_billPanel, selectedSection == _billPanel);
+        RefreshCurrencyUI();
+    }
+
+    private void SetSelectedUpgradeTab(GameObject selectedImage)
+    {
+        SetPanelActive(_billTabSelectedImage, selectedImage == _billTabSelectedImage);
+        SetPanelActive(_skillTreeTabSelectedImage, selectedImage == _skillTreeTabSelectedImage);
+        SetPanelActive(_piggyBankTabSelectedImage, selectedImage == _piggyBankTabSelectedImage);
+        SetPanelActive(_collectionTabSelectedImage, selectedImage == _collectionTabSelectedImage);
+    }
+
     private void RefreshCurrencyUI()
     {
         if (_currencyManager == null)
@@ -668,13 +700,49 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [GROW-02-01] 스킬 트리 패널 켬
+    /// [GROW-02-01] 성장 트리 화면 전환
+    /// 스테이지 결과 패널은 비활성 처리
+    /// 업그레이드 화면의 성장 트리 표시
     /// </summary>
     public void OnUpgradeButtonClicked()
     {
         HideAllPanels();
-        SetPanelActive(_upgradePanel, true);
-        RefreshCurrencyUI();
+        ShowUpgradeSection(_growthSkillTreePanel);
+        SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
+    }
+
+    /// <summary>
+    /// [BILL-03-02] 스테이지 결과에서 청구서 패널 전환
+    /// 스테이지 결과 패널은 비활성 처리
+    /// 업그레이드 화면의 청구서 내용 표시
+    /// </summary>
+    public void OnBillButtonClicked()
+    {
+        HideAllPanels();
+        ShowUpgradeSection(_billPanel);
+        SetSelectedUpgradeTab(_billTabSelectedImage);
+    }
+
+    /// <summary>
+    /// [GROW-02-01] 스킬 트리 탭 활성화
+    /// 청구서 패널은 비활성 처리
+    /// 업그레이드 화면의 성장 트리 표시
+    /// </summary>
+    public void OnSkillTreeTabButtonClicked()
+    {
+        ShowUpgradeSection(_growthSkillTreePanel);
+        SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
+    }
+
+    /// <summary>
+    /// [BILL-03-02] 청구서 탭 활성화
+    /// 성장 트리 패널은 비활성 처리
+    /// 업그레이드 화면의 청구서 내용 표시
+    /// </summary>
+    public void OnBillTabButtonClicked()
+    {
+        ShowUpgradeSection(_billPanel);
+        SetSelectedUpgradeTab(_billTabSelectedImage);
     }
 
     /// <summary>
