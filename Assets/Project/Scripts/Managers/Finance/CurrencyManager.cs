@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// [FIN-01-01][FIN-01-02][FIN-01-03] 재화 잔고 조회와 변경 이벤트 관리
+/// [FIN-01-01][FIN-01-02][FIN-01-03][FIN-02-02] 재화 잔고와 추가 보상 지급 관리
 /// </summary>
 public class CurrencyManager : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class CurrencyManager : MonoBehaviour
     #region 이벤트
     public event Action<int> OnAmountChanged;
     public event Action<ECurrencyType, int, int> OnBalanceChanged;
+    public event Action<string, ECurrencyType, int> OnRewardGranted;
     #endregion
 
     #region 인스펙터
@@ -27,6 +29,7 @@ public class CurrencyManager : MonoBehaviour
     #endregion
 
     #region 내부 변수
+    private readonly HashSet<string> _grantedRewardIds = new HashSet<string>();
     private int _gold;
     private int _legacyPoints;
     #endregion
@@ -135,6 +138,26 @@ public class CurrencyManager : MonoBehaviour
         }
 
         return penalty;
+    }
+
+    /// <summary>
+    /// [FIN-02-02] 고유 보상 ID 기준 추가 재화 지급과 중복 방지
+    /// </summary>
+    public bool TryGrantReward(string rewardId, ECurrencyType type, int amount)
+    {
+        if (string.IsNullOrWhiteSpace(rewardId) || _grantedRewardIds.Contains(rewardId))
+        {
+            return false;
+        }
+
+        if (!TryAdd(type, amount))
+        {
+            return false;
+        }
+
+        _grantedRewardIds.Add(rewardId);
+        OnRewardGranted?.Invoke(rewardId, type, amount);
+        return true;
     }
     #endregion
 
