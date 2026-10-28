@@ -1,33 +1,37 @@
-using System;
+ï»¿using System;
 using System.IO;
 using UnityEngine;
 
 /// <summary>
-/// °ÔÀÓ µ¥ÀÌÅÍÀÇ ÀúÀå ¹× ºÒ·¯¿À±â¸¦ °ü¸®
+/// ê²Œì„ ë°ì´í„°ì˜ ì €ì¥ ë° ë¶ˆëŸ¬ì˜¤ê¸°ë¥¼ ê´€ë¦¬
 /// </summary>
 public class SaveManager : MonoBehaviour
 {
-    #region »ó¼ö
+    #region ìƒìˆ˜
     private const int MinSlotIndex = 1;
     private const int MaxSlotIndex = 3;
     #endregion
 
-    #region °æ·Î
+    #region ê²½ë¡œ
     private const string SaveFileNameFormat = "save_slot_{0}.json";
     #endregion
 
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static SaveManager Instance { get; private set; }
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region í”„ë¡œí¼í‹°
+    public int CurrentSlotIndex { get; private set; } = -1;
+    #endregion
+
+    #region ì´ë²¤íŠ¸
     public event Action OnGameSaved;
     public event Action<SaveSlotData> OnGameLoaded;
     #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     /// <summary>
-    /// SaveManager ½Ì±ÛÅæÀ» µî·ÏÇÕ´Ï´Ù.
+    /// SaveManager ì‹±ê¸€í†¤ì„ ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
     private void Awake()
     {
@@ -38,10 +42,11 @@ public class SaveManager : MonoBehaviour
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
-    /// SaveManager°¡ ÆÄ±«µÉ ¶§ ½Ì±ÛÅæ ÂüÁ¶¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+    /// SaveManagerê°€ íŒŒê´´ë  ë•Œ ì‹±ê¸€í†¤ ì°¸ì¡°ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
     /// </summary>
     private void OnDestroy()
     {
@@ -52,7 +57,7 @@ public class SaveManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Private)
+    #region ì»¤ìŠ¤í…€ (Private)
     private string GetSavePath(int slotIndex)
     {
         string fileName = string.Format(SaveFileNameFormat, slotIndex);
@@ -61,7 +66,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// µ¥ÀÌÅÍ°¡ ´©¶ôµÈ °æ¿ì »ç¿ëÇÒ ±âº» °´Ã¼¸¦ ÁØºñ
+    /// ë°ì´í„°ê°€ ëˆ„ë½ëœ ê²½ìš° ì‚¬ìš©í•  ê¸°ë³¸ ê°ì²´ë¥¼ ì¤€ë¹„
     /// </summary>
     /// <param name="saveDate"></param>
     private void EnsureValidData(SaveSlotData saveDate)
@@ -93,7 +98,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀúÀå ½½·ÔÀÇ ÃÖ¼Ò, ÃÖ´ë ÀÎµ¦½º °ª ¹İÈ¯
+    /// ì €ì¥ ìŠ¬ë¡¯ì˜ ìµœì†Œ, ìµœëŒ€ ì¸ë±ìŠ¤ ê°’ ë°˜í™˜
     /// </summary>
     /// <param name="slotIndex"></param>
     /// <returns></returns>
@@ -103,8 +108,8 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀúÀå ÆÄÀÏÀ» ÀĞ°í µ¥ÀÌÅÍ¸¦ °ËÁõ
-    /// ºÒ·¯¿À±â ÀÌº¥Æ®´Â ¹ß»ı½ÃÅ°Áö ¾ÊÀ½.
+    /// ì €ì¥ íŒŒì¼ì„ ì½ê³  ë°ì´í„°ë¥¼ ê²€ì¦
+    /// ë¶ˆëŸ¬ì˜¤ê¸° ì´ë²¤íŠ¸ëŠ” ë°œìƒì‹œí‚¤ì§€ ì•ŠìŒ.
     /// </summary>
     /// <param name="slotIndex"></param>
     /// <returns></returns>
@@ -138,29 +143,29 @@ public class SaveManager : MonoBehaviour
         }
         catch (Exception exception)
         {
-            Debug.LogError($"ÀúÀå µ¥ÀÌÅÍ ÀĞ±â ½ÇÆĞ: ½½·Ô {slotIndex}, {exception.Message}");
+            Debug.LogError($"ì €ì¥ ë°ì´í„° ì½ê¸° ì‹¤íŒ¨: ìŠ¬ë¡¯ {slotIndex}, {exception.Message}");
 
             return null;
         }
     }
     #endregion
 
-    #region Ä¿½ºÅÒ ¸Ş¼­µå (Public)
+    #region ì»¤ìŠ¤í…€ ë©”ì„œë“œ (Public)
 
     /// <summary>
-    /// Àü´Ş¹ŞÀº °ÔÀÓ µ¥ÀÌÅÍ¸¦ ÀúÀåÇÕ´Ï´Ù.
+    /// ì „ë‹¬ë°›ì€ ê²Œì„ ë°ì´í„°ë¥¼ ì €ì¥í•©ë‹ˆë‹¤.
     /// </summary>
     public void SaveGame(SaveSlotData saveData)
     {
         if (saveData == null)
         {
-            Debug.LogError("ÀúÀåÇÒ µ¥ÀÌÅÍ°¡ ¾øÀ½.");
+            Debug.LogError("ì €ì¥í•  ë°ì´í„°ê°€ ì—†ìŒ.");
             return;
         }
 
         if (!IsValidSlotIndex(saveData.slotIndex))
         {
-            Debug.LogError("Àß¸øµÈ ÀúÀå ½½·Ô ¹øÈ£");
+            Debug.LogError("ì˜ëª»ëœ ì €ì¥ ìŠ¬ë¡¯ ë²ˆí˜¸");
             return;
         }
 
@@ -178,26 +183,26 @@ public class SaveManager : MonoBehaviour
 
             OnGameSaved?.Invoke();
 
-            Debug.Log($"ÀúÀå ¿Ï·á: ½½·Ô {saveData.slotIndex}");
+            Debug.Log($"ì €ì¥ ì™„ë£Œ: ìŠ¬ë¡¯ {saveData.slotIndex}");
         }
         catch (Exception exception)
         {
-            Debug.LogError($"°ÔÀÓ ÀúÀå ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ê²Œì„ ì €ì¥ ì‹¤íŒ¨: {exception.Message}");
         }
     }
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ ½½·ÔÀ» ÀĞ°í ÇØ´ç µ¥ÀÌÅÍÀÇ º¹¿øÀ» ¾Ë¸².
+    /// ì§€ì •í•œ ìŠ¬ë¡¯ì„ ì½ê³  í•´ë‹¹ ë°ì´í„°ì˜ ë³µì›ì„ ì•Œë¦¼.
     /// </summary>
     public SaveSlotData LoadGame(int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex))
         {
-            Debug.LogError("Àß¸øµÈ ÀúÀå ½½·Ô ¹øÈ£");
+            Debug.LogError("ì˜ëª»ëœ ì €ì¥ ìŠ¬ë¡¯ ë²ˆí˜¸");
             return null;
         }
 
-        // ³»ºÎ ¸Ş¼­µå¸¦ ÀÌ¿ëÇØ µ¥ÀÌÅÍ¸¦ ÀĞ°í °ËÁõ
+        // ë‚´ë¶€ ë©”ì„œë“œë¥¼ ì´ìš©í•´ ë°ì´í„°ë¥¼ ì½ê³  ê²€ì¦
         SaveSlotData saveData = ReadSaveData(slotIndex);
 
         if (saveData == null)
@@ -205,14 +210,14 @@ public class SaveManager : MonoBehaviour
             return null;
         }
 
-        // ÁöÁ¤ÇÑ ½½·ÔÀÇ µ¥ÀÌÅÍ¸¸ ¿ÜºÎ¿¡ ¾Ë¸²
+        // ì§€ì •í•œ ìŠ¬ë¡¯ì˜ ë°ì´í„°ë§Œ ì™¸ë¶€ì— ì•Œë¦¼
         OnGameLoaded?.Invoke(saveData);
 
         return saveData;
     }
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ ½½·Ô¿¡ ÀúÀå µ¥ÀÌÅÍ°¡ Á¸ÀçÇÏ´ÂÁö È®ÀÎ
+    /// ì§€ì •í•œ ìŠ¬ë¡¯ì— ì €ì¥ ë°ì´í„°ê°€ ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸
     /// </summary>
     public bool HasSaveData(int slotIndex)
     {
@@ -225,7 +230,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¼¼ °³ÀÇ ½½·Ô Áß ÇÏ³ª¶óµµ ÀúÀå µ¥ÀÌÅÍ°¡ ÀÖ´ÂÁö È®ÀÎ
+    /// ì„¸ ê°œì˜ ìŠ¬ë¡¯ ì¤‘ í•˜ë‚˜ë¼ë„ ì €ì¥ ë°ì´í„°ê°€ ìˆëŠ”ì§€ í™•ì¸
     /// </summary>
     public bool HasSaveData()
     {
@@ -241,13 +246,13 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀúÀåµÈ °ÔÀÓ µ¥ÀÌÅÍ¸¦ »èÁ¦ÇÕ´Ï´Ù.
+    /// ì €ì¥ëœ ê²Œì„ ë°ì´í„°ë¥¼ ì‚­ì œí•©ë‹ˆë‹¤.
     /// </summary>
     public void DeleteSaveData(int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex))
         {
-            Debug.LogError("Àß¸øµÈ ÀúÀå ½½·Ô ¹øÈ£ÀÔ´Ï´Ù.");
+            Debug.LogError("ì˜ëª»ëœ ì €ì¥ ìŠ¬ë¡¯ ë²ˆí˜¸ì…ë‹ˆë‹¤.");
             return;
         }
 
@@ -258,17 +263,17 @@ public class SaveManager : MonoBehaviour
             if (File.Exists(path))
             {
                 File.Delete(path);
-                Debug.Log($"ÀúÀå µ¥ÀÌÅÍ »èÁ¦ ¿Ï·á: ½½·Ô {slotIndex}");
+                Debug.Log($"ì €ì¥ ë°ì´í„° ì‚­ì œ ì™„ë£Œ: ìŠ¬ë¡¯ {slotIndex}");
             }
         }
         catch (Exception exception)
         {
-            Debug.LogError($"ÀúÀå µ¥ÀÌÅÍ »èÁ¦ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ì €ì¥ ë°ì´í„° ì‚­ì œ ì‹¤íŒ¨: {exception.Message}");
         }
     }
 
     /// <summary>
-    /// ÁøÇà ÁßÀÎ ·± Áß °¡Àå ÃÖ±Ù¿¡ ÀúÀåµÈ µ¥ÀÌÅÍ¸¦ ºÒ·¯¿À±â
+    /// ì§„í–‰ ì¤‘ì¸ ëŸ° ì¤‘ ê°€ì¥ ìµœê·¼ì— ì €ì¥ëœ ë°ì´í„°ë¥¼ ë¶ˆëŸ¬ì˜¤ê¸°
     /// </summary>
     public SaveSlotData LoadMostRecentlyPlayedGame()
     {
@@ -277,7 +282,7 @@ public class SaveManager : MonoBehaviour
 
         for (int slotIndex = MinSlotIndex; slotIndex <= MaxSlotIndex; slotIndex++)
         {
-            // °Ë»ö Áß¿¡´Â ºÒ·¯¿À±â ÀÌº¥Æ®¸¦ ¹ß»ı½ÃÅ°Áö ¾ÊÀ½.
+            // ê²€ìƒ‰ ì¤‘ì—ëŠ” ë¶ˆëŸ¬ì˜¤ê¸° ì´ë²¤íŠ¸ë¥¼ ë°œìƒì‹œí‚¤ì§€ ì•ŠìŒ.
             SaveSlotData saveData = ReadSaveData(slotIndex);
 
             if (saveData == null)
@@ -285,7 +290,7 @@ public class SaveManager : MonoBehaviour
                 continue;
             }
 
-            // ÁøÇà ÁßÀÎ ·±¸¸ ÀÌ¾îÇÏ±â ´ëÇ×À¸·Î Ãë±Ş
+            // ì§„í–‰ ì¤‘ì¸ ëŸ°ë§Œ ì´ì–´í•˜ê¸° ëŒ€í•­ìœ¼ë¡œ ì·¨ê¸‰
             if (!saveData.runData.isRunActive)
             {
                 continue;
@@ -303,13 +308,30 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // °Ë»öÀÌ ³¡³­ µÚ ÃÖÁ¾ ¼±ÅÃµÈ µ¥ÀÌÅÍ¸¸ ¾Ë¸².
+        // ê²€ìƒ‰ì´ ëë‚œ ë’¤ ìµœì¢… ì„ íƒëœ ë°ì´í„°ë§Œ ì•Œë¦¼.
         if (latestData != null)
         {
             OnGameLoaded?.Invoke(latestData);
         }
 
         return latestData;
+    }
+
+    /// <summary>
+    /// í˜„ì¬ ì‚¬ìš©í•  ì €ì¥ ìŠ¬ë¡¯ì„ ì§€ì •
+    /// </summary>
+    /// <param name="slotIndex"></param>
+    /// <returns></returns>
+    public bool SetCurrentSlotIndex(int slotIndex)
+    {
+        if (!IsValidSlotIndex(slotIndex))
+        {
+            Debug.LogError($"ì˜ëª»ëœ ì €ì¥ ìŠ¬ë¡¯ ë²ˆí˜¸: {slotIndex}");
+            return false;
+        }
+
+        CurrentSlotIndex = slotIndex;
+        return true;
     }
 
     #endregion

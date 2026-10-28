@@ -220,6 +220,18 @@ public class GameManager : MonoBehaviour
         Application.Quit();
 #endif
     }
+
+    /// <summary>
+    /// 저장된 런의 활성 상태를 복원합니다.
+    /// 게임 상태 변경 및 런 시작 이벤트는 발생시키지 않습니다.
+    /// </summary>
+    public void RestoreRunState()
+    {
+        _isRunActive = true;
+        SetPaused(false);
+
+        Debug.Log("GameManager : 저장된 런의 활성 상태를 복원");
+    }
     #endregion
 
     #region 커스텀 (private)

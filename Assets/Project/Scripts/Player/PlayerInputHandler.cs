@@ -9,6 +9,9 @@
 public class PlayerInputHandler : MonoBehaviour
 {
     #region 인스펙터
+    [Header("공격 범위")]
+    [SerializeField] private PlayerStats _playerStats;
+
     [Header("입력 설정")]
     [SerializeField] private Camera _mainCamera;
     [SerializeField] private LayerMask _groundLayer;
@@ -18,6 +21,8 @@ public class PlayerInputHandler : MonoBehaviour
     [SerializeField] private Collider _playAreaCollider;
     // 책상 가장자리에서 안쪽으로 띄우는 거리
     [SerializeField] private float _edgePadding = 0f;
+    // 윗면으로 인정할 표면의 기울기 기준
+    [SerializeField, Range(0f, 1f)] private float _minTopSurfaceNormalY = 0.7f;
     #endregion
 
     #region 내부 변수
@@ -58,6 +63,17 @@ public class PlayerInputHandler : MonoBehaviour
         {
             _mainCamera = Camera.main;
         }
+
+        if (_playerStats == null)
+        {
+            _playerStats = GetComponentInParent<PlayerStats>();
+        }
+
+        // 첫 프레임부터 윗면 높이를 알게 하기
+        if (_playAreaCollider != null)
+        {
+            _groundHeight = _playAreaCollider.bounds.max.y;
+        }
     }
 
     private void OnEnable()
@@ -74,8 +90,9 @@ public class PlayerInputHandler : MonoBehaviour
     #region 커스텀 (private)
     /// <summary>
     /// 마우스 입력 값에 따라 업데이트
-    /// 1. 지면 콜라이더에 닿으면 그 지점, 닿지 않으면 마지막으로 닿은 지면 높이의 평면과 만나는 지점을 구함.
-    /// 2. 구한 위치를 책상 범위 안으로 제한해서 MouseWorldPosition에 저장
+    /// 1. 광선이 책산 윗면에 닿으면 그 지점을 사용
+    /// 2. 윗면에 닿지 않으면 마지막으로 닿은 윗면 놓이의 평면과 만나는 지점을 사용
+    /// 3. 구한 위치를 책상 범위 안으로 제한해서 MouseWorldPosition에 저장
     /// </summary>
     private void UpdateMouseWorldPosition()
     {
@@ -90,7 +107,7 @@ public class PlayerInputHandler : MonoBehaviour
         Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
         Vector3 point;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, _groundLayer))
+        if (TryRaycastTopSurface(ray, out RaycastHit hit))
         {
             point = hit.point;
             IsMouseOnGround = true;
@@ -123,13 +140,45 @@ public class PlayerInputHandler : MonoBehaviour
         HasMouseWorldPosition = true;
     }
 
+    /// <summary>
+    /// 광선이 책상 윗면에 닿았는지 검사
+    /// 카메라가 비스듬히 보는 구조에서는 광선이 책상 앞면이나 바닥에 먼저 닿을 수 있으므로
+    /// 표면이 위를 향하는 경우에만 지면으로 인정
+    /// </summary>
+    /// <param name="ray"></param>
+    /// <param name="hit"></param>
+    /// <returns></returns>
+    private bool TryRaycastTopSurface(Ray ray, out RaycastHit hit)
+    {
+        bool isHit = _playAreaCollider != null ? _playAreaCollider.Raycast(ray, out hit, Mathf.Infinity) : Physics.Raycast(ray, out hit, Mathf.Infinity, _groundLayer, QueryTriggerInteraction.Ignore);
+
+        // 임시 확인용: 윗면이 아닌 표면에 닿아서 무시되는 경우만 출력
+        //if (isHit && hit.normal.y < _minTopSurfaceNormalY)
+        //{
+        //    Debug.Log($"무시된 표면: {hit.collider.name} / 법선 {hit.normal} / 높이 {hit.point.y:F2}");
+        //}
+
+        return isHit && hit.normal.y >= _minTopSurfaceNormalY;
+    }
+
+    /// <summary>
+    /// 위치를 책상 콜라이어의 범위(X, Z) 안으로 제한
+    /// </summary>
+    /// <param name="point"></param>
+    /// <param name="area"></param>
+    /// <returns></returns>
     private Vector3 ClampToArea(Vector3 point, Collider area)
     {
         Bounds bounds = area.bounds;
-        float padding = Mathf.Max(0f, _edgePadding);
 
-        point.x = Mathf.Clamp(point.x, bounds.min.x + padding, bounds.max.x - padding);
-        point.z = Mathf.Clamp(point.z, bounds.min.z + padding, bounds.max.z - padding);
+        // 에임 원의 반지름 + 가장자리 여백
+        float radius = _playerStats != null ? Mathf.Max(0f, _playerStats.AttackRange) : 0f;
+
+        float padding = Mathf.Max(0f, _edgePadding);
+        float margin = radius + padding;
+
+        point.x = Mathf.Clamp(point.x, bounds.min.x + margin, bounds.max.x - margin);
+        point.z = Mathf.Clamp(point.z, bounds.min.z + margin, bounds.max.z - margin);
 
         return point;
     }

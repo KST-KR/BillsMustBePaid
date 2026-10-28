@@ -98,11 +98,33 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnNewGameButtonClicked()
     {
-        if (SceneTransitionManager.Instance == null)
+        if (SaveManager.Instance == null)
         {
-            Debug.LogError("SceneManager를 찾을 수 없음.");
+            Debug.LogError("SaveManager를 찾을 수 없음.");
             return;
         }
+
+        if (SceneTransitionManager.Instance == null)
+        {
+            Debug.LogError("SceneTransitionManager를 찾을 수 없음.");
+            return;
+        }
+
+        // 처음 시작하는 새 게임은 슬롯 1번을 사용
+        const int defaultSlotIndex = 1;
+
+        if (SaveManager.Instance.HasSaveData(defaultSlotIndex))
+        {
+            Debug.LogWarning("슬롯 1번에 기존 저장 데이터가 있습니다.");
+            return;
+        }
+
+        if (!SaveManager.Instance.SetCurrentSlotIndex(defaultSlotIndex))
+        {
+            return;
+        }
+
+        GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.NewGame, defaultSlotIndex);
 
         SceneTransitionManager.Instance.LoadGameScene();
     }
