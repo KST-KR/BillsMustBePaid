@@ -29019,6 +29019,7 @@ MonoBehaviour:
     m_Bits: 64
   _playAreaCollider: {fileID: 6712971231045834286}
   _edgePadding: 0
+  _minTopSurfaceNormalY: 0.7
 --- !u!143 &5489345558399541586
 CharacterController:
   m_ObjectHideFlags: 0

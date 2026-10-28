@@ -155,6 +155,26 @@ public class PlayerStamina : MonoBehaviour
         SetCurrent(_current + amount);
         return _current - before;
     }
+
+    /// <summary>
+    /// 저금통 파괴 보상 등 최대 스태미나 초과를 허용하는 회복
+    /// 고갈 상태에서는 회복하지 못함.
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <returns></returns>
+    public float RecoverBeyondMax(float amount)
+    {
+        if (amount <= 0f || _isExhausted)
+        {
+            return 0f;
+        }
+
+        float before = _current;
+
+        SetCurrent(_current + amount);
+
+        return _current - before;
+    }
     #endregion
 
     #region 커스텀 (private)
@@ -179,20 +199,15 @@ public class PlayerStamina : MonoBehaviour
     }
 
     /// <summary>
-    /// [PL-STAMINA-05] 최대 스태미나가 변경되면 현재 스태미나를 새 최대값 이하로 조정
-    /// 최대값이 바뀌었으면 UI 갱신을 위해 변경 이벤트도 전달
+    /// [PL-STAMINA-05] 최대 스태미나 변경 반영
+    /// 최대 스태미나가 변경되어도 현재 스태미나를 강제로 감소시키지 않음.
+    /// 최대 스태미나 변경 시 UI 갱신 이벤트를 전달.
     /// </summary>
     private void HandleStatsChanged()
     {
         float max = Max;
         bool maxChanged = !Mathf.Approximately(_lastMax, max);
         _lastMax = max;
-
-        if (_current > max)
-        {
-            SetCurrent(max);
-            return;
-        }
 
         if (maxChanged)
         {
@@ -213,13 +228,15 @@ public class PlayerStamina : MonoBehaviour
     }
 
     /// <summary>
-    /// 현재 스태미나 0~최대 범위로 제한 설정, 변경 시 이벤트 발생
+    /// 현재 스태미나를 0 이상으로 설정하고 변경 이벤트 발생.
+    /// 최대 스태미나 초과를 허용.
     /// 0에 도달하면 고갈 처리
     /// </summary>
     /// <param name="value"></param>
     private void SetCurrent(float value)
     {
-        float clamped = Mathf.Clamp(value, 0f, Max);
+        float clamped = Mathf.Max(0f, value);
+
         if (Mathf.Approximately(_current, clamped))
         {
             return;
