@@ -52,7 +52,7 @@ public class SpawnPigBank : MonoBehaviour
         // 오브젝트 풀로 돌아가 비활성화된(!activeInHierarchy) 돼지들을 리스트에서 정리합니다.
         _spawnedPigBanks.RemoveAll(pig => pig == null || !pig.activeInHierarchy);
 
-        // 리스폰 코루틴이 돌고 있지 않다면 코루틴을 시작합니다.
+        // 오류 없스리스폰 코루틴이 돌고 있지 않다면 코루틴을 시작합니다.
         if (_spawnedPigBanks.Count == 0 && _respawnCoroutine == null)
         {
             if (StageManager.Instance == null || StageManager.Instance.IsStageActive)

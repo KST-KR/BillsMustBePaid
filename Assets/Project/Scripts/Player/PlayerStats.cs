@@ -169,9 +169,7 @@ public class PlayerStats : MonoBehaviour
             case EUpgradeStat.Luck:
                 _luckGrowth += amount;
                 break;
-
-            /*
-            TODO : EUpgradeStat에 치명타 확률, 최대 스태미나 항목이 추가되면 활성화
+            
             case EUpgradeStat.CriticalChance:
                 _criticalChanceGrowth += amount; 
                 break;
@@ -179,9 +177,9 @@ public class PlayerStats : MonoBehaviour
             case EUpgradeStat.Stamina:
                 _maxStaminaGrowth += amount; 
                 break;
-            */
 
             default:
+                Debug.LogWarning($"처리되지 않은 능력치 성장: {upgrade.TargetStat}");
                 return;
         }
 
