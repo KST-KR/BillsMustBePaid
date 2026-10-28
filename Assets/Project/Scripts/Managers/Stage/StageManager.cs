@@ -231,5 +231,37 @@ public class StageManager : MonoBehaviour
         // ResetStage는 진행 정보 초기화만 담당
     }
 
+    /// <summary>
+    /// 저장된 스테이지 결과 화면 상태를 복원합니다.
+    /// 실제 스테이지 시작 및 클리어 이벤트는 발생시키지 않습니다.
+    /// </summary>
+    public void RestoreStageClear(int stageNumber)
+    {
+        if (stageNumber <= 0)
+        {
+            Debug.LogError("복원할 스테이지 번호가 잘못됨.");
+            return;
+        }
+
+        if (GameManager.Instance == null || !GameManager.Instance.IsRunActive)
+        {
+            Debug.LogError("활성화된 런이 없어 스테이지를 복원할 수 없음.");
+            return;
+        }
+
+        int previousStage = _currentStage;
+
+        _currentStage = stageNumber;
+        _isStageActive = false;
+
+        GameManager.Instance.ChangeGameState(EGameState.StageClear);
+
+        if (previousStage != _currentStage)
+        {
+            OnStageChanged?.Invoke(_currentStage);
+        }
+
+        Debug.Log($"StageManager : 저장된 스테이지 결과 화면 복원 / 스테이지 번호 : {_currentStage}");
+    }
     #endregion
 }
