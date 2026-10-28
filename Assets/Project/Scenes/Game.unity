@@ -28957,7 +28957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 703b2583f7625aa43affba658a6b971a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _inputHandler: {fileID: 0}
+  _inputHandler: {fileID: 5489345558399541584}
   _forwardOffset: 0
   _heightOffset: 0.5
   _targetLayers:
@@ -28991,7 +28991,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _baseAttackPower: 10
-  _baseAttackInterval: 2
+  _baseAttackInterval: 1.5
   _baseAttackRange: 2
   _baseCriticalChance: 0
   _baseLuck: 0
@@ -29017,6 +29017,8 @@ MonoBehaviour:
   _groundLayer:
     serializedVersion: 2
     m_Bits: 64
+  _playAreaCollider: {fileID: 6712971231045834286}
+  _edgePadding: 0
 --- !u!143 &5489345558399541586
 CharacterController:
   m_ObjectHideFlags: 0
