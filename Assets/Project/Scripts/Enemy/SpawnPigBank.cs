@@ -15,6 +15,7 @@ public class SpawnPigBank : MonoBehaviour
     [SerializeField] private Transform _spawnPoint;
     [SerializeField] private int _spawnCount = 3;
     [SerializeField] private float _respawnTime = 3.0f;
+    [SerializeField] private float _spawnRadius = 2.0f;
     #endregion
 
     #region 내부 변수
@@ -69,6 +70,15 @@ public class SpawnPigBank : MonoBehaviour
             StageManager.Instance.OnStageStarted -= HandleStageStarted;
         }
     }
+
+    /// <summary>
+    /// 에디터에서 스폰 범위를 그리기 위한 기즈모
+    /// </summary>
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(_spawnPoint.position, _spawnRadius);
+    }
     #endregion
 
     #region 커스텀 메소드 (Private)
@@ -100,12 +110,12 @@ public class SpawnPigBank : MonoBehaviour
             return;
         }
 
-        Vector3 spawnPosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
-
         if (PigBankObjectPoolManager.Instance != null)
         {
             for (int i = 0; i < _spawnCount; i++)
             {
+                Vector3 spawnPosition = RandomSpawnPoint();
+
                 GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
                 if (pig != null)
                 {
@@ -133,7 +143,7 @@ public class SpawnPigBank : MonoBehaviour
         {
             int currentStage = (StageManager.Instance != null) ? StageManager.Instance.CurrentStage : 1;
             string pigID = GetPigIDForStage(currentStage);
-            Vector3 spawnPosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
+            Vector3 spawnPosition = RandomSpawnPoint();
 
             if (PigBankObjectPoolManager.Instance != null)
             {
@@ -148,6 +158,22 @@ public class SpawnPigBank : MonoBehaviour
 
         // 코루틴이 끝났으므로 참조를 초기화하여 다음 0마리 상황에 다시 실행될 수 있개 한다.
         _respawnCoroutine = null;
+    }
+
+    /// <summary>
+    /// 기준 위치를 중심으로 원형 범위 내의 무작위 3D 좌표를 반환
+    /// </summary>
+    private Vector3 RandomSpawnPoint()
+    {
+        Vector3 basePosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
+
+        // XZ 평면 상에서 원 내부의 무작위 점 추출 (Random.insideUnitCircle은 2차원 반경 벡터 반환)
+        Vector2 randomCircle = Random.insideUnitCircle * _spawnRadius;
+
+        // Y축(높이)은 스폰 포인트의 높이를 유지하고, X와 Z에 오프셋을 더해줌
+        Vector3 spawnPos = new Vector3(basePosition.x + randomCircle.x, basePosition.y, basePosition.z + randomCircle.y);
+
+        return spawnPos;
     }
 
     /// <summary>

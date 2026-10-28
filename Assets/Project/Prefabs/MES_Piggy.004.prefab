@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.028051376, y: 2.8737261, z: -1.4529276}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3171561971416651248}
@@ -76,6 +76,7 @@ MonoBehaviour:
   _pigData: {fileID: 11400000, guid: 3bacb39c0a27431499f351b15756f872, type: 2}
   _jumpHeight: 0.6
   _jumpSpeed: 8
+  _radius: 2.399
 --- !u!65 &1435380928431481864
 BoxCollider:
   m_ObjectHideFlags: 0

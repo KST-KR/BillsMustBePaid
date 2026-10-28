@@ -15723,6 +15723,7 @@ MonoBehaviour:
   _spawnPoint: {fileID: 1958309167}
   _spawnCount: 5
   _respawnTime: 0.5
+  _spawnRadius: 7
 --- !u!4 &1737088453
 Transform:
   m_ObjectHideFlags: 0
@@ -18008,7 +18009,7 @@ Transform:
   m_GameObject: {fileID: 1958309166}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.36, y: 1.98, z: -8}
+  m_LocalPosition: {x: 5.36, y: 1.98, z: -5.82}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
