@@ -552,7 +552,14 @@ public class UIManager : MonoBehaviour
         HideAllPanels();
 
         SetPanelActive(_stageClearPanel, true);
+
+        // 현재 보유 재화를 업그레이드 화면과 결과 화면에 각각 반영
         RefreshCurrencyUI();
+
+        if (_currencyManager != null)
+        {
+            UpdateResultTotalGoldUI(_currencyManager.Gold);
+        }
     }
 
     /// <summary>
