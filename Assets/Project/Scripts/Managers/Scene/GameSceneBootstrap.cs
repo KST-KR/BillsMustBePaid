@@ -62,11 +62,22 @@ public class GameSceneBootstrap : MonoBehaviour
     }
 
     /// <summary>
-    /// 저장 데이터를 불러와 런과 스테이지 상태를 복원
+    /// 저장 데이터를 검증한 뒤 게임 상태를 순서대로 복원합니다.
     /// </summary>
     private void LoadSavedGame(int slotIndex)
     {
-        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
+        SaveManager saveManager = SaveManager.Instance;
+        CurrencyManager currencyManager = CurrencyManager.Instance;
+        GrowthManager growthManager = GrowthManager.Instance;
+
+        if (saveManager == null || currencyManager == null || growthManager == null || GameManager.Instance == null || StageManager.Instance == null)
+        {
+            Debug.LogError("게임 데이터 복원에 필요한 매니저가 없음.");
+            return;
+        }
+
+        // 1. 저장 데이터 읽기 (아직 복원 이벤트는 발생하지 않음)
+        SaveSlotData saveData = saveManager.LoadGame(slotIndex);
 
         if (saveData == null)
         {
@@ -74,17 +85,31 @@ public class GameSceneBootstrap : MonoBehaviour
             return;
         }
 
-        if (!saveData.runData.isRunActive ||
-            saveData.runData.currentStage <= 0)
+        // 2. 런 및 스테이지 데이터 검증
+        if (!saveData.runData.isRunActive || saveData.runData.currentStage <= 0)
         {
-            Debug.LogError("이어하기에 필요한 런 또는 스테이지 정보가 올바르지 않습니다.");
+            Debug.LogError("이어하기에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
             return;
         }
 
-        // 런 활성 상태 복원. OnRunStarted는 발생하지 않습니다.
+        // 3. 재화 복원
+        if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
+        {
+            Debug.LogError("재화 데이터 복원에 실패");
+            return;
+        }
+
+        // 4. 성장 시스템에 검증된 저장 데이터 전달
+        // GrowthManager가 OnGameLoaded를 구독하고 있으므로
+        // 이 시점에 런 성장 데이터 복원이 실행
+        saveManager.NotifyGameLoaded(saveData);
+
+        // 5. 런 활성 상태 복원
         GameManager.Instance.RestoreRunState();
 
-        // 스테이지 번호와 결과 화면 상태 복원
+        // 6. 모든 데이터 복원 후 결과 화면 표시
         StageManager.Instance.RestoreStageClear(saveData.runData.currentStage);
+
+        Debug.Log($"이어하기 데이터 복원 완료: " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
     }
 }

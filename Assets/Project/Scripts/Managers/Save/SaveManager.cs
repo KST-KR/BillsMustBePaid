@@ -192,7 +192,7 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 지정한 슬롯을 읽고 해당 데이터의 복원을 알림.
+    /// 지정한 슬롯을 읽기
     /// </summary>
     public SaveSlotData LoadGame(int slotIndex)
     {
@@ -202,18 +202,22 @@ public class SaveManager : MonoBehaviour
             return null;
         }
 
-        // 내부 메서드를 이용해 데이터를 읽고 검증
-        SaveSlotData saveData = ReadSaveData(slotIndex);
+        return ReadSaveData(slotIndex);
+    }
 
+    /// <summary>
+    /// 검증이 끝난 저장 데이터의 복원을 구독자에게 알림
+    /// </summary>
+    /// <param name="saveData"></param>
+    public void NotifyGameLoaded(SaveSlotData saveData)
+    {
         if (saveData == null)
         {
-            return null;
+            Debug.LogError("복원할 저장 데이터가 없음.");
+            return;
         }
-
-        // 지정한 슬롯의 데이터만 외부에 알림
+        
         OnGameLoaded?.Invoke(saveData);
-
-        return saveData;
     }
 
     /// <summary>
@@ -334,5 +338,33 @@ public class SaveManager : MonoBehaviour
         return true;
     }
 
+    public int GetMostRecentlyPlayedSlotIndex()
+    {
+        int lastestSlotIndex = -1;
+        DateTime latestTime = DateTime.MinValue;
+
+        for (int slotIndex = MinSlotIndex; slotIndex <= MaxSlotIndex; slotIndex++)
+        {
+            SaveSlotData saveData = ReadSaveData(slotIndex);
+
+            if (saveData == null || !saveData.runData.isRunActive)
+            {
+                continue;
+            }
+
+            if (!DateTime.TryParse(saveData.lastPlayedAt, out DateTime playedAt))
+            {
+                continue;
+            }
+
+            if (playedAt > latestTime)
+            {
+                latestTime = playedAt;
+                lastestSlotIndex = slotIndex;
+            }
+        }
+
+        return lastestSlotIndex;
+    }
     #endregion
 }

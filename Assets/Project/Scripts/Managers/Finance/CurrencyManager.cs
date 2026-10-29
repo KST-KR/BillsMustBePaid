@@ -197,6 +197,29 @@ public class CurrencyManager : MonoBehaviour
         OnRewardGranted?.Invoke(rewardId, type, amount);
         return true;
     }
+
+    /// <summary>
+    /// 저장된 골드와 레거시 포인트 복원
+    /// 기존 잔액에 더하지 않고 저장된 값으로 설정
+    /// </summary>
+    /// <param name="gold"></param>
+    /// <param name="legacyPoints"></param>
+    /// <returns></returns>
+    public bool RestoreBalances(int gold, int legacyPoints)
+    {
+        if (gold < 0 || legacyPoints < 0)
+        {
+            Debug.LogError("복원할 재화 값은 음수가 되면 안됌.");
+            return false;
+        }
+
+        SetBalance(ECurrencyType.Gold, gold);
+        SetBalance(ECurrencyType.LegacyPoint, legacyPoints);
+
+        Debug.Log($"재화 복원 완료: 골드 {Gold}, 레거시 포인트 {LegacyPoints}");
+
+        return true;
+    }
     #endregion
 
     #region 커스텀 (Private)

@@ -23,22 +23,36 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject _loadPanel;
     [SerializeField] private GameObject _settingsPanel;
 
+    #region 이벤트 함수
     private void Start()
     {
         // 실제 저장 시스템과 연결할 부분
         bool hasSaveData = CheckSaveData();
 
         SetSaveDataUI(hasSaveData);
-
-        // 초기 패널 설정
-        _mainMenuPanel.SetActive(true);
-        _loadPanel.SetActive(false);
-        _settingsPanel.SetActive(false);
+        ShowPanel(_mainMenuPanel);
     }
+    #endregion
 
     private bool CheckSaveData()
     {
-        // 나중에 실제 저장 데이터 확인 로직으로 교체
+        if (SaveManager.Instance == null)
+        {
+            Debug.LogError("SaveManager를 찾을 수 없음.");
+            return false;
+        }
+
+        // 저장 슬롯 1~3 중 하나라도 데이터가 있는지 확인
+        for (int slotIndex = 1; slotIndex <= 3; slotIndex++)
+        {
+            if (SaveManager.Instance.HasSaveData(slotIndex))
+            {
+                Debug.Log($"저장 데이터 확인: 슬롯 {slotIndex}");
+                return true;
+            }
+        }
+
+        Debug.Log("저장 데이터 없음.");
         return false;
     }
 
@@ -60,40 +74,31 @@ public class MainMenuUI : MonoBehaviour
         _loadOrNewGameButton.SetActive(hasSaveData);
     }
 
-    /// <summary>
-    /// 불러오기 패널 열기
-    /// </summary>
+    private void ShowPanel(GameObject targetPanel)
+    {
+        _mainMenuPanel.SetActive(targetPanel == _mainMenuPanel);
+        _loadPanel.SetActive(targetPanel == _loadPanel);
+        _settingsPanel.SetActive(targetPanel == _settingsPanel);
+    }
+
     public void OpenLoadPanel()
     {
-        _mainMenuPanel.SetActive(false);
-        _loadPanel.SetActive(true);
+        ShowPanel(_loadPanel);
     }
 
-    /// <summary>
-    /// 불러오기 패널 닫고 메인 메뉴 복귀
-    /// </summary>
     public void CloseLoadPanel()
     {
-        _loadPanel.SetActive(false);
-        _mainMenuPanel.SetActive(true);
+        ShowPanel(_mainMenuPanel);
     }
 
-    /// <summary>
-    /// 설정 패널 열기
-    /// </summary>
     public void OpenSettingsPanel()
     {
-        _mainMenuPanel.SetActive(false);
-        _settingsPanel.SetActive(true);
+        ShowPanel(_settingsPanel);
     }
 
-    /// <summary>
-    /// 설정 패널 닫고 메인 메뉴 복귀
-    /// </summary>
     public void CloseSettingsPanel()
     {
-        _settingsPanel.SetActive(false);
-        _mainMenuPanel.SetActive(true);
+        ShowPanel(_mainMenuPanel);
     }
 
     public void OnNewGameButtonClicked()
@@ -125,6 +130,42 @@ public class MainMenuUI : MonoBehaviour
         }
 
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.NewGame, defaultSlotIndex);
+
+        SceneTransitionManager.Instance.LoadGameScene();
+    }
+
+    public void OnContinueButtonClicked()
+    {
+        if (SaveManager.Instance == null)
+        {
+            Debug.LogError("SaveManager를 찾을 수 없음.");
+            return;
+        }
+
+        if (SceneTransitionManager.Instance == null)
+        {
+            Debug.LogError("SceneTransitionManager를 찾을 수 없음.");
+            return;
+        }
+
+        // 가장 최근 저장 슬롯 확인
+        int slotIndex = SaveManager.Instance.GetMostRecentlyPlayedSlotIndex();
+
+        if (slotIndex < 1 || slotIndex > 3)
+        {
+            Debug.LogWarning("이어하기에 사용할 수 있는 저장 데이터가 없음.");
+            return;
+        }
+
+        if (!SaveManager.Instance.SetCurrentSlotIndex(slotIndex))
+        {
+            return;
+        }
+
+        // 게임 씬에 이어하기 정보를 전달
+        GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.LoadGame, slotIndex);
+
+        Debug.Log($"이어하기 시작: 슬롯 {slotIndex}");
 
         SceneTransitionManager.Instance.LoadGameScene();
     }
