@@ -2,8 +2,19 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ECurrencyTransactionType
+{
+    Unspecified,
+    Purchase,
+    Upgrade,
+    BillPayment,
+    Other
+}
+
 /// <summary>
-/// [FIN-01-01][FIN-01-02][FIN-01-03][FIN-02-02] 재화 잔고와 추가 보상 지급 관리
+/// [FIN-01-01][FIN-01-02][FIN-01-03][FIN-02-02][FIN-03-01] 재화 잔고와 거래 관리
+/// 공통 재화 증감과 잔고 알림 제공
+/// 거래 유형별 지출 검증과 결과 알림 제공
 /// </summary>
 public class CurrencyManager : MonoBehaviour
 {
@@ -20,6 +31,7 @@ public class CurrencyManager : MonoBehaviour
     public event Action<int> OnAmountChanged;
     public event Action<ECurrencyType, int, int> OnBalanceChanged;
     public event Action<string, ECurrencyType, int> OnRewardGranted;
+    public event Action<ECurrencyTransactionType, ECurrencyType, int, int> OnCurrencySpent;
     #endregion
 
     #region 인스펙터
@@ -32,6 +44,7 @@ public class CurrencyManager : MonoBehaviour
     private readonly HashSet<string> _grantedRewardIds = new HashSet<string>();
     private int _gold;
     private int _legacyPoints;
+    private bool _isSpending;
     #endregion
 
     #region 이벤트 함수
@@ -99,16 +112,41 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// [FIN-01-02] 잔고를 확인하고 지정한 재화 차감
+    /// [FIN-03-01] 잔고 확인 후 지정한 재화 차감
+    /// 음수 금액과 잔고 부족 요청 거부
+    /// 성공한 지출은 잔고 변경 알림과 거래 알림 발생
     /// </summary>
     public bool TrySpend(ECurrencyType type, int amount)
     {
-        if (amount <= 0 || GetBalance(type) < amount)
+        return TrySpend(type, amount, ECurrencyTransactionType.Unspecified);
+    }
+
+    /// <summary>
+    /// [FIN-03-01] 거래 유형과 잔고를 검증해 재화 지출
+    /// 요청 금액 전체를 한 번에 차감해 부분 결제 방지
+    /// 성공한 거래의 종류와 차감 후 잔고 전달
+    /// </summary>
+    public bool TrySpend(ECurrencyType type, int amount, ECurrencyTransactionType transactionType)
+    {
+        if ((type != ECurrencyType.Gold && type != ECurrencyType.LegacyPoint) ||
+            !Enum.IsDefined(typeof(ECurrencyTransactionType), transactionType) ||
+            amount <= 0 || _isSpending || GetBalance(type) < amount)
         {
             return false;
         }
 
-        SetBalance(type, GetBalance(type) - amount);
+        int remainingBalance = GetBalance(type) - amount;
+        _isSpending = true;
+        try
+        {
+            SetBalance(type, remainingBalance);
+            OnCurrencySpent?.Invoke(transactionType, type, amount, remainingBalance);
+        }
+        finally
+        {
+            _isSpending = false;
+        }
+
         return true;
     }
 

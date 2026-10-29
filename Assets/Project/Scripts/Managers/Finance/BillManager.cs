@@ -115,7 +115,8 @@ public class BillManager : MonoBehaviour
     public bool TryPayCurrentBill()
     {
         BillRecord bill = GetNextUnpaidBill();
-        if (bill == null || CurrencyManager.Instance == null || !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, bill.Amount))
+        if (bill == null || CurrencyManager.Instance == null ||
+            !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, bill.Amount, ECurrencyTransactionType.BillPayment))
         {
             return false;
         }
