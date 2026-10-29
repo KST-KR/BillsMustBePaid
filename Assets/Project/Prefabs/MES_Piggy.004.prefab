@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: -7953228954195822865}
   - component: {fileID: 7995894921422296563}
   - component: {fileID: -1109432764024298058}
+  - component: {fileID: 1590600810029089567}
   - component: {fileID: 1435380928431481864}
   m_Layer: 7
   m_Name: MES_Piggy.004
@@ -77,6 +78,21 @@ MonoBehaviour:
   _jumpHeight: 0.6
   _jumpSpeed: 8
   _radius: 2.399
+--- !u!114 &1590600810029089567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727750011497123723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f7d9a344352e140a91e51e38234676, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pigData:
+    _pigBodyMaterial: {fileID: 2100000, guid: 8023579663947404d83c688640c008ba, type: 2}
+    _pigEyeMaterial: {fileID: 2100000, guid: 3e1b7c077fef43d48b2ebcc07d0f45a2, type: 2}
 --- !u!65 &1435380928431481864
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -159,7 +175,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1914217146509554597, guid: 68bec01d41ac9d94abcec6a20eb9cfae, type: 3}
+  - {fileID: 2100000, guid: 3e1b7c077fef43d48b2ebcc07d0f45a2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -242,7 +258,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -2836946208665841951, guid: 68bec01d41ac9d94abcec6a20eb9cfae, type: 3}
+  - {fileID: 2100000, guid: 8023579663947404d83c688640c008ba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
