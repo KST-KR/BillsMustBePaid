@@ -55,11 +55,11 @@ public class PigBankMoveing : MonoBehaviour
     /// <summary>
     /// 에디터에서 반구 범위를 그리기 위한 기즈모
     /// </summary>
-    //private void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.yellow;
-    //    Gizmos.DrawSphere(transform.position, _radius);
-    //}
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(transform.position, _radius);
+    }
     #endregion
 
     #region 커스텀 메서드 (private)
@@ -72,9 +72,14 @@ public class PigBankMoveing : MonoBehaviour
         }
 
         float currentSpeed = _pigData.MoveSpeed;
+        Vector3 finalDir = _moveDir.normalized;
+
+        float moveDiatance = currentSpeed * Time.deltaTime;
+        float castRadius = 1f;
+        float castDistance = moveDiatance + 0.2f;
 
         // 진행 방향 앞에 보이지 않는 벽(Wall)이 있는지 레이캐스트로 검사
-        if (Physics.Raycast(transform.position, _moveDir, out RaycastHit hit, 0.6f))
+        if (Physics.SphereCast(transform.position, castRadius,finalDir, out RaycastHit hit, 0.6f))
         {
             if (hit.collider.CompareTag("Wall"))
             {
@@ -82,10 +87,10 @@ public class PigBankMoveing : MonoBehaviour
                 _moveDir = Vector3.Reflect(_moveDir, hit.normal);
                 _moveDir.y = 0;
                 _moveDir.Normalize();
+
+                finalDir = _moveDir;
             }
         }
-
-        Vector3 finalDir = _moveDir.normalized;
 
         // 전진
         transform.Translate(finalDir * currentSpeed * Time.deltaTime, Space.World);
