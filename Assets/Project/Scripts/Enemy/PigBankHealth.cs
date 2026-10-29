@@ -41,6 +41,16 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 
         _currentHP = Mathf.Max(0, _currentHP - damageAmount);
 
+        HitEffect hitEffect = GetComponent<HitEffect>();
+        if (hitEffect != null)
+        {
+            hitEffect.ChangeColor();
+        }
+        else
+        {
+            Debug.LogError("돼지 저금통에 HitEffect가 없습니다!", this);
+        }
+
         Debug.Log($"{_gameData.PigBankName} 피격: 피해량 {damageAmount}, 남은 HP {_currentHP}");
 
         if (_currentHP <= 0)
