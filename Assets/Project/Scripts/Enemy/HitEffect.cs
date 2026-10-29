@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class HitEffect : MonoBehaviour
@@ -9,7 +11,6 @@ public class HitEffect : MonoBehaviour
     #endregion
 
     #region 내부 변수
-    private Renderer _renderer;
     private Material[] _materials;
     private Color[] _originColors;
 
@@ -21,20 +22,23 @@ public class HitEffect : MonoBehaviour
     #region 이벤트 함수
     private void Awake()
     {
-        _renderer = GetComponentInChildren<Renderer>();
+        Renderer[] renderer = GetComponentsInChildren<Renderer>();
+        List<Material> materialsList = new List<Material>();
 
-        if (_renderer != null)
+        foreach(var rend in renderer)
         {
-            _materials = _renderer.materials;
-
-            _originColors = new Color[_materials.Length];
-            for (int i = 0; i < _materials.Length; i++)
-            {
-                _originColors[i] = _materials[i].color;
-            }
-
-            Debug.Log($"[HitEffect] 머티리얼 개수: {_materials.Length}");
+            materialsList.Add(rend.material);
         }
+    
+        _materials = materialsList.ToArray();
+
+        _originColors = new Color[_materials.Length];
+        for (int i = 0; i < _materials.Length; i++)
+        {
+            _originColors[i] = _materials[i].color;
+        }
+
+        Debug.Log($"[HitEffect] 머티리얼 개수: {_materials.Length}");
     }
     #endregion
 
