@@ -112,7 +112,8 @@ public class GrowthManager : MonoBehaviour
     public bool PurchaseUpgrade(string upgradeId)
     {
         UpgradeData upgrade = GetUpgrade(upgradeId);
-        if (upgrade == null || !CanPurchase(upgradeId) || !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, upgrade.Cost))
+        if (upgrade == null || !CanPurchase(upgradeId) ||
+            !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, upgrade.Cost, ECurrencyTransactionType.Upgrade))
         {
             return false;
         }
