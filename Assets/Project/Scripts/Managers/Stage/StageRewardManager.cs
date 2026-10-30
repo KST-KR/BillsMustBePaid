@@ -17,6 +17,7 @@ public class StageRewardManager : MonoBehaviour
     #region 속성
 
     public int StageRewardGold => _stageRewardGold;
+    public int StagePenaltyGold => _stagePenaltyGold;
 
     #endregion
 
@@ -33,6 +34,7 @@ public class StageRewardManager : MonoBehaviour
     private CurrencyManager _currencyManager;
 
     private int _stageRewardGold;
+    private int _stagePenaltyGold;
     private bool _isSettled;
     private bool _isSubscribed;
 
@@ -117,6 +119,7 @@ public class StageRewardManager : MonoBehaviour
     private void HandleStageStarted(int stageNumber)
     {
         _stageRewardGold = 0;
+        _stagePenaltyGold = 0;
         _isSettled = false;
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
@@ -131,6 +134,7 @@ public class StageRewardManager : MonoBehaviour
     {
         // 실패한 스테이지의 미정산 보상은 지급하지 않음.
         _stageRewardGold = 0;
+        _stagePenaltyGold = 0;
         _isSettled = true;
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
@@ -155,7 +159,12 @@ public class StageRewardManager : MonoBehaviour
             return;
         }
 
-        int rewardGold = _stageRewardGold;
+        // 스테이지 보상 골드에서 연체 패널티를 계산하여 차감
+        int sRewardGold = _stageRewardGold;
+        _stagePenaltyGold = BillManager.Instance != null
+            ? BillManager.Instance.CalculateOverdueIncomePenalty(sRewardGold)
+            : 0;
+        int rewardGold = Mathf.Max(0, sRewardGold - _stagePenaltyGold);
 
         if (rewardGold > 0 &&
             !_currencyManager.TryAdd(ECurrencyType.Gold, rewardGold))

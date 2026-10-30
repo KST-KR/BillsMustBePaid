@@ -251,6 +251,10 @@ public class GameSaveController : MonoBehaviour
 
         // 현재 플레이어의 영구 재화 정보
         saveData.playerData.legacyPoints = _currencyManager.LegacyPoints;
+        if (RoguelikeManager.Instance != null)
+        {
+            saveData.playerData.bankruptcyCycle = RoguelikeManager.Instance.CycleCount;
+        }
 
         // 현재 런의 진행 정보 데이터
         saveData.runData.isRunActive = _gameManager.IsRunActive;

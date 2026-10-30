@@ -206,6 +206,36 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
+    /// [ROGUE-02-02] 파산 후 영구 사이클 번호를 저장
+    /// </summary>
+    public bool SaveBankruptcyCycle(int cycle)
+    {
+        if (!IsValidSlotIndex(CurrentSlotIndex) || cycle < 1)
+        {
+            Debug.LogError("파산 시 싸이클 슬롯 저장 에러");
+            return false;
+        }
+
+        SaveSlotData saveData = HasSaveData(CurrentSlotIndex) ? LoadGame(CurrentSlotIndex) : null;
+        if (saveData == null)
+        {
+            saveData = new SaveSlotData();
+            saveData.slotIndex = CurrentSlotIndex;
+        }
+
+        EnsureValidData(saveData);
+        saveData.playerData.bankruptcyCycle = cycle;
+        saveData.runData.isRunActive = false;
+        saveData.runData.currentStage = 0;
+        saveData.runData.currentGold = 0;
+        saveData.runData.currentStamina = 0.0f;
+        saveData.runData.runGrowth = new RunGrowthSaveData();
+        SaveGame(saveData);
+        SaveSlotData savedData = LoadGame(CurrentSlotIndex);
+        return savedData != null && savedData.playerData.bankruptcyCycle == cycle && !savedData.runData.isRunActive;
+    }
+
+    /// <summary>
     /// 검증이 끝난 저장 데이터의 복원을 구독자에게 알림
     /// </summary>
     /// <param name="saveData"></param>

@@ -8,6 +8,7 @@
 public class PlayerSaveData
 {
     public int legacyPoints;
+    public int bankruptcyCycle = 1;
     public PermanentGrowthSaveData permanentGrowth;
 
     public PlayerSaveData()
