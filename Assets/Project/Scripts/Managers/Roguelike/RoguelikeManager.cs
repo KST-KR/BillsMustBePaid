@@ -2,17 +2,22 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Ã»±¸ »çÀÌÅ¬, ÀÌº¥Æ® ÆÄ»ê ÈÄÃ³¸®¿Í ¼ºÀå ¼±ÅÃ ¿äÃ»À» °ü¸®
-/// ¿ä¼Á: GameManagerÀÇ ·± ½ÃÀÛ/Á¾·á ¹× ½ºÅ×ÀÌÁö Èå¸§¿¡¼­ ÀÌ ¸Å´ÏÀúÀÇ °ø°³ ¸Ş¼­µå¸¦ È£Ãâ
+/// ì²­êµ¬ ì‚¬ì´í´, ì´ë²¤íŠ¸ íŒŒì‚° í›„ì²˜ë¦¬ì™€ ì„±ì¥ ì„ íƒ ìš”ì²­ì„ ê´€ë¦¬
 /// </summary>
 public class RoguelikeManager : MonoBehaviour
 {
-    #region ½Ì±ÛÅæ
+    #region ì‹±ê¸€í†¤
     public static RoguelikeManager Instance { get; private set; }
     #endregion
 
+    #region ì†ì„±
+    public int CycleCount { get; private set; } = 1;
+    #endregion
 
-    #region ÀÌº¥Æ® ÇÔ¼ö
+    private bool _isRestartingAfterBankruptcy;
+
+
+    #region ì´ë²¤íŠ¸ í•¨ìˆ˜
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -33,19 +38,23 @@ public class RoguelikeManager : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ (Public)
+    #region ì»¤ìŠ¤í…€ (Public)
     /// <summary>
-    /// »õ ·±À» ½ÃÀÛÇÏ°í Ã¹ Ã»±¸¼­¸¦ ¹ßÇà
-    /// ¿ä¼Á: GameManager.StartRun Èå¸§¿¡¼­ È£ÃâÇØ Ã¹ Ã»±¸¼­¸¦ ½ÃÀÛ
+    /// ìƒˆ ëŸ°ì„ ì‹œì‘í•˜ê³  ì²« ì²­êµ¬ì„œë¥¼ ë°œí–‰
     /// </summary>
     public bool BeginRun()
     {
-        return true;
+        if (GameManager.Instance == null || GameManager.Instance.IsRunActive)
+        {
+            return false;
+        }
+
+        GameManager.Instance.StartRun();
+        return GameManager.Instance.IsRunActive;
     }
 
     /// <summary>
-    /// ÇöÀç Ã»±¸¼­¸¦ ³³ºÎÇÏ°í ´ÙÀ½ »çÀÌÅ¬ Ã»±¸¼­ ¹ßÇà
-    /// ¿ä¼Á: ³³ºÎ UI ÀÔ·Â¿¡¼­ È£Ãâ ´ÙÀ½ »çÀÌÅ¬ Ç¥½Ã¸¦°»½Å
+    /// í˜„ì¬ ì²­êµ¬ì„œë¥¼ ë‚©ë¶€í•˜ê³  ë‹¤ìŒ ì‚¬ì´í´ ì²­êµ¬ì„œ ë°œí–‰
     /// </summary>
     public bool PayBillAndAdvance()
     {
@@ -53,17 +62,57 @@ public class RoguelikeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àç½ÃÀÛ ½Ã ÀÏ¹İ ¼ºÀåÀ» ÃÊ±âÈ­ÇÏ°í ¿µ±¸ ¼ºÀåÀ» À¯ÁöÇÑ Ã¤ »õ ·±À» ½ÃÀÛ
-    /// ¿ä¼Á: GameManagerÀÇ Àç½ÃÀÛ ¼±ÅÃ ÃÄ¸® ÈÄ È£Ãâ
+    /// ì¬ì‹œì‘ ì‹œ ì¼ë°˜ ì„±ì¥ì„ ì´ˆê¸°í™”í•˜ê³  ì˜êµ¬ ì„±ì¥ì„ ìœ ì§€í•œ ì±„ ìƒˆ ëŸ°ì„ ì‹œì‘
     /// </summary>
     public bool RestartAfterBankruptcy()
     {
-        return BeginRun();
+        if (_isRestartingAfterBankruptcy || BillManager.Instance == null || !BillManager.Instance.HasExpiredBills ||
+            GameManager.Instance == null || CurrencyManager.Instance == null)
+        {
+            return false;
+        }
+
+        _isRestartingAfterBankruptcy = true;
+        CycleCount = CycleCount == int.MaxValue ? int.MaxValue : CycleCount + 1;
+
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.SaveBankruptcyCycle(CycleCount);
+        }
+
+        if (GameManager.Instance.IsRunActive)
+        {
+            GameManager.Instance.EndRun();
+        }
+
+        CurrencyManager.Instance.ResetRunGold();
+        if (GrowthManager.Instance != null)
+        {
+            GrowthManager.Instance.ResetRunGrowth();
+        }
+
+        BillManager.Instance.ResetRunBills();
+        bool restarted = BeginRun();
+        if (restarted && GameSaveController.Instance != null)
+        {
+            GameSaveController.Instance.SaveCurrentProgress(CurrencyManager.Instance.Gold);
+        }
+
+        _isRestartingAfterBankruptcy = false;
+        return restarted;
     }
 
     /// <summary>
-    /// ¿ÜºÎ °ÔÀÓ Èå¸§¿¡¼­ ·± Á¾·á¸¦ ¾Ë¸®°í ¹Ì³³ Ã»±¸¼­¸¦ Á¤¸®
-    /// ¿ä¼Á: GameOver Èå¸§¿¡¼­ È£Ãâ
+    /// [ROGUE-02-02] ì €ì¥ ë°ì´í„°ì—ì„œ ì˜êµ¬ ì‚¬ì´í´ ë²ˆí˜¸ ë³µì›
+    /// ëˆ„ë½ë˜ê±°ë‚˜ ì˜ëª»ëœ ê°’ì€ ì²« ì‚¬ì´í´ë¡œ ë³´ì •
+    /// </summary>
+    public void RestoreCycleCount(int cycleCount)
+    {
+        CycleCount = Mathf.Max(1, cycleCount);
+    }
+
+    /// <summary>
+    /// ì™¸ë¶€ ê²Œì„ íë¦„ì—ì„œ ëŸ° ì¢…ë£Œë¥¼ ì•Œë¦¬ê³  ë¯¸ë‚© ì²­êµ¬ì„œë¥¼ ì •ë¦¬
     /// </summary>
     public bool EndRun()
     {
@@ -71,9 +120,7 @@ public class RoguelikeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î »ç¸Á ÅëÁö¸¦ ¹Ş¾Æ ÇöÀç ·±À» Á¾·á
-    /// ¼±ÅÂ: ÇÃ·¹ÀÌ¾î ÅëÇÕ ½ºÅ×ÀÌÆ®¿¡¼­ »ç¸Á È®Á¤ ½Ã È£Ãâ
-    /// ¿ä¼Á: GameOver »óÅÂ/UI·Î ÀüÈ¯
+    /// í”Œë ˆì´ì–´ ì‚¬ë§ í†µì§€ë¥¼ ë°›ì•„ í˜„ì¬ ëŸ°ì„ ì¢…ë£Œ
     /// </summary>
     public void NotifyPlayerDeath()
     {
@@ -81,8 +128,7 @@ public class RoguelikeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅ×ÀÌÁö Å¬¸®¾î ½Ã ¼ºÀå ¼±ÅÃ UI È°¼º ¾Ë¸²
-    /// ¿ä¼Á: StageManager/GameManager°¡ Å¬¸®¾î¸¦ È®ÀÎÇÑ µÚ ½ºÅ×ÀÌÁö ¹øÈ£¿Í ÇÔ²² È£Ãâ        
+    /// ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´ ì‹œ ì„±ì¥ ì„ íƒ UI í™œì„± ì•Œë¦¼     
     /// </summary>
     public void NotifyStageCleared(int stageNumber)
     {
