@@ -13,13 +13,64 @@ MonoBehaviour:
   m_Name: "BILL_01_\uAE30\uBCF8\uCCAD\uAD6C\uC11C"
   m_EditorClassIdentifier: 
   _billId: BILL_01
-  _billName: "\uCCAD\uAD6C\uC11C 01"
+  _billName: "\uC6D4\uB9D0 \uC0DD\uD65C\uBE44 \uACE0\uC9C0\uC11C"
   _issueDay: 1
   _dueDays: 3
-  _billAmounts: 64000000
+  _issues:
+  - _amount: 700
+    _category: "\uC218\uB3C4\uC694\uAE08 - \uD55C \uBC29\uC6B8\uB3C4 \uC544\uAEF4\uC694"
+    _title: "\uC218\uB3C4\uAF2D\uC9C0 \uC7A0\uAC14\uB098?"
+    _penaltyRate: 0.05
+  - _amount: 1300
+    _category: "\uC804\uAE30\uC138 - \uB300\uAE30\uC804\uB825 \uD1F4\uCE58\uBC18"
+    _title: "\uCDA9\uC804\uAE30 \uC5B4\uB514\uC788\uC9C0"
+    _penaltyRate: 0.07
+  - _amount: 2000
+    _category: "\uAC04\uC2DD\uBE44 - \uC791\uC740 \uC0AC\uCE58 \uD611\uD68C"
+    _title: "\uC0C8\uBCBD \uD3B8\uC758\uC810 \uD589\uBCF5 \uCDA9\uC804\uB8CC"
+    _penaltyRate: 0.1
+  - _amount: 3000
+    _category: "\uC138\uD0C1\uBE44 - \uC591\uB9D0 \uC2E4\uC885 \uC0AC\uAC74"
+    _title: "\uC9DD \uC783\uC740 \uC591\uB9D0 \uC218\uC0AC \uCC29\uC218\uAE08"
+    _penaltyRate: 0.12
+  - _amount: 4500
+    _category: "\uC218\uB3C4\uC694\uAE08 - \uC0E4\uC6CC \uC2DC\uAC04 \uAD00\uB9AC\uAD6D"
+    _title: "5\uBD84\uB9CC \uB354 \uC0E4\uC6CC\uD55C \uB300\uAC00"
+    _penaltyRate: 0.15
+  - _amount: 6000
+    _category: "\uC804\uAE30\uC138 - \uB0C9\uC7A5\uACE0 \uBB38\uB2E8\uC18D\uACFC"
+    _title: "\uB0C9\uC7A5\uACE0 \uC55E \uBA4D\uB54C\uB9BC \uC0AC\uC6A9\uB8CC"
+    _penaltyRate: 0.18
+  - _amount: 8500
+    _category: "\uBC30\uB2EC\uBE44 - \uBB38 \uC55E \uD589\uBCF5 \uC6B4\uC1A1"
+    _title: "\uC18C\uD30C\uC5D0\uC11C \uD55C \uBC1C\uB3C4 \uC548 \uB5C0 \uBC30\uC1A1\uB8CC"
+    _penaltyRate: 0.2
+  - _amount: 12000
+    _category: "\uC0DD\uD65C\uC6A9\uD488 - \uC0DD\uC874 \uBCF4\uAE09\uBD80"
+    _title: "\uD734\uC9C0\uC640 \uC138\uC81C\uAC00 \uB3D9\uC2DC\uC5D0 \uBC14\uB2E5\uB0A8"
+    _penaltyRate: 0.22
+  - _amount: 15000
+    _category: "\uC804\uC790\uC81C\uD488 - \uCDA9\uC804\uAE30 \uC99D\uC2DD\uBD80"
+    _title: "\uCDA9\uC804\uAE30\uB294 \uC65C \uB298 \uC0AC\uB77C\uC9C8\uAE4C"
+    _penaltyRate: 0.25
+  - _amount: 18500
+    _category: "\uC804\uC790\uC81C\uD488 - \uCC45\uC0C1 \uC704 \uAC1C\uC870\uB2E8"
+    _title: "\uD0A4\uBCF4\uB4DC \uC18C\uB9AC\uB294 \uD56D\uC0C1 \uD06C\uC9C0"
+    _penaltyRate: 0.28
+  - _amount: 22000
+    _category: "\uAC00\uC804\uC81C\uD488 - \uC9D1\uC548 \uB3D9\uB9F9\uD68C"
+    _title: "\uC120\uD48D\uAE30\uC640 \uBC25\uC1A5\uC758 \uC804\uB825 \uD68C\uB2F4"
+    _penaltyRate: 0.3
+  - _amount: 35000
+    _category: "\uC804\uC790\uC81C\uD488 - \uC7A5\uBC14\uAD6C\uB2C8 \uBCC0\uBA85\uACFC"
+    _title: "\uC774\uBC88\uC5D4 \uC9C4\uC9DC \uD544\uC694\uD55C \uD0DC\uBE14\uB9BF"
+    _penaltyRate: 0.35
   _penaltyType: 1
   _penaltyRate: 0.1
   _perkRewardCount: 1
   _legacyPointRate: 0
   _earlyPaymentBonus: 0
-  _maxIssues: 1
+  _maxIssues: 12
+  _billAmounts: 
+  _billCategories: []
+  _billTitles: []

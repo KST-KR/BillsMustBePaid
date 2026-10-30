@@ -98,6 +98,11 @@ public class GameSceneBootstrap : MonoBehaviour
             Debug.LogError("재화 데이터 복원에 실패");
             return;
         }
+        // 파산 사이클 수 복원
+        if (RoguelikeManager.Instance != null)
+        {
+            RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
+        }
 
         // 4. 성장 시스템에 검증된 저장 데이터 전달
         // GrowthManager가 OnGameLoaded를 구독하고 있으므로

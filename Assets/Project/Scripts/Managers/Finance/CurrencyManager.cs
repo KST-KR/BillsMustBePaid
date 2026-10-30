@@ -160,6 +160,15 @@ public class CurrencyManager : MonoBehaviour
     }
 
     /// <summary>
+    /// [ROGUE-02-02] 다음 런을 위해 런 재화인 골드만 초기화
+    /// 영구 재화인 레거시 포인트는 유지
+    /// </summary>
+    public void ResetRunGold()
+    {
+        SetBalance(ECurrencyType.Gold, Mathf.Max(0, _initialGold));
+    }
+
+    /// <summary>
     /// [FIN-01-02] 골드 잔고에 파산 패널티 적용 후 차감액 반환
     /// </summary>
     public int ApplyPenalty(float penaltyRate)
