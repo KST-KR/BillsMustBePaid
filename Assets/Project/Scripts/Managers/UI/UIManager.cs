@@ -740,10 +740,34 @@ public class UIManager : MonoBehaviour
 
         if (_stageManager == null)
         {
-            Debug.LogError("StageManager를 찾을 수 없어 다음 스테이지를 시작할 수 없음.");
+            Debug.LogError("StageManager를 찾을 수 없음.");
             return;
         }
 
+        GameSaveController saveController = GameSaveController.Instance;
+
+        // 메인 메뉴에서 스킬트리로 진입한 경우
+        if (saveController != null && saveController.IsSkillTreeOnlyMode)
+        {
+            if (saveController.SavedStageInProgress)
+            {
+                // 저장 당시 진행 중이던 스테이지를 처음부터 재시작
+                _stageManager.StartStage(_stageManager.CurrentStage);
+
+                Debug.Log($"스킬트리에서 복귀: {_stageManager.CurrentStage} 스테이지 재시작");
+            }
+            else
+            {
+                // 저장 당시 스테이지 클리어 후 상태였다면 다음 스테이지 시작
+                _stageManager.NextStage();
+
+                Debug.Log($"스킬트리에서 복귀: {_stageManager.CurrentStage} 스테이지 시작");
+            }
+
+            return;
+        }
+
+        // 일반적인 스테이지 결과 화면에서 다음 스테이지 시작
         _stageManager.NextStage();
     }
 
@@ -938,6 +962,17 @@ public class UIManager : MonoBehaviour
         {
             GameManager.Instance.QuitGame();
         }
+    }
+
+    /// <summary>
+    /// 메인 메뉴에서 스킬트리 전용으로 진입했을 때 업그레이드 화면을 표시
+    /// </summary>
+    public void ShowSkillTreeFromMainMenu()
+    {
+        HideAllPanels();
+
+        ShowUpgradeSection(_growthSkillTreePanel);
+        SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
     }
     #endregion
 }

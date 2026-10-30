@@ -214,7 +214,6 @@ public class StageManager : MonoBehaviour
     /// </summary>
     public void ResetStage()
     {
-        bool wasStageActive = _isStageActive;
         bool stageChanged = _currentStage != 0;
 
         _currentStage = 0;
@@ -232,8 +231,8 @@ public class StageManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 저장된 스테이지 결과 화면 상태를 복원합니다.
-    /// 실제 스테이지 시작 및 클리어 이벤트는 발생시키지 않습니다.
+    /// 저장된 스테이지 결과 화면 상태를 복원
+    /// 실제 스테이지 시작 및 클리어 이벤트는 발생시키지 않음.
     /// </summary>
     public void RestoreStageClear(int stageNumber)
     {
@@ -254,14 +253,41 @@ public class StageManager : MonoBehaviour
         _currentStage = stageNumber;
         _isStageActive = false;
 
-        GameManager.Instance.ChangeGameState(EGameState.StageClear);
-
         if (previousStage != _currentStage)
         {
             OnStageChanged?.Invoke(_currentStage);
         }
 
+        GameManager.Instance.ChangeGameState(EGameState.StageClear);
+
         Debug.Log($"StageManager : 저장된 스테이지 결과 화면 복원 / 스테이지 번호 : {_currentStage}");
+    }
+
+    /// <summary>
+    /// 스테이지를 시작하지 않고 저장된 스테이지 번호만 복원
+    /// </summary>
+    /// <param name="stageNumber"></param>
+    public void RestoreStageProgress(int stageNumber)
+    {
+        if (stageNumber <= 0)
+        {
+            Debug.LogWarning("복원할 스테이지 번호가 올바르지 않음.");
+            return;
+        }
+
+        bool hasChanged = _currentStage != stageNumber;
+
+        _currentStage = stageNumber;
+
+        // 스테이지는 아직 진행중이 아님.
+        _isStageActive = false;
+
+        if (hasChanged)
+        {
+            OnStageChanged?.Invoke(_currentStage);
+        }
+
+        Debug.Log($"스테이지 진행 정보 복원: {_currentStage}");
     }
     #endregion
 }

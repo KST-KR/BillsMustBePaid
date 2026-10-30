@@ -7,7 +7,8 @@ public static class GameLaunchData
     public enum ELaunchMode
     {
         NewGame,
-        LoadGame
+        LoadGame,
+        OpenSkillTree
     }
     #endregion
 
@@ -24,6 +25,7 @@ public static class GameLaunchData
 
     public static void Clear()
     {
+        LaunchMode = ELaunchMode.NewGame;
         SlotIndex = -1;
     }
 }

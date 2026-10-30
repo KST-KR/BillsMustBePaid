@@ -9,6 +9,9 @@ public class RunSaveData
     public bool isRunActive;
     public int currentStage;
 
+    // 현재 스테이지 진행 여부
+    public bool isStageInProgress;
+
     public int currentGold;
     public float currentStamina;
 
