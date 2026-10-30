@@ -14,7 +14,14 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
         }
 
         _gameData = gameData;
+        ResetHealth();
+    }
+
+    public void ResetHealth()
+    {
+       
         _currentHP = Mathf.Max(0, _gameData.PigBankHP);
+        
     }
 
     public void TakePlayerAttack(float damage)
@@ -41,6 +48,7 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 
         _currentHP = Mathf.Max(0, _currentHP - damageAmount);
 
+        // 피격시 색 변화
         HitEffect hitEffect = GetComponent<HitEffect>();
         if (hitEffect != null)
         {

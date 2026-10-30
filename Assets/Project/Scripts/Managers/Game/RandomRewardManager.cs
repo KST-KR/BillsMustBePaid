@@ -31,6 +31,7 @@ public class RandomRewardManager : MonoBehaviour
     public void Initialize(PigBankGameDataSO pigData)
     {
         _pigData = pigData;
+        _isDead = false;
 
         if (_pigData == null)
         {

@@ -74,6 +74,7 @@ public class PigBankObjectPoolManager : MonoBehaviour
         if (health != null)
         {
             health.Initialize(pigData);
+            health.ResetHealth();
         }
         else
         {
@@ -101,7 +102,15 @@ public class PigBankObjectPoolManager : MonoBehaviour
             return;
         }
 
-        ResetPigBankObject(pig);
+        HitEffect hitEffect = pig.GetComponent<HitEffect>();
+        if (hitEffect != null)
+        {
+            hitEffect.RestoreColor();
+        }
+        else
+        {
+            Debug.LogError("돼지 저금통에 HitEffect가 없습니다!", this);
+        }
 
         pig.SetActive(false);
         pig.transform.SetParent(_rootDistionary[pigData]);
@@ -141,18 +150,6 @@ public class PigBankObjectPoolManager : MonoBehaviour
             }
 
             _poolDistionary[pigData] = queue;
-        }
-    }
-
-    private void ResetPigBankObject(GameObject pig)
-    {
-        Rigidbody rb = pig.GetComponent<Rigidbody>();
-
-        if(rb != null )
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.Sleep();
         }
     }
     #endregion
