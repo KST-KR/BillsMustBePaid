@@ -152,7 +152,7 @@ public class StageClearBillButtonController : MonoBehaviour
             else if (bill != null && bill.Status == EBillStatus.Expired)
             {
                 _periodText.text = "기한 만료";
-                _periodText.fontSize = 16.0f;
+                _periodText.fontSize = 36.0f;
                 _periodText.enableAutoSizing = false;
                 _periodText.color = new Color(0.95f, 0.24f, 0.24f, 1.0f);
             }
@@ -169,7 +169,7 @@ public class StageClearBillButtonController : MonoBehaviour
             else
             {
                 _periodText.text = "청구서 없음";
-                _periodText.fontSize = 16.0f;
+                _periodText.fontSize = 36.0f;
                 _periodText.enableAutoSizing = false;
                 _periodText.color = _defaultPeriodColor;
             }
