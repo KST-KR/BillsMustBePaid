@@ -129,6 +129,18 @@ public class GameSaveController : MonoBehaviour
     private void HandleStageStarted(int stageNumber)
     {
         _isSavedForCurrentResult = false;
+
+        CacheManagers();
+
+        if (_currencyManager == null)
+        {
+            Debug.LogError("CurrencyManager를 찾을 수 없어 스테이지 시작 데이터를 저장할 수 없음.");
+            return;
+        }
+
+        SaveCurrentProgress(_currencyManager.Gold);
+
+        Debug.Log($"스테이지 시작 데이터 저장: 스테이지 {stageNumber}");
     }
 
     /// <summary>
@@ -232,6 +244,11 @@ public class GameSaveController : MonoBehaviour
         // 현재 런의 진행 정보 데이터
         saveData.runData.isRunActive = _gameManager.IsRunActive;
         saveData.runData.currentStage = _stageManager.CurrentStage;
+
+        // 현재 스테이지 진행 여부
+        saveData.runData.isStageInProgress = _stageManager.IsStageActive;
+
+        // 런 중 현재 번 돈
         saveData.runData.currentGold = settledGold;
 
         // 스태미나는 저장, 복원 대상으로 사용하지 않음.
@@ -243,7 +260,10 @@ public class GameSaveController : MonoBehaviour
         // 기존 영구 성장 데이터와 구매 아이템 목록은 별도로 초기화하지 않음.
         _saveManager.SaveGame(saveData);
 
-        Debug.Log($"결과 화면 저장 요청: 슬롯 {slotIndex}, " + $"스테이지 {saveData.runData.currentStage}, " + $"보유 골드 {saveData.runData.currentGold}");
+        Debug.Log($"결과 화면 저장 요청: 슬롯 {slotIndex}, " + 
+            $"스테이지 {saveData.runData.currentStage}" +
+            $"진행 중 여부 {saveData.runData.isStageInProgress}, " + 
+            $"보유 골드 {saveData.runData.currentGold}");
     }
     #endregion
 

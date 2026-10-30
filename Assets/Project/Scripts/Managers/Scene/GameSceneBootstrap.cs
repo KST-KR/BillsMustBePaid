@@ -107,8 +107,21 @@ public class GameSceneBootstrap : MonoBehaviour
         // 5. 런 활성 상태 복원
         GameManager.Instance.RestoreRunState();
 
-        // 6. 모든 데이터 복원 후 결과 화면 표시
-        StageManager.Instance.RestoreStageClear(saveData.runData.currentStage);
+        // 6. 저장 당시 스테이지 상태에 따라 복원
+        if (saveData.runData.isStageInProgress)
+        {
+            // 진행 중이던 스테이지를 처음부터 다시 시작
+            StageManager.Instance.StartStage(saveData.runData.currentStage);
+
+            Debug.Log($"진행 중이던 스테이지 재시작: {saveData.runData.currentStage}");
+        }
+        else
+        {
+            // 클리어 후 결과 화면 상태 복원
+            StageManager.Instance.RestoreStageClear(saveData.runData.currentStage);
+
+            Debug.Log($"스테이지 결과 화면 복원: {saveData.runData.currentStage}");
+        }
 
         Debug.Log($"이어하기 데이터 복원 완료: " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
     }
