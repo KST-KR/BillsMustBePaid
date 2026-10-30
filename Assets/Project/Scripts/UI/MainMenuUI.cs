@@ -6,6 +6,7 @@
 /// </summary>
 public class MainMenuUI : MonoBehaviour
 {
+    #region 인스펙터
     [Header("항상 표시할 버튼")]
     [SerializeField] private GameObject _settingsButton;
     [SerializeField] private GameObject _exitButton;
@@ -23,16 +24,69 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject _loadPanel;
     [SerializeField] private GameObject _settingsPanel;
 
+    [Header("삭제 확인 UI")]
+    [SerializeField] private SaveSlotDeleteConfirmUI _deleteConfirmUI;
+    #endregion
+
     #region 이벤트 함수
+    private void OnEnable()
+    {
+        if (_deleteConfirmUI != null)
+        {
+            _deleteConfirmUI.OnSlotDeleted += HandleSlotDeleted;
+        }
+    }
+
     private void Start()
     {
-        // 실제 저장 시스템과 연결할 부분
+        RefreshSaveDataUI();
+        ShowPanel(_mainMenuPanel);
+    }
+
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.Escape))
+        {
+            return;
+        }
+
+        // 가장 위에 열린 패널부터 닫기
+        if (_deleteConfirmUI != null && _deleteConfirmUI.TryClose())
+        {
+            return;
+        }
+
+        if (_loadPanel.activeSelf)
+        {
+            CloseLoadPanel();
+            return;
+        }
+
+        if (_settingsPanel.activeSelf)
+        {
+            CloseSettingsPanel();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_deleteConfirmUI != null)
+        {
+            _deleteConfirmUI.OnSlotDeleted -= HandleSlotDeleted;
+        }
+    }
+    #endregion
+
+    #region 커스텀 (private)
+    /// <summary>
+    /// 저장 데이터 유무를 확인하고 메인 메뉴 버튼을 갱신
+    /// </summary>
+    private void RefreshSaveDataUI()
+    {
         bool hasSaveData = CheckSaveData();
 
         SetSaveDataUI(hasSaveData);
-        ShowPanel(_mainMenuPanel);
     }
-    #endregion
 
     private bool CheckSaveData()
     {
@@ -74,13 +128,26 @@ public class MainMenuUI : MonoBehaviour
         _loadOrNewGameButton.SetActive(hasSaveData);
     }
 
+    /// <summary>
+    /// 저장 슬롯 삭제 완료 이벤트
+    /// </summary>
+    /// <param name="deletedSlotIndex"></param>
+    private void HandleSlotDeleted(int deletedSlotIndex)
+    {
+        Debug.Log($"저장 슬롯 {deletedSlotIndex} 삭제 완료. 메인 메뉴 UI 갱신");
+
+        RefreshSaveDataUI();
+    }
+
     private void ShowPanel(GameObject targetPanel)
     {
         _mainMenuPanel.SetActive(targetPanel == _mainMenuPanel);
         _loadPanel.SetActive(targetPanel == _loadPanel);
         _settingsPanel.SetActive(targetPanel == _settingsPanel);
     }
+    #endregion
 
+    #region 커스텀 (public)
     public void OpenLoadPanel()
     {
         ShowPanel(_loadPanel);
@@ -169,4 +236,6 @@ public class MainMenuUI : MonoBehaviour
 
         SceneTransitionManager.Instance.LoadGameScene();
     }
+    #endregion
+
 }

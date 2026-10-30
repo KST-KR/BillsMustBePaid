@@ -38,13 +38,20 @@ public class GameSceneBootstrap : MonoBehaviour
             yield break;
         }
 
-        if (launchMode == GameLaunchData.ELaunchMode.NewGame)
+        switch (launchMode)
         {
-            StartNewGame();
-        }
-        else
-        {
-            LoadSavedGame(slotIndex);
+            case GameLaunchData.ELaunchMode.NewGame:
+                StartNewGame();
+                break;
+
+            case GameLaunchData.ELaunchMode.LoadGame:
+                LoadSavedGame(slotIndex);
+                break;
+
+            case GameLaunchData.ELaunchMode.OpenSkillTree:
+                // TODO : 스클트리 버튼 클릭시 불러와야할 데이터와 상태들
+                // LoadSavedGameForSkillTree(slotIndex);
+                break;
         }
 
         GameLaunchData.Clear();
