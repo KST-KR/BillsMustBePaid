@@ -50,6 +50,9 @@ public class UIManager : MonoBehaviour
     [Header("결과 화면 재화 UI")]
     [SerializeField] private TMP_Text _stageRewardGoldText;
     [SerializeField] private TMP_Text _resultTotalGoldText;
+    [SerializeField] private TMP_Text _resultNetIncomeText;
+    [SerializeField] private GameObject _lateFeePanel;
+    [SerializeField] private TMP_Text _lateFeeText;
 
     [Header("업그레이드 화면 재화 UI")]
     [SerializeField] private TMP_Text _upgradeGoldText;
@@ -351,11 +354,43 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void HandleStageRewardSettled(int rewardGold, int totalGold)
     {
-        UpdateStageRewardGoldUI(rewardGold);
+        int grossIncome = _stageRewardManager != null ? _stageRewardManager.StageRewardGold : rewardGold;
+        UpdateStageRewardGoldUI(grossIncome);
+        int lateFee = _stageRewardManager != null ? _stageRewardManager.StagePenaltyGold : 0;
+        UpdateResultNetIncomeUI(rewardGold);
         UpdateResultTotalGoldUI(totalGold);
+        UpdateLateFeeUI(lateFee);
 
         // CurrencyManager의 실제 잔고와 UI를 동기화
         RefreshCurrencyUI();
+    }
+
+    private void UpdateLateFeeUI(int amount)
+    {
+        bool hasFee = amount > 0;
+        if (_lateFeePanel != null)
+        {
+            _lateFeePanel.SetActive(hasFee);
+        }
+
+        if (_lateFeeText == null)
+        {
+            return;
+        }
+
+        _lateFeeText.text = hasFee ? "-$ " + amount.ToString("N0") : string.Empty;
+        if (_lateFeePanel == null)
+        {
+            _lateFeeText.gameObject.SetActive(hasFee);
+        }
+    }
+
+    private void UpdateResultNetIncomeUI(int amount)
+    {
+        if (_resultNetIncomeText != null)
+        {
+            _resultNetIncomeText.text = "$ " + amount.ToString("N0");
+        }
     }
 
     /// <summary>
@@ -552,6 +587,12 @@ public class UIManager : MonoBehaviour
         HideAllPanels();
 
         SetPanelActive(_stageClearPanel, true);
+        int lateFee = _stageRewardManager != null ? _stageRewardManager.StagePenaltyGold : 0;
+        UpdateLateFeeUI(lateFee);
+        if (_stageRewardManager != null)
+        {
+            UpdateResultNetIncomeUI(Mathf.Max(0, _stageRewardManager.StageRewardGold - lateFee));
+        }
 
         // 현재 보유 재화를 업그레이드 화면과 결과 화면에 각각 반영
         RefreshCurrencyUI();
