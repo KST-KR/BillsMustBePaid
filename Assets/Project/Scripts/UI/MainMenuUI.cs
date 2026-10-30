@@ -215,7 +215,7 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        // 가장 최근 저장 슬롯 확인
+        // 가장 최근에 플레잉한 저장 슬롯 확인
         int slotIndex = SaveManager.Instance.GetMostRecentlyPlayedSlotIndex();
 
         if (slotIndex < 1 || slotIndex > 3)
@@ -229,10 +229,46 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        // 게임 씬에 이어하기 정보를 전달
+        // 일반 이어하기 모드로 게임 씬에 전달
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.LoadGame, slotIndex);
 
-        Debug.Log($"이어하기 시작: 슬롯 {slotIndex}");
+        Debug.Log($"이어하기 진입: 슬롯 {slotIndex}");
+
+        SceneTransitionManager.Instance.LoadGameScene();
+    }
+
+    public void OnSkillTreeButtonClicked()
+    {
+        if (SaveManager.Instance == null)
+        {
+            Debug.LogError("SaveManager를 찾을 수 없음.");
+            return;
+        }
+
+        if (SceneTransitionManager.Instance == null)
+        {
+            Debug.LogError("SceneTransitionManager를 찾을 수 없음.");
+            return;
+        }
+
+        // 가장 최근에 플레이한 저장 슬롯 확인
+        int slotIndex = SaveManager.Instance.GetMostRecentlyPlayedSlotIndex();
+
+        if (slotIndex < 1 || slotIndex > 3)
+        {
+            Debug.LogWarning("스킬트리를 열 수 있는 저장 데이터가 없음.");
+            return;
+        }
+
+        if (!SaveManager.Instance.SetCurrentSlotIndex(slotIndex))
+        {
+            return;
+        }
+
+        // 스킬트리 전용 진입 모드로 게임 씬에 전달
+        GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.OpenSkillTree, slotIndex);
+
+        Debug.Log($"스킬트리 진입: 슬롯 {slotIndex}");
 
         SceneTransitionManager.Instance.LoadGameScene();
     }

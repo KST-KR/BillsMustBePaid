@@ -49,8 +49,7 @@ public class GameSceneBootstrap : MonoBehaviour
                 break;
 
             case GameLaunchData.ELaunchMode.OpenSkillTree:
-                // TODO : 스클트리 버튼 클릭시 불러와야할 데이터와 상태들
-                // LoadSavedGameForSkillTree(slotIndex);
+                LoadSavedGameForSkillTree(slotIndex);
                 break;
         }
 
@@ -131,5 +130,76 @@ public class GameSceneBootstrap : MonoBehaviour
         }
 
         Debug.Log($"이어하기 데이터 복원 완료: " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
+    }
+
+    /// <summary>
+    /// 저장 데이터를 복원한 뒤 스테이지를 시작하지 않고 스킬트리 화면 표시
+    /// </summary>
+    /// <param name="slotIndex"></param>
+    private void LoadSavedGameForSkillTree(int slotIndex)
+    {
+        SaveManager saveManager = SaveManager.Instance;
+        CurrencyManager currencyManager = CurrencyManager.Instance;
+        GrowthManager growthManager = GrowthManager.Instance;
+        UIManager uiManager = UIManager.Instance;
+
+        if (saveManager == null || currencyManager == null || growthManager == null || uiManager == null || GameManager.Instance == null || StageManager.Instance == null)
+        {
+            Debug.LogError("스킬트리 진입에 필요한 매니저가 없음.");
+            return;
+        }
+
+        // 1. 저장 데이터 읽기
+        SaveSlotData saveData = saveManager.LoadGame(slotIndex);
+
+        if (saveData == null)
+        {
+            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터를 불러오지 못함.");
+            return;
+        }
+
+        // 2. 런 및 스테이지 데이터 검증
+        if (!saveData.runData.isRunActive || saveData.runData.currentStage <= 0)
+        {
+            Debug.LogError("스킬트리 진입에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
+            return;
+        }
+
+        // 3. 재화 복원
+        if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
+        {
+            Debug.LogError("재화 데이터 복원에 실패");
+            return;
+        }
+
+        // 4. 성장 데이터 복원
+        saveManager.NotifyGameLoaded(saveData);
+
+        // 5. 런 활성 상태 복원
+        GameManager.Instance.RestoreRunState();
+
+        // 6. 스테이지 번호만 복원
+        StageManager.Instance.RestoreStageProgress(saveData.runData.currentStage);
+
+        GameSaveController saveController = GameSaveController.Instance;
+
+        if (saveController == null)
+        {
+            Debug.LogError("GameSaveController를 찾을 수 없음.");
+            return;
+        }
+
+        saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);
+
+        // 7. 스테이지 클리어 상태로 변경
+        GameManager.Instance.ChangeGameState(EGameState.StageClear);
+
+        // 8. 스킬트리 화면 표시
+        uiManager.ShowSkillTreeFromMainMenu();
+
+        Debug.Log($"스킬트리 진입 완료: 슬롯 {slotIndex}, " + 
+            $"스테이지 {saveData.runData.currentStage}, " +
+            $"골드 {currencyManager.Gold}, " +
+            $"레거시 포인트 {currencyManager.LegacyPoints}");
     }
 }

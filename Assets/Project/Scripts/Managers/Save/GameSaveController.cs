@@ -20,6 +20,13 @@ public class GameSaveController : MonoBehaviour
 
     private bool _isSubscribed;
     private bool _isSavedForCurrentResult;
+    private bool _isSkillTreeOnlyMode;
+    private bool _savedStageInProgress;
+    #endregion
+
+    #region 프로퍼티
+    public bool IsSkillTreeOnlyMode => _isSkillTreeOnlyMode;
+    public bool SavedStageInProgress => _savedStageInProgress;
     #endregion
 
     #region 이벤트 함수
@@ -129,6 +136,10 @@ public class GameSaveController : MonoBehaviour
     private void HandleStageStarted(int stageNumber)
     {
         _isSavedForCurrentResult = false;
+
+        // 실제 스테이지가 시작되었으므로 스킬트리 전용 모드 해제
+        _isSkillTreeOnlyMode = false;
+        _savedStageInProgress = false;
 
         CacheManagers();
 
@@ -246,7 +257,16 @@ public class GameSaveController : MonoBehaviour
         saveData.runData.currentStage = _stageManager.CurrentStage;
 
         // 현재 스테이지 진행 여부
-        saveData.runData.isStageInProgress = _stageManager.IsStageActive;
+        if (_isSkillTreeOnlyMode)
+        {
+            // 스킬트리 전용 진입 중에는 진입 당시 저장된 상태 유지
+            saveData.runData.isStageInProgress = _savedStageInProgress;
+        }
+        else
+        {
+            //일반 게임 진행 중에는 실제 스테이지 활성 상태 반영
+            saveData.runData.isStageInProgress = _stageManager.IsStageActive;
+        }
 
         // 런 중 현재 번 돈
         saveData.runData.currentGold = settledGold;
@@ -264,6 +284,18 @@ public class GameSaveController : MonoBehaviour
             $"스테이지 {saveData.runData.currentStage}" +
             $"진행 중 여부 {saveData.runData.isStageInProgress}, " + 
             $"보유 골드 {saveData.runData.currentGold}");
+    }
+
+    /// <summary>
+    /// 스킬트리 전용 진입 상태를 설정
+    /// </summary>
+    /// <param name="isStageInProgress"></param>
+    public void SetSkillTreeOnlyMode(bool isStageInProgress)
+    {
+        _isSkillTreeOnlyMode = true;
+        _savedStageInProgress = isStageInProgress;
+
+        Debug.Log($"스킬트리 전용 진입 설정: 기존 스테이지 진행 여부 {_savedStageInProgress}");
     }
     #endregion
 
