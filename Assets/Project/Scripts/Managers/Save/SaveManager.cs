@@ -280,29 +280,43 @@ public class SaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 저장된 게임 데이터를 삭제합니다.
+    /// 지정한 슬롯의 저장 데이터를 삭제
     /// </summary>
-    public void DeleteSaveData(int slotIndex)
+    /// <param name="slotIndex"></param>
+    public bool DeleteSaveData(int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex))
         {
-            Debug.LogError("잘못된 저장 슬롯 번호입니다.");
-            return;
+            Debug.LogError($"잘못된 저장 슬롯 번호: {slotIndex}");
+            return false;
         }
 
         string path = GetSavePath(slotIndex);
 
         try
         {
-            if (File.Exists(path))
+            if (!File.Exists(path))
             {
-                File.Delete(path);
-                Debug.Log($"저장 데이터 삭제 완료: 슬롯 {slotIndex}");
+                Debug.LogWarning($"삭제할 저장 데이터가 없음: 슬롯 {slotIndex}");
+                return false;
             }
+
+            File.Delete(path);
+
+            // 현재 사용 중인 슬롯을 삭제했다면 참조 초기화
+            if (CurrentSlotIndex == slotIndex)
+            {
+                CurrentSlotIndex = -1;
+            }
+
+            Debug.Log($"저장 데이터 삭제 완료: 슬롯 {slotIndex}");
+
+            return true;
         }
         catch (Exception exception)
         {
-            Debug.LogError($"저장 데이터 삭제 실패: {exception.Message}");
+            Debug.LogError($"저장 데이터 삭제 실패: 슬롯 {slotIndex}, {exception.Message}");
+            return false;
         }
     }
 
