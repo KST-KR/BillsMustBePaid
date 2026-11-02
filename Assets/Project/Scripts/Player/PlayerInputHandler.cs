@@ -90,7 +90,7 @@ public class PlayerInputHandler : MonoBehaviour
     #region 커스텀 (private)
     /// <summary>
     /// 마우스 입력 값에 따라 업데이트
-    /// 1. 광선이 책산 윗면에 닿으면 그 지점을 사용
+    /// 1. 광선이 책상 윗면에 닿으면 그 지점을 사용
     /// 2. 윗면에 닿지 않으면 마지막으로 닿은 윗면 놓이의 평면과 만나는 지점을 사용
     /// 3. 구한 위치를 책상 범위 안으로 제한해서 MouseWorldPosition에 저장
     /// </summary>

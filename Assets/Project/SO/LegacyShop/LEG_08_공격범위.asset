@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe2367f78a93284888ea816830a0bd3, type: 3}
+  m_Name: "LEG_08_\uACF5\uACA9\uBC94\uC704"
+  m_EditorClassIdentifier: 
+  _itemId: LEG_08
+  _displayName: "\uD655\uC7A5\uB41C \uADA4\uC801"
+  _description: "\uACF5\uACA9 \uBC94\uC704\uB97C \uD55C\uCE35 \uB354 \uB113\uD600
+    \uC90D\uB2C8\uB2E4."
+  _price: 2000
+  _meshName: MES_Circle.023
+  _targetStat: 3
+  _statValue: 0.75
+  _initiallyOwned: 0
+  _activeMaterial: {fileID: 2100000, guid: f6058fa3938403a46bb38aac208ef808, type: 2}
+  _lockedMaterial: {fileID: 2100000, guid: df742dc5441838b4eb05eb60596c73b5, type: 2}

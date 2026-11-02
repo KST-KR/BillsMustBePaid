@@ -7,6 +7,11 @@ using UnityEngine;
 /// </summary>
 public class StageManager : MonoBehaviour
 {
+    #region 인스펙터
+    [Header("스테이지 환경")]
+    [SerializeField] private TableCrackEffect _tableCrackEffect;
+    #endregion
+
     #region 싱글톤
     public static StageManager Instance { get; private set; }
     #endregion
@@ -113,6 +118,20 @@ public class StageManager : MonoBehaviour
     {
         ResetStage();
     }
+
+    /// <summary>
+    /// 책상에 생성된 균열을 모두 제거
+    /// </summary>
+    private void ClearTableCracks()
+    {
+        if (_tableCrackEffect == null)
+        {
+            Debug.LogWarning("TableCrackEffect가 연결되지 않음.", this);
+            return;
+        }
+
+        _tableCrackEffect.ClearCracks();
+    }
     #endregion
 
     #region 커스텀 메서드 (Public)
@@ -131,6 +150,9 @@ public class StageManager : MonoBehaviour
         {
             return;
         }
+
+        // 새로운 스테이지 시작 전 기존 균열 제거
+        ClearTableCracks();
 
         int previousStage = _currentStage;
 
@@ -216,8 +238,12 @@ public class StageManager : MonoBehaviour
     {
         bool stageChanged = _currentStage != 0;
 
+        // 스테이지 진행 정보 초기화
         _currentStage = 0;
         _isStageActive = false;
+
+        // 기존 균열 제거
+        ClearTableCracks();
 
         Debug.Log("ResetStage : 스테이지 진행 정보를 초기화 합니다.");
 
