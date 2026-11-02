@@ -18,6 +18,10 @@ public class PlayerCombat : MonoBehaviour
     // 에임의 진행도를 계산할 때 전체 대기 시간이 필요하므로 따로 보관
     private float _cooldownDuration;
     private float _cooldownRemaining;
+
+    private Animator _handAnimator;
+
+    private static readonly int AttackHash = Animator.StringToHash("Attack");
     #endregion
 
     #region 이벤트
@@ -68,6 +72,13 @@ public class PlayerCombat : MonoBehaviour
         _playerStamina = GetComponent<PlayerStamina>();
         _attackDetector = GetComponent<PlayerAttackDetector>();
         _activator = GetComponent<PlayerStageActivator>();
+
+        _handAnimator = GetComponentInChildren<Animator>(true);
+
+        if (_handAnimator == null)
+        {
+            Debug.LogWarning("HandPivot에 Animator가 없어 공격 애니메이션을 재생할 수 없음.");
+        }
 
         if (_activator == null)
         {
@@ -182,6 +193,11 @@ public class PlayerCombat : MonoBehaviour
         _hasHitThisAttack = false;
         _attackElapsed = 0f;
 
+        if (_handAnimator != null)
+        {
+            _handAnimator.SetTrigger(AttackHash);
+        }
+
         Debug.Log("망치 공격 시작");
     }
 
@@ -191,6 +207,7 @@ public class PlayerCombat : MonoBehaviour
         if (!CanAct)
         {
             ResetAttackState();
+            return;
         }
 
         _attackElapsed += Time.deltaTime;
@@ -220,6 +237,7 @@ public class PlayerCombat : MonoBehaviour
             if (!CanAct)
             {
                 ResetAttackState();
+                return;
             }
         }
 
