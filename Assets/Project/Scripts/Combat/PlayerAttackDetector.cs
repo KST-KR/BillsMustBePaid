@@ -50,21 +50,22 @@ public class PlayerAttackDetector : MonoBehaviour
         float attackRange = Mathf.Max(0f, _playerStats.AttackRange);
         float damage = Mathf.Max(0f, _playerStats.AttackPower);
 
-        // 구형 범위 안의 콜라이더를 찾는다.
-        Collider[] colliders = Physics.OverlapSphere(attackCenter, attackRange, _targetLayers, QueryTriggerInteraction.Collide);
+        // 공격 범위 안의 Collider 탐색
+        Collider[] colliders = Physics.OverlapSphere(
+            attackCenter,
+            attackRange,
+            _targetLayers,
+            QueryTriggerInteraction.Collide
+        );
 
-        Debug.Log($"[공격 탐색] 중심={attackCenter}, " +$"반경={attackRange}, " +$"검색된 콜라이더={colliders.Length}", this);
-
-        // 같은 대상이 중복 타격되는 것을 방지
         HashSet<IPlayerAttackTarget> hitTargets = new HashSet<IPlayerAttackTarget>();
 
         int hitCount = 0;
 
+        // 1. 공격 가능한 대상부터 탐색
         for (int i = 0; i < colliders.Length; i++)
         {
             IPlayerAttackTarget target = FindAttackTarget(colliders[i]);
-
-            Debug.Log( $"[공격 대상 확인] 콜라이더={colliders[i].name}, " +$"레이어={LayerMask.LayerToName(colliders[i].gameObject.layer)}, " +$"공격 대상={target != null}",colliders[i]);
 
             if (target == null || !hitTargets.Add(target))
             {
@@ -73,6 +74,25 @@ public class PlayerAttackDetector : MonoBehaviour
 
             target.TakePlayerAttack(damage);
             hitCount++;
+        }
+
+        // 2. 공격 가능한 대상이 없다면 책상 균열 생성
+        if (hitCount == 0)
+        {
+            HashSet<TableCrackEffect> hitTables = new HashSet<TableCrackEffect>();
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                TableCrackEffect crackEffect =
+                    colliders[i].GetComponentInParent<TableCrackEffect>();
+
+                if (crackEffect == null || !hitTables.Add(crackEffect))
+                {
+                    continue;
+                }
+
+                crackEffect.CreateCrack(attackCenter);
+            }
         }
 
         return hitCount;
@@ -153,6 +173,19 @@ public class PlayerAttackDetector : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(center, range);
+    }
+
+    private string GetHierarchyPath(Transform target)
+    {
+        string path = target.name;
+
+        while (target.parent != null)
+        {
+            target = target.parent;
+            path = target.name + "/" + path;
+        }
+
+        return path;
     }
     #endregion
 }

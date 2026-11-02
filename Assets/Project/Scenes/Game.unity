@@ -3059,6 +3059,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce434ff83c01f6c4284c511a1826a776, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _tableCrackEffect: {fileID: 6712971231045834287}
 --- !u!4 &370864698
 Transform:
   m_ObjectHideFlags: 0
@@ -31541,7 +31542,7 @@ MonoBehaviour:
   _heightOffset: 0.5
   _targetLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 192
 --- !u!114 &5489345558399541582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31879,6 +31880,7 @@ GameObject:
   - component: {fileID: 6023847962830201723}
   - component: {fileID: 6712971231045834285}
   - component: {fileID: 6712971231045834286}
+  - component: {fileID: 6712971231045834287}
   m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
@@ -33782,6 +33784,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 50.48401, y: 21.223944, z: 23.958328}
   m_Center: {x: 0, y: -9.095014, z: 0}
+--- !u!114 &6712971231045834287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5679579438736789970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0660e44a9e3f4814293f801533a43dec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _crackPrefab: {fileID: 8919076791401141720, guid: 4786a773a1580d0438bd1f766da70991, type: 3}
+  _surfaceOffset: 0.01
+  _minCrackScale: 0.85
+  _maxCrackScale: 1.15
+  _maxCrackCount: 3
+  _minRandomAngle: 0
+  _maxRandomAngle: 360
 --- !u!114 &6741203936990661100
 MonoBehaviour:
   m_ObjectHideFlags: 0
