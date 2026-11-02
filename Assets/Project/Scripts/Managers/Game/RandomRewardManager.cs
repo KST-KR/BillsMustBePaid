@@ -20,7 +20,6 @@ public class RandomRewardManager : MonoBehaviour
             Debug.LogWarning("PigData 확인 필요");
             return;
         }
-
     }
     #endregion
 
@@ -38,7 +37,6 @@ public class RandomRewardManager : MonoBehaviour
             Debug.LogWarning("PigData가 null입니다!");
             return;
         }
-
     }
 
     public void Die()
@@ -53,6 +51,11 @@ public class RandomRewardManager : MonoBehaviour
         Debug.Log("돼지 저금통 파괴");
 
         DropCoins();
+
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.NotifyPigBankDestroyed();
+        }
 
         if (PigBankObjectPoolManager.Instance != null)
         {
@@ -77,9 +80,10 @@ public class RandomRewardManager : MonoBehaviour
 
         bool isJacpot = Random.value <= _pigData.JackpotChance;
 
-        int coinCount = _pigData.RewardCoin;
+        int currentLevel = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.CurrentCrashLevel : 1;
+        int coinCount = _pigData.RewardCoin + GetLevelBonusReward(currentLevel);
 
-        if(isJacpot)
+        if (isJacpot)
         {
             coinCount *= 3;
             Debug.Log($"★ 잭팟! 코인 대량 드랍! (3배)(총 {coinCount}개)");
@@ -95,9 +99,49 @@ public class RandomRewardManager : MonoBehaviour
         if (StageRewardManager.Instance != null)
         {
             // 현재 누적되는 골드 양 확인
-            Debug.LogWarning($"[TryAddStageGold 호출] 추가하려는 코인: {coinCount}, 현재까지 누적된 스테이지 골드: {StageRewardManager.Instance.StageRewardGold}");
+            Debug.Log($"[TryAddStageGold 호출] 추가하려는 코인: {coinCount}, 현재까지 누적된 스테이지 골드: {StageRewardManager.Instance.StageRewardGold}");
             StageRewardManager.Instance.TryAddStageGold(coinCount);
         }
+    }
+
+    /// <summary>
+    /// 파괴 레벨에 따른 추가 보상량 계산
+    /// </summary>
+    private int GetLevelBonusReward(int level)
+    {
+        int bonus = 0;
+
+        switch (level)
+        {
+            case 0:
+                bonus = 0; 
+                break;
+
+            case 1:
+                bonus = 10;
+                break;
+
+            case 2:
+                bonus = 20;
+                break;
+
+            case 3:
+                bonus = 30;
+                break;
+
+            case 4:
+                bonus = 40;
+                break;
+
+            case 5:
+                bonus = 50;
+                break;
+
+            default:
+                break;
+        }
+
+        return bonus;
     }
     #endregion
 
