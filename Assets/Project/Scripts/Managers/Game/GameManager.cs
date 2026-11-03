@@ -91,6 +91,17 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("GameManager : StartRun 새로운 런을 시작");
 
+        // 새로운 런이 시작될떄 파괴 레벨 초기화
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.ResetCrashLevelSystem();
+        }
+
+        if (PigBankUnlock.Instance != null)
+        {
+            PigBankUnlock.Instance.ResetUnlockSystem();
+        }
+
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }

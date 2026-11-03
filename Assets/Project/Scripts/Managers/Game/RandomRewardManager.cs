@@ -78,10 +78,11 @@ public class RandomRewardManager : MonoBehaviour
             return;
         }
 
-        bool isJacpot = Random.value <= _pigData.JackpotChance;
+        bool isJacpot = Random.value <= _pigData.JackpotChance; 
 
-        int currentLevel = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.CurrentCrashLevel : 1;
-        int coinCount = _pigData.RewardCoin + GetLevelBonusReward(currentLevel);
+        // StageRewardManager를 통해 현재 레벨의 보너스 보상을 안전하게 가져옴
+        int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetCurrentLevelBonusReward() : 0;
+        int coinCount = _pigData.RewardCoin + levelBonus;
 
         if (isJacpot)
         {
@@ -102,46 +103,6 @@ public class RandomRewardManager : MonoBehaviour
             Debug.Log($"[TryAddStageGold 호출] 추가하려는 코인: {coinCount}, 현재까지 누적된 스테이지 골드: {StageRewardManager.Instance.StageRewardGold}");
             StageRewardManager.Instance.TryAddStageGold(coinCount);
         }
-    }
-
-    /// <summary>
-    /// 파괴 레벨에 따른 추가 보상량 계산
-    /// </summary>
-    private int GetLevelBonusReward(int level)
-    {
-        int bonus = 0;
-
-        switch (level)
-        {
-            case 0:
-                bonus = 0; 
-                break;
-
-            case 1:
-                bonus = 10;
-                break;
-
-            case 2:
-                bonus = 20;
-                break;
-
-            case 3:
-                bonus = 30;
-                break;
-
-            case 4:
-                bonus = 40;
-                break;
-
-            case 5:
-                bonus = 50;
-                break;
-
-            default:
-                break;
-        }
-
-        return bonus;
     }
     #endregion
 

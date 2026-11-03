@@ -54,10 +54,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _lateFeePanel;
     [SerializeField] private TMP_Text _lateFeeText;
 
-    [Header("결과 화면 정확도 UI")]
-    [SerializeField] private PlayerAccuracy _playerAccuracy;
-    [SerializeField] private TMP_Text _accuracyPercentText;
-
     [Header("업그레이드 화면 재화 UI")]
     [SerializeField] private TMP_Text _upgradeGoldText;
     [SerializeField] private TMP_Text _upgradeLegacyPointText;
@@ -212,14 +208,6 @@ public class UIManager : MonoBehaviour
             UpdateStaminaUI(_playerStamina.Current, _playerStamina.Max);
         }
 
-        if (_playerAccuracy != null)
-        {
-            _playerAccuracy.OnAccuracyChanged += HandleAccuracyChanged;
-
-            // 구독전에 변경된 정확도도 UI에 반영
-            UpdateAccuracyPercentUI(_playerAccuracy.Accuracy);
-        }
-
         _isSubscribed = true;
     }
 
@@ -258,11 +246,6 @@ public class UIManager : MonoBehaviour
         if (_playerStamina != null)
         {
             _playerStamina.OnStaminaChanged -= HandleStaminaChanged;
-        }
-
-        if (_playerAccuracy != null)
-        {
-            _playerAccuracy.OnAccuracyChanged -= HandleAccuracyChanged;
         }
 
         _gameManager = null;
@@ -371,14 +354,9 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void HandleStageRewardSettled(int rewardGold, int totalGold)
     {
-        int grossIncome = _stageRewardManager != null 
-            ? _stageRewardManager.StageRewardBeforePenaltyGold
-            : rewardGold;
-
+        int grossIncome = _stageRewardManager != null ? _stageRewardManager.StageRewardGold : rewardGold;
         UpdateStageRewardGoldUI(grossIncome);
-
         int lateFee = _stageRewardManager != null ? _stageRewardManager.StagePenaltyGold : 0;
-
         UpdateResultNetIncomeUI(rewardGold);
         UpdateResultTotalGoldUI(totalGold);
         UpdateLateFeeUI(lateFee);
@@ -532,28 +510,6 @@ public class UIManager : MonoBehaviour
         SceneManager.LoadScene(_titleSceneName);
     }
     
-    /// <summary>
-    /// 플레이어 정확도 변경 이벤트 처리
-    /// </summary>
-    /// <param name="accuracy"></param>
-    private void HandleAccuracyChanged(float accuracy)
-    {
-        UpdateAccuracyPercentUI(accuracy);
-    }
-
-    /// <summary>
-    /// 결과 화면의 정확도를 UI에 반영
-    /// </summary>
-    /// <param name="accuracy"></param>
-    private void UpdateAccuracyPercentUI(float accuracy)
-    {
-        if (_accuracyPercentText == null)
-        {
-            return;
-        }
-
-        _accuracyPercentText.text = $"{accuracy:0.0}%";
-    }
     #endregion
 
     #region 커스텀 메서드 (Public)
@@ -631,17 +587,11 @@ public class UIManager : MonoBehaviour
         HideAllPanels();
 
         SetPanelActive(_stageClearPanel, true);
-
-        int lateFee = _stageRewardManager != null 
-            ? _stageRewardManager.StagePenaltyGold 
-            : 0;
-
+        int lateFee = _stageRewardManager != null ? _stageRewardManager.StagePenaltyGold : 0;
         UpdateLateFeeUI(lateFee);
-
-        // 스테이지 종료 시점의 정확도 표시
-        if (_playerAccuracy != null)
+        if (_stageRewardManager != null)
         {
-            UpdateAccuracyPercentUI(_playerAccuracy.Accuracy);
+            UpdateResultNetIncomeUI(Mathf.Max(0, _stageRewardManager.StageRewardGold - lateFee));
         }
 
         // 현재 보유 재화를 업그레이드 화면과 결과 화면에 각각 반영
