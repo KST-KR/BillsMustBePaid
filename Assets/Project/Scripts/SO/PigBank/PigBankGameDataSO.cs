@@ -18,6 +18,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
 
     public float JackpotChance => _jackpotChance;
     public float ShinePigBankChance => _shinePigBankChance;
+
+    public int CrashLevel => _crashLevel;
     #endregion
 
     #region 인스펙터

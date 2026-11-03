@@ -38,6 +38,11 @@ public class PlayerStats : MonoBehaviour
     private float _luckGrowth;
     private float _maxStaminaGrowth;
 
+    // 장착한 망치의 능력치
+    private float _hammerAttackPower;
+    private float _hammerAttackInterval;
+    private float _hammerAttackRange;
+
     private GrowthManager _growthManager;
     private LegacyShopManager _legacyShopManager;
     #endregion
@@ -46,13 +51,11 @@ public class PlayerStats : MonoBehaviour
     /// <summary>
     /// 각 기본 능력치 + 성장 능력치 합
     /// </summary>
-    public float AttackPower => _baseAttackPower + _attackPowerGrowth + GetLegacyShopBonus(EUpgradeStat.Attack);
+    public float AttackPower => _baseAttackPower + _attackPowerGrowth + _hammerAttackPower + GetLegacyShopBonus(EUpgradeStat.Attack);
 
-    public float AttackInterval => Mathf.Max(_minAttackInterval,
-        _baseAttackInterval + _attackIntervalGrowth + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
+    public float AttackInterval => Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
 
-    public float AttackRange => Mathf.Max(_minAttackRange,
-        _baseAttackRange + _attackRangeGrowth + GetLegacyShopBonus(EUpgradeStat.AttackRange));
+    public float AttackRange => Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + _hammerAttackRange + GetLegacyShopBonus(EUpgradeStat.AttackRange));
 
     public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth +
         GetLegacyShopBonus(EUpgradeStat.CriticalChance));
@@ -149,6 +152,36 @@ public class PlayerStats : MonoBehaviour
         }
 
         OnStateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격력을 계산
+    /// </summary>
+    public float GetAttackPowerWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackPower : 0f;
+
+        return _baseAttackPower + _attackPowerGrowth + equipmentValue;
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격 간격을 계산
+    /// </summary>
+    public float GetAttackIntervalWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackInterval : 0f;
+
+        return Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + equipmentValue);
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격 범위를 계산
+    /// </summary>
+    public float GetAttackRangeWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackRange : 0f;
+
+        return Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + equipmentValue);
     }
     #endregion
 
