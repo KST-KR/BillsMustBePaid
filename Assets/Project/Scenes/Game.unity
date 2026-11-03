@@ -12134,6 +12134,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 133e64b94dd88394882c2aad5145da9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _maxLevel: 5
+  _levelTable:
+  - destroyCount: 10
+    bonusReward: 0
+  - destroyCount: 15
+    bonusReward: 10
+  - destroyCount: 20
+    bonusReward: 20
+  - destroyCount: 25
+    bonusReward: 30
+  - destroyCount: 30
+    bonusReward: 40
 --- !u!4 &1132498279
 Transform:
   m_ObjectHideFlags: 0
@@ -22431,6 +22443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _initialGold: 100
   _initialLegacyPoints: 0
+  _legacyPointText: {fileID: 0}
 --- !u!4 &2104043097
 Transform:
   m_ObjectHideFlags: 0
