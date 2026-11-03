@@ -2,6 +2,16 @@
 using System;
 using UnityEngine;
 
+[Serializable]
+public struct CrashLevelInfo
+{
+    [Tooltip("다음 레벨로 넘어가기 위해 잡아야 하는 돼지 저금통 횟수")]
+    public int destroyCount;
+
+    [Tooltip("레벨에서 추가로 지급 되는 골드")]
+    public int bonusReward;
+}
+
 /// <summary>
 /// 스테이지에서 획득한 골드를 기록하고,
 /// 스테이지 클리어 시 보유 골드에 정산합니다.
@@ -31,6 +41,9 @@ public class StageRewardManager : MonoBehaviour
     #region 인스펙터
     [Header("파괴 레벨 시스템")]
     [SerializeField] private int _maxLevel = 5;
+
+    [Header("레벨별 데이터 설정 (인스펙터에서 수정 가능)")]
+    [SerializeField] private CrashLevelInfo[] _levelTable;
     #endregion
 
     #region 내부 변수
@@ -43,7 +56,7 @@ public class StageRewardManager : MonoBehaviour
     private bool _isSettled;
     private bool _isSubscribed;
 
-    private int _currentCrashLevel = 0;
+    private int _currentCrashLevel = 1;
     private int _totalCrashNumber = 0;
 
     #endregion
@@ -199,18 +212,38 @@ public class StageRewardManager : MonoBehaviour
     public void NotifyPigBankDestroyed()
     {
         _totalCrashNumber++;
-        Debug.Log($"[StageReward] 돼지 파괴 누적 횟수: {_totalCrashNumber}");
+        Debug.Log($"StageReward : 돼지 파괴 누적 횟수: {_totalCrashNumber}");
 
-        if (_totalCrashNumber >= 5)
+        int currentIndex = _currentCrashLevel -1;
+
+        // 배열 범위를 벗어나지 않는지 확인
+        if (currentIndex < _levelTable.Length)
         {
-            _totalCrashNumber = 0; // 횟수 초기화
-
-            if (_currentCrashLevel < _maxLevel)
+            // 현재 레벨에 설정된 목표 횟수에 도달했는지 확인
+            if (_totalCrashNumber >= _levelTable[currentIndex].destroyCount)
             {
-                _currentCrashLevel++;
-                Debug.Log($"★ LevelUp : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
+                _totalCrashNumber = 0; 
+
+                if (_currentCrashLevel < _maxLevel)
+                {
+                    _currentCrashLevel++;
+                    Debug.LogError($"★★ LevelUp ★★ : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// 현재 레벨에 해당하는 추가 보상을 반환
+    /// </summary>
+    public int GetCurrentLevelBonusReward()
+    {
+        int currentIndex = _currentCrashLevel - 1;
+        if (currentIndex >= 0 && currentIndex < _levelTable.Length)
+        {
+            return _levelTable[currentIndex].bonusReward;
+        }
+        return 0; // 예외 처리
     }
 
     /// <summary>

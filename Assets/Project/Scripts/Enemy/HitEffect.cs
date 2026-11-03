@@ -37,6 +37,7 @@ public class HitEffect : MonoBehaviour
             _originColors[i] = _materials[i].color;
         }
 
+        // TODO : 내용 확인 함 나중에 정리하기
         Debug.Log($"[HitEffect] 머티리얼 개수: {_materials.Length}");
     }
 

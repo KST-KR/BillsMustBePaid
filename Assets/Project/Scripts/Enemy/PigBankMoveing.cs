@@ -55,11 +55,11 @@ public class PigBankMoveing : MonoBehaviour
     /// <summary>
     /// 에디터에서 반구 범위를 그리기 위한 기즈모
     /// </summary>
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(transform.position, _radius);
-    }
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.yellow;
+    //    Gizmos.DrawSphere(transform.position, _radius);
+    //}
     #endregion
 
     #region 커스텀 메서드 (private)
