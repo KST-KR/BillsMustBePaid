@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using UnityEngine;
 
 /// <summary>
@@ -17,6 +16,9 @@ public class StageRewardManager : MonoBehaviour
 
     public int StageRewardGold => _stageRewardGold;
     public int StagePenaltyGold => _stagePenaltyGold;
+    
+    public int AccuracyBonusGold => _accuracyBonusGold;
+    public int StageRewardBeforePenaltyGold => _stageRewardGold + _accuracyBonusGold;
 
     public int CurrentCrashLevel => _currentCrashLevel;
     #endregion
@@ -31,6 +33,9 @@ public class StageRewardManager : MonoBehaviour
     #region 인스펙터
     [Header("파괴 레벨 시스템")]
     [SerializeField] private int _maxLevel = 5;
+
+    [Header("플레이어 정확도")]
+    [SerializeField] private PlayerAccuracy _playerAccuracy;
     #endregion
 
     #region 내부 변수
@@ -40,12 +45,12 @@ public class StageRewardManager : MonoBehaviour
 
     private int _stageRewardGold;
     private int _stagePenaltyGold;
-    private bool _isSettled;
-    private bool _isSubscribed;
-
     private int _currentCrashLevel = 0;
     private int _totalCrashNumber = 0;
+    private int _accuracyBonusGold;
 
+    private bool _isSettled;
+    private bool _isSubscribed;
     #endregion
 
     #region 이벤트 함수
@@ -128,6 +133,7 @@ public class StageRewardManager : MonoBehaviour
     {
         _stageRewardGold = 0;
         _stagePenaltyGold = 0;
+        _accuracyBonusGold = 0;
         _isSettled = false;
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
@@ -143,6 +149,7 @@ public class StageRewardManager : MonoBehaviour
         // 실패한 스테이지의 미정산 보상은 지급하지 않음.
         _stageRewardGold = 0;
         _stagePenaltyGold = 0;
+        _accuracyBonusGold = 0;
         _isSettled = true;
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
@@ -167,15 +174,24 @@ public class StageRewardManager : MonoBehaviour
             return;
         }
 
-        // 스테이지 보상 골드에서 연체 패널티를 계산하여 차감
-        int sRewardGold = _stageRewardGold;
-        _stagePenaltyGold = BillManager.Instance != null
-            ? BillManager.Instance.CalculateOverdueIncomePenalty(sRewardGold)
-            : 0;
-        int rewardGold = Mathf.Max(0, sRewardGold - _stagePenaltyGold);
+        // 1. 기본 스테이지 보상
+        int baseRewardGold = _stageRewardGold;
 
-        if (rewardGold > 0 &&
-            !_currencyManager.TryAdd(ECurrencyType.Gold, rewardGold))
+        // 2. 정확도에 비례해 기본 보상의 최대 10%까지 보너스 지급
+        float accuracy = _playerAccuracy != null ? _playerAccuracy.Accuracy : 100f;
+
+        _accuracyBonusGold = Mathf.FloorToInt(baseRewardGold * accuracy / 1000f);
+
+        // 기본 보상 + 정확도 보너스
+        int rewardBeforePenalty = baseRewardGold + _accuracyBonusGold;
+
+        // 3. 정확도가 반영된 보상을 기준으로 연체 패널티 계산
+        _stagePenaltyGold = BillManager.Instance != null ? BillManager.Instance.CalculateOverdueIncomePenalty(rewardBeforePenalty) : 0;
+
+        // 4. 패널티 차감 후 최종 보상 계산
+        int rewardGold = Mathf.Max(0, rewardBeforePenalty - _stagePenaltyGold);
+
+        if (rewardGold > 0 && !_currencyManager.TryAdd(ECurrencyType.Gold, rewardGold))
         {
             Debug.LogError("스테이지 보상 골드 지급에 실패했습니다.");
             return;

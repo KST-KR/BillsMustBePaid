@@ -20,21 +20,23 @@ public class PlayerAttackDetector : MonoBehaviour
 
     #region 내부 변수
     private PlayerStats _playerStats;
+    private PlayerAccuracy _playerAccuracy;
     #endregion
 
     #region 이벤트 함수
     private void Awake()
     {
         _playerStats = GetComponent<PlayerStats>();
+        _playerAccuracy = GetComponent<PlayerAccuracy>();
 
         if (_inputHandler == null)
         {
             _inputHandler = GetComponentInParent<PlayerInputHandler>();
         }
 
-        if (_inputHandler == null)
+        if (_playerAccuracy == null)
         {
-            Debug.LogWarning("PlayerInputHandler를 찾을 수 없음.");
+            Debug.LogWarning("PlayerAccuracy를 찾을 수 없음.", this);
         }
     }
     #endregion
@@ -62,7 +64,7 @@ public class PlayerAttackDetector : MonoBehaviour
 
         int hitCount = 0;
 
-        // 1. 공격 가능한 대상부터 탐색
+        // 공격 가능한 대상부터 탐색
         for (int i = 0; i < colliders.Length; i++)
         {
             IPlayerAttackTarget target = FindAttackTarget(colliders[i]);
@@ -76,8 +78,13 @@ public class PlayerAttackDetector : MonoBehaviour
             hitCount++;
         }
 
-        // 2. 공격 가능한 대상이 없다면 책상 균열 생성
-        if (hitCount == 0)
+        // 공격 가능한 대상이 적중했다면 승리 기록
+        if (hitCount > 0)
+        {
+            _playerAccuracy?.RecordWin();
+        }
+        // 공격 가능한 대상이 없다면 책상 탐색
+        else
         {
             HashSet<TableCrackEffect> hitTables = new HashSet<TableCrackEffect>();
 
@@ -92,6 +99,12 @@ public class PlayerAttackDetector : MonoBehaviour
                 }
 
                 crackEffect.CreateCrack(attackCenter);
+            }
+
+            // 책상에 적중한 경우 패배 기록
+            if (hitTables.Count > 0)
+            {
+                _playerAccuracy?.RecordLose();
             }
         }
 
