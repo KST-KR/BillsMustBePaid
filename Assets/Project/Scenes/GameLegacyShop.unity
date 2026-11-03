@@ -232,6 +232,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 485068656}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: d01bc47373323bd49823e3fe85dc1aa3, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -756,6 +757,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1538112858}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 70abd1305761ddb4bb24897914212e18, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -886,6 +888,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1655384551}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 288ac9d8737039044b114b3c6e035193, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -1020,6 +1023,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 808686882}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 5fe73c196ee5e2f4ab01baef4b90858d, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -1743,53 +1747,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371264392}
   m_CullTransparentMesh: 1
---- !u!1 &436133552
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 436133554}
-  - component: {fileID: 436133553}
-  m_Layer: 0
-  m_Name: CurrencyManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &436133553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 436133552}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb9ddc4407a1835458fd218292b87f16, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _initialGold: 100
-  _initialLegacyPoints: 1000000
-  _legacyPointText: {fileID: 651898481}
---- !u!4 &436133554
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 436133552}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &479344265
 GameObject:
   m_ObjectHideFlags: 0
@@ -2107,6 +2064,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 2028156712}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: b889b61105391944cad25a1193c066be, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -3259,6 +3217,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1941502261}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: ae69409080a25a643a3b61e7adf13517, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -3389,6 +3348,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 632803031}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: ce4711bc3803abd48908e2cdd28d2b2f, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -3817,6 +3777,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 2100917523}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 619fb2fe9d2d65647b43ba0dee27e748, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -3947,6 +3908,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1013763652}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 4a7902d7641ba604381b05ccead00dd3, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -4186,6 +4148,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 127530659}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 6c6ff588296d4b041af3e969b4ec3919, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -4316,6 +4279,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 120789880}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 51dd67440ec5a1749b810c8cb50e4da7, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -4564,7 +4528,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4846,7 +4810,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4284389058
+    rgba: 4294967295
   m_fontColor: {r: 0.76, g: 0.59, b: 0.37, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -4859,7 +4823,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -5012,6 +4976,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 906717602}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 20e1fa9f891d99f41b6020f0cfc899a9, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -5279,6 +5244,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1998215260}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: fd5fce2dc26d6504b87504b035e6ff2e, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -5409,6 +5375,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1570324654}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: c0940daefb04c2a498c6b7483d4951ce, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -5539,6 +5506,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 709760555}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: c01e57b9914946643ada0c6d85a80811, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -5669,6 +5637,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1724451016}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: d63f2c5d508c9304b92157cc09a9589d, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -6241,6 +6210,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 371264396}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 29aaca3bbf520ba46969a4b0417fde21, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -7325,7 +7295,7 @@ GameObject:
   - component: {fileID: 1673909451}
   - component: {fileID: 1673909450}
   m_Layer: 0
-  m_Name: Screen
+  m_Name: Screen Shade
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7893,6 +7863,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1798931664}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 0ae2ef57502fda44291e4f3013c01a08, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -8264,6 +8235,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 696003732}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: ffb1a3d36fbe69b46b12d3263b1693c4, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -8464,7 +8436,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4293456114
+    rgba: 4294967295
   m_fontColor: {r: 0.95, g: 0.94, b: 0.91, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -8477,12 +8449,12 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
+  m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -9622,6 +9594,7 @@ MonoBehaviour:
   _descriptionText: {fileID: 1897722158}
   _priceText: {fileID: 1060694925}
   _ringLabelText: {fileID: 1285961852}
+  _balanceText: {fileID: 651898481}
   _purchaseConfirmPopup: {fileID: 1228582693}
   _itemData: {fileID: 11400000, guid: 33b5de8dedb7e4640a1cb36a65ab35a6, type: 2}
   _hoverCamera: {fileID: 963194227}
@@ -9696,6 +9669,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ce4711bc3803abd48908e2cdd28d2b2f, type: 2}
   - {fileID: 11400000, guid: 619fb2fe9d2d65647b43ba0dee27e748, type: 2}
   - {fileID: 11400000, guid: 6c6ff588296d4b041af3e969b4ec3919, type: 2}
+  _refundAndResetButton: {fileID: 1520589347}
+  _startNextCycleButton: {fileID: 1725342031}
 --- !u!4 &2123474067
 Transform:
   m_ObjectHideFlags: 0
@@ -9705,7 +9680,7 @@ Transform:
   m_GameObject: {fileID: 2123474065}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 960.1243, y: 526.27954, z: 9.130587}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9720,4 +9695,3 @@ SceneRoots:
   - {fileID: 2058124942}
   - {fileID: 1888237999}
   - {fileID: 2123474067}
-  - {fileID: 436133554}

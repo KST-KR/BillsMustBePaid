@@ -6,6 +6,10 @@ using UnityEngine;
 /// </summary>
 public class RoguelikeManager : MonoBehaviour
 {
+    #region 상수
+    private const int CLegacyPointsPerGold = 50;
+    #endregion
+
     #region 싱글톤
     public static RoguelikeManager Instance { get; private set; }
     #endregion
@@ -67,39 +71,48 @@ public class RoguelikeManager : MonoBehaviour
     public bool RestartAfterBankruptcy()
     {
         if (_isRestartingAfterBankruptcy || BillManager.Instance == null || !BillManager.Instance.HasExpiredBills ||
-            GameManager.Instance == null || CurrencyManager.Instance == null)
+            GameManager.Instance == null || CurrencyManager.Instance == null || SaveManager.Instance == null ||
+            SceneTransitionManager.Instance == null)
         {
             return false;
         }
 
         _isRestartingAfterBankruptcy = true;
-        CycleCount = CycleCount == int.MaxValue ? int.MaxValue : CycleCount + 1;
-
-        if (SaveManager.Instance != null)
+        int nextCycle = CycleCount == int.MaxValue ? int.MaxValue : CycleCount + 1;
+        int previousGold = CurrencyManager.Instance.Gold;
+        int previousLegacyPoints = CurrencyManager.Instance.LegacyPoints;
+        if (!CurrencyManager.Instance.ConvertGoldToLegacyPoints(CLegacyPointsPerGold, out int convertedPoints))
         {
-            SaveManager.Instance.SaveBankruptcyCycle(CycleCount);
+            _isRestartingAfterBankruptcy = false;
+            return false;
         }
 
-        if (GameManager.Instance.IsRunActive)
+        if (!SaveManager.Instance.SaveBankruptcyCycle(nextCycle))
         {
-            GameManager.Instance.EndRun();
+            Debug.LogError("저장 실패");
+            CurrencyManager.Instance.RestoreBalances(previousGold, previousLegacyPoints);
+            _isRestartingAfterBankruptcy = false;
+            return false;
         }
 
+        Debug.Log("파산 전환: 골드 " + previousGold + ", 레거시 포인트 " + convertedPoints);
+
+        CycleCount = nextCycle;
+        GameManager.Instance.EndRun();
         CurrencyManager.Instance.ResetRunGold();
         if (GrowthManager.Instance != null)
         {
             GrowthManager.Instance.ResetRunGrowth();
         }
-
         BillManager.Instance.ResetRunBills();
-        bool restarted = BeginRun();
-        if (restarted && GameSaveController.Instance != null)
+
+        if (!SceneTransitionManager.Instance.LoadLegacyShopScene())
         {
-            GameSaveController.Instance.SaveCurrentProgress(CurrencyManager.Instance.Gold);
+            _isRestartingAfterBankruptcy = false;
+            return false;
         }
 
-        _isRestartingAfterBankruptcy = false;
-        return restarted;
+        return true;
     }
 
     /// <summary>

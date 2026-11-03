@@ -70,6 +70,15 @@ public class CurrencyManager : MonoBehaviour
         
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            TryAdd(ECurrencyType.Gold, 10000);
+            Debug.Log($"골드 추가 후 잔고: {Gold}");
+        }
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -190,6 +199,38 @@ public class CurrencyManager : MonoBehaviour
         }
 
         return penalty;
+    }
+
+    /// <summary>
+    /// 파산 시 런 골드를 지정한 비율로 영구 레거시 포인트로 전환
+    /// 전환 후 남은 골드는 파산 처리에 따라 소멸
+    /// </summary>
+    public bool ConvertGoldToLegacyPoints(int goldPerPoint, out int convertedPoints)
+    {
+        convertedPoints = 0;
+        if (goldPerPoint <= 0)
+        {
+            Debug.LogError("레거시 포인트 전환 비율은 1 이상필요함");
+            return false;
+        }
+
+        int goldToConvert = _gold;
+        int pointsToAdd = goldToConvert / goldPerPoint;
+        long newLegacyPoints = (long)_legacyPoints + pointsToAdd;
+        if (newLegacyPoints > int.MaxValue)
+        {
+            Debug.LogWarning("레거시 포인트 전환 결과가 최대 잔고를 초과");
+            newLegacyPoints = int.MaxValue;
+        }
+
+        if (pointsToAdd > 0)
+        {
+            SetBalance(ECurrencyType.LegacyPoint, (int)newLegacyPoints);
+        }
+
+        SetBalance(ECurrencyType.Gold, 0);
+        convertedPoints = pointsToAdd;
+        return true;
     }
 
     /// <summary>
