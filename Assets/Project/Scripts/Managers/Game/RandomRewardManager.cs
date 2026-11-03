@@ -78,7 +78,7 @@ public class RandomRewardManager : MonoBehaviour
             return;
         }
 
-        bool isJacpot = Random.value <= _pigData.JackpotChance;
+        bool isJacpot = Random.value <= _pigData.JackpotChance; 
 
         // StageRewardManager를 통해 현재 레벨의 보너스 보상을 안전하게 가져옴
         int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetCurrentLevelBonusReward() : 0;
