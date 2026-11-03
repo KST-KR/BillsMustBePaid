@@ -8,7 +8,8 @@ public static class GameLaunchData
     {
         NewGame,
         LoadGame,
-        OpenSkillTree
+        OpenSkillTree,
+        StartNextCycle
     }
     #endregion
 

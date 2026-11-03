@@ -225,6 +225,10 @@ public class SaveManager : MonoBehaviour
 
         EnsureValidData(saveData);
         saveData.playerData.bankruptcyCycle = cycle;
+        if (CurrencyManager.Instance != null)
+        {
+            saveData.playerData.legacyPoints = CurrencyManager.Instance.LegacyPoints;
+        }
         saveData.runData.isRunActive = false;
         saveData.runData.currentStage = 0;
         saveData.runData.currentGold = 0;

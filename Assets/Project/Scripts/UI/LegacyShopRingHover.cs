@@ -3,24 +3,22 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// 레거시 상점 링의 마우스 오버 강조와 설명 패널 표시를 처리합니다.
+/// 레거시 상점 링의 마우스 오버 강조와 설명 패널 표시 및 구매요청 관리를 처리하니다.
 /// </summary>
 public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    private const string OwnedKeyPrefix = "LegacyShop.Owned";
-
     [SerializeField] private GameObject _tooltipRoot;
     [SerializeField] private TMP_Text _titleText;
     [SerializeField] private TMP_Text _descriptionText;
     [SerializeField] private TMP_Text _priceText;
     [SerializeField] private TMP_Text _ringLabelText;
+    [SerializeField] private TMP_Text _balanceText;
     [SerializeField] private LegacyShopPurchaseConfirmPopup _purchaseConfirmPopup;
     [SerializeField] private LegacyShopItemData _itemData;
     [SerializeField] private Camera _hoverCamera;
 
     private Renderer[] _renderers;
     private MaterialPropertyBlock[] _originalPropertyBlocks;
-    private string _ownershipKey;
     private bool _hovering;
     private bool _isOwned;
     private bool _initialized;
@@ -35,16 +33,16 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
         _descriptionText = descriptionText;
         _priceText = priceText;
         _ringLabelText = ringLabelText;
+        _balanceText = balanceText;
         _purchaseConfirmPopup = purchaseConfirmPopup;
         _itemData = itemData;
         _hoverCamera = hoverCamera;
         SyncItemData();
         if (_itemData == null)
         {
-            Debug.LogError("Legacy Shop 아이템 SO가 연결되지 않았습니다.", this);
+            Debug.LogError("Legacy Shop SO 누락", this);
             return;
         }
-
         CacheRenderers();
         RefreshOwnedAppearance();
     }
@@ -61,8 +59,13 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
         if (!Application.isPlaying) return;
         _legacyShopManager = LegacyShopManager.GetOrCreate();
         _legacyShopManager.OnOwnershipDataChanged += HandleOwnershipDataChanged;
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.OnBalanceChanged += HandleBalanceChanged;
+        }
         SyncItemData();
         RefreshOwnedAppearance();
+        RefreshBalanceText();
     }
 
     private void OnDestroy()
@@ -70,6 +73,10 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
         if (_legacyShopManager != null)
         {
             _legacyShopManager.OnOwnershipDataChanged -= HandleOwnershipDataChanged;
+        }
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.OnBalanceChanged -= HandleBalanceChanged;
         }
     }
 
@@ -132,13 +139,58 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
 
     private void RequestPurchase()
     {
-        
+        if (_purchaseConfirmPopup != null && _purchaseConfirmPopup.IsOpen)
+        {
+            return;
+        }
+        if (!EnsureInitialized()) return;
+        if (_isOwned)
+        {
+            if (_priceText != null) _priceText.text = "보유 중 · 장착됨";
+            return;
+        }
+
+        if (_purchaseConfirmPopup != null)
+        {
+            HideTooltip();
+            _purchaseConfirmPopup.Open(this, _itemData.DisplayName,
+                _itemData.Description + "\n" + _itemData.StatEffectText, _itemData.FormattedPrice);
+        }
+        else if (_priceText != null)
+        {
+            _priceText.text = "구매 확인 창이 연결되지 않았습니다";
+        }
     }
 
     public bool TryPurchase(out string result)
     {
         result = string.Empty;
-        
+        if (!EnsureInitialized())
+        {
+            result = "아이템 정보를 불러오지 못했습니다";
+            return false;
+        }
+        if (_isOwned)
+        {
+            result = "이미 보유한 아이템입니다";
+            return false;
+        }
+
+        int cost = _itemData.Price;
+        LegacyShopManager manager = LegacyShopManager.GetOrCreate();
+        if (!manager.TryPurchase(_itemData))
+        {
+            result = CurrencyManager.Instance == null
+                ? "재화 매니저를 찾을 수 없습니다"
+                : CurrencyManager.Instance.LegacyPoints < cost ? "포인트가 부족합니다" : "구매 처리에 실패했습니다";
+            return false;
+        }
+
+        _isOwned = true;
+        UpdatePriceText();
+        RefreshOwnedAppearance();
+        Debug.Log("레거시 링을 구매했습니다: " + _itemData.DisplayName + " / " + cost + " 포인트", this);
+        result = "구매가 완료되었습니다";
         return true;
     }
 
@@ -165,7 +217,8 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
         if (_renderers == null) return;
         Material stateMaterial = _isOwned ? _itemData.ActiveMaterial : _itemData.LockedMaterial;
         if (stateMaterial == null)
-        {            
+        {
+            Debug.LogWarning("아이템 SO의 활성/잠금 재질 참조를 확인하세요: " + _itemData.name, _itemData);
             return;
         }
 
@@ -194,7 +247,6 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
     {
         if (_itemData == null) return;
 
-        _ownershipKey = OwnedKeyPrefix + _itemData.ItemId;
         if (Application.isPlaying)
         {
             _legacyShopManager = LegacyShopManager.Instance != null
@@ -204,16 +256,7 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
             return;
         }
 
-        string previousItemId = _itemData.ItemId.StartsWith("LEG_")
-            ? "Ring_" + _itemData.ItemId.Substring(4)
-            : _itemData.ItemId;
-        bool wasOwnedWithPreviousId = PlayerPrefs.GetInt(OwnedKeyPrefix + previousItemId, 0) == 1;
-        if (wasOwnedWithPreviousId && PlayerPrefs.GetInt(_ownershipKey, 0) != 1)
-        {
-            PlayerPrefs.SetInt(_ownershipKey, 1);
-            PlayerPrefs.Save();
-        }
-        _isOwned = _itemData.InitiallyOwned || PlayerPrefs.GetInt(_ownershipKey, 0) == 1 || wasOwnedWithPreviousId;
+        _isOwned = _itemData.InitiallyOwned;
     }
 
     private void HandleOwnershipDataChanged()
@@ -221,6 +264,29 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
         SyncItemData();
         RefreshOwnedAppearance();
         UpdatePriceText();
+    }
+
+    private void HandleBalanceChanged(ECurrencyType type, int previousAmount, int currentAmount)
+    {
+        if (type == ECurrencyType.LegacyPoint)
+        {
+            RefreshBalanceText();
+        }
+    }
+
+    private void RefreshBalanceText()
+    {
+        if (_balanceText != null && CurrencyManager.Instance != null)
+        {
+            _balanceText.text = FormatBalance(CurrencyManager.Instance.LegacyPoints);
+        }
+    }
+
+    private static string FormatBalance(int balance)
+    {
+        return balance >= 10000
+            ? (balance / 10000.0f).ToString("0.##") + "만"
+            : balance.ToString("N0");
     }
 
     private void CacheRenderers()

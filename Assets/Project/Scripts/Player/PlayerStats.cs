@@ -38,24 +38,32 @@ public class PlayerStats : MonoBehaviour
     private float _luckGrowth;
     private float _maxStaminaGrowth;
 
+    // 장착한 망치의 능력치
+    private float _hammerAttackPower;
+    private float _hammerAttackInterval;
+    private float _hammerAttackRange;
+
     private GrowthManager _growthManager;
+    private LegacyShopManager _legacyShopManager;
     #endregion
 
     #region 프로퍼티
     /// <summary>
     /// 각 기본 능력치 + 성장 능력치 합
     /// </summary>
-    public float AttackPower => _baseAttackPower + _attackPowerGrowth;
+    public float AttackPower => _baseAttackPower + _attackPowerGrowth + _hammerAttackPower + GetLegacyShopBonus(EUpgradeStat.Attack);
 
-    public float AttackInterval => Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth);
+    public float AttackInterval => Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
 
-    public float AttackRange => Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth);
+    public float AttackRange => Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + _hammerAttackRange + GetLegacyShopBonus(EUpgradeStat.AttackRange));
 
-    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth);
+    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth +
+        GetLegacyShopBonus(EUpgradeStat.CriticalChance));
 
-    public float Luck => _baseLuck + _luckGrowth;
+    public float Luck => _baseLuck + _luckGrowth + GetLegacyShopBonus(EUpgradeStat.Luck);
 
-    public float MaxStamina => Mathf.Max(_minMaxStamina, _baseMaxStamina + _maxStaminaGrowth);
+    public float MaxStamina => Mathf.Max(_minMaxStamina,
+        _baseMaxStamina + _maxStaminaGrowth + GetLegacyShopBonus(EUpgradeStat.Stamina));
 
     /// <summary>
     /// 한 번의 공격 동작 시간
@@ -84,6 +92,11 @@ public class PlayerStats : MonoBehaviour
     private void Start()
     {
         _growthManager = GrowthManager.Instance;
+        _legacyShopManager = LegacyShopManager.Instance;
+        if (_legacyShopManager != null)
+        {
+            _legacyShopManager.OnOwnershipDataChanged += HandleLegacyShopDataChanged;
+        }
 
         if (_growthManager == null)
         {
@@ -104,6 +117,11 @@ public class PlayerStats : MonoBehaviour
             _growthManager.OnApplyStatGrowth -= HandleApplyStatGrowth;
             _growthManager.OnResetRunGrowth -= ResetGrowth;
             _growthManager = null;
+        }
+        if (_legacyShopManager != null)
+        {
+            _legacyShopManager.OnOwnershipDataChanged -= HandleLegacyShopDataChanged;
+            _legacyShopManager = null;
         }
     }
     #endregion
@@ -135,9 +153,49 @@ public class PlayerStats : MonoBehaviour
 
         OnStateChanged?.Invoke();
     }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격력을 계산
+    /// </summary>
+    public float GetAttackPowerWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackPower : 0f;
+
+        return _baseAttackPower + _attackPowerGrowth + equipmentValue;
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격 간격을 계산
+    /// </summary>
+    public float GetAttackIntervalWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackInterval : 0f;
+
+        return Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + equipmentValue);
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 공격 범위를 계산
+    /// </summary>
+    public float GetAttackRangeWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.AttackRange : 0f;
+
+        return Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + equipmentValue);
+    }
     #endregion
 
     #region 커스텀 (private)
+    private float GetLegacyShopBonus(EUpgradeStat stat)
+    {
+        return LegacyShopManager.Instance != null ? LegacyShopManager.Instance.GetStatBonus(stat) : 0.0f;
+    }
+
+    private void HandleLegacyShopDataChanged()
+    {
+        OnStateChanged?.Invoke();
+    }
+
     /// <summary>
     /// GrowthManager.OnApplyStatGrowth처리
     /// amount는 이번에 변경된 값이므로 해당 능력치에 더함.

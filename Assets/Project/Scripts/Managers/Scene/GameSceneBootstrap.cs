@@ -51,6 +51,10 @@ public class GameSceneBootstrap : MonoBehaviour
             case GameLaunchData.ELaunchMode.OpenSkillTree:
                 LoadSavedGameForSkillTree(slotIndex);
                 break;
+
+            case GameLaunchData.ELaunchMode.StartNextCycle:
+                StartNextCycle(slotIndex);
+                break;
         }
 
         GameLaunchData.Clear();
@@ -65,6 +69,54 @@ public class GameSceneBootstrap : MonoBehaviour
 
         // StageManager가 OnRunStarted를 구독하고 있으므로
         // StartRun에서 첫 번째 스테이지가 자동으로 시작됨.
+    }
+
+    /// <summary>
+    /// [SCENE-02] 상점에서 돌아온 다음 사이클의 영구 데이터 복원 후 새 런 시작
+    /// </summary>
+    private void StartNextCycle(int slotIndex)
+    {
+        SaveManager saveManager = SaveManager.Instance;
+        CurrencyManager currencyManager = CurrencyManager.Instance;
+        if (saveManager == null || currencyManager == null || !saveManager.SetCurrentSlotIndex(slotIndex))
+        {
+            Debug.LogError("매니저 누락");
+            return;
+        }
+
+        SaveSlotData saveData = saveManager.LoadGame(slotIndex);
+        if (saveData == null || saveData.playerData == null)
+        {
+            Debug.LogError("데이터 로드 실패");
+            return;
+        }
+
+        if (!currencyManager.RestoreBalances(currencyManager.Gold, saveData.playerData.legacyPoints))
+        {
+            Debug.LogError("포인트 복원 실패");
+            return;
+        }
+
+        if (RoguelikeManager.Instance != null)
+        {
+            RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
+        }
+        if (LegacyShopManager.Instance != null)
+        {
+            LegacyShopManager.Instance.ImportSaveData(saveData.playerData.permanentGrowth);
+        }
+        currencyManager.ResetRunGold();
+        if (GrowthManager.Instance != null)
+        {
+            GrowthManager.Instance.ResetRunGrowth();
+        }
+        if (BillManager.Instance != null)
+        {
+            BillManager.Instance.ResetRunBills();
+        }
+
+        GameManager.Instance.StartRun();
+        Debug.Log("다음 사이클 런 시작: " + saveData.playerData.bankruptcyCycle);
     }
 
     /// <summary>
