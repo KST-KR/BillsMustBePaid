@@ -15564,7 +15564,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxLevel: 5
-  _levelTable: []
+  _levelTable:
+  - destroyCount: 5
+    bonusReward: 0
+  - destroyCount: 10
+    bonusReward: 5
+  - destroyCount: 20
+    bonusReward: 10
+  - destroyCount: 30
+    bonusReward: 20
+  - destroyCount: 0
+    bonusReward: 30
   _playerAccuracy: {fileID: 5489345558399541589}
 --- !u!4 &1132498279
 Transform:
