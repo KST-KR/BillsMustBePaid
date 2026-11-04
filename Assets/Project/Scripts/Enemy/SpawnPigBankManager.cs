@@ -81,7 +81,7 @@ public class SpawnPigBankManager : MonoBehaviour
     {
         ReturnToPool();
 
-        string pigID = GetPigIDForStage(stageNumber);
+        string pigID = GetRandomPigID();
 
         if (_pigDatabase != null)
         {
@@ -162,9 +162,9 @@ public class SpawnPigBankManager : MonoBehaviour
     private void RespawnSinglePig()
     {
         int currentStage = (StageManager.Instance != null) ? StageManager.Instance.CurrentStage : 1;
-        string pigID = GetPigIDForStage(currentStage);
+        string pigID = GetRandomPigID();
 
-        if(PigBankObjectPoolManager.Instance != null)
+        if (PigBankObjectPoolManager.Instance != null)
         {
             Vector3 spawnPosition = RandomSpawnPoint();
             GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
@@ -212,15 +212,37 @@ public class SpawnPigBankManager : MonoBehaviour
         _pigData = null;
     }
 
-    private string GetPigIDForStage(int stageNumber)
+    private string GetRandomPigID()
     {
-        switch (stageNumber)
+        List<string> availablePigIDs = new List<string>();
+
+        if(_pigDatabase != null && _pigDatabase.Datas != null)
         {
-            case 1:
-                return "PigBank_Basic";
-            default:
-                return "PigBank_Basic";
+            int currentUnlockLevel = 1;
+            currentUnlockLevel = PigBankUnlock.Instance.UnlockLevel;
+
+            foreach(var pigData in _pigDatabase.Datas)
+            {
+                if(pigData == null)
+                {
+                    continue;
+                }
+
+                if(pigData.CrashLevel <=  currentUnlockLevel)
+                {
+                    availablePigIDs.Add(pigData.ID);
+                }
+            }
         }
+        // 리스트가 비어있다면 기본 돼지 저금통 반환
+        if(availablePigIDs.Count == 0)
+        {
+            return "PigBank_Basic";
+        }
+
+        // 해금된 돼지 저금통 들중 하나를 골라 반환
+        int randomIndex = Random.Range(0, availablePigIDs.Count);
+        return availablePigIDs[randomIndex];
     }
     #endregion
 }

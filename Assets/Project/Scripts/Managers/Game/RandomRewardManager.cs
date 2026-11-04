@@ -57,6 +57,8 @@ public class RandomRewardManager : MonoBehaviour
             StageRewardManager.Instance.NotifyPigBankDestroyed();
         }
 
+        PigBankUnlock.Instance.UnlockPigBank();
+
         if (PigBankObjectPoolManager.Instance != null)
         {
             PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, gameObject);
