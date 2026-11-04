@@ -91,6 +91,11 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("GameManager : StartRun 새로운 런을 시작");
 
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.ResetCrashLevelSystem();
+        }
+
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }
