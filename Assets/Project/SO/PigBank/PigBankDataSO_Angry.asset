@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8eaad34b27a4f246921ae71e492c582, type: 3}
+  m_Name: PigBankDataSO_Angry
+  m_EditorClassIdentifier: 
+  _id: PigBank_Angry
+  _pigBankName: Angry
+  _pigBankHP: 40
+  _moveSpeed: 7
+  _pigPrefab: {fileID: 5129206302073926321, guid: e71b891515ee9e045937ff429ce5547b, type: 3}
+  _crashLevel: 3
+  _rewardCoin: 200
+  _jackpotChance: 0.05
+  _shinePigBankChance: 0.01
+  _specialCoinChance: 0.02
