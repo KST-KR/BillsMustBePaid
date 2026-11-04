@@ -17,6 +17,10 @@ public class PigBankUnlock : MonoBehaviour
     public static PigBankUnlock Instance { get; private set; }
     #endregion
 
+    #region 속성
+    public int UnlockLevel => _unlockLevel;
+    #endregion
+
     #region 인스펙터
     [Header("해금 데이터 설정 (인스펙터에서 수정 가능)")]
     [SerializeField] private UnlockInfo[] _unlockTable;
@@ -67,7 +71,7 @@ public class PigBankUnlock : MonoBehaviour
     /// <summary>
     /// 해금 레벨에 해당하는 보상을 반환
     /// </summary>
-    public PigBankDataBaseSO GetUnlockLevelBonus()
+    public PigBankDataBaseSO GetUnlockLevel()
     {
         int currentIndex = _unlockLevel - 1;
         if (currentIndex >= 0 && currentIndex < _unlockTable.Length)

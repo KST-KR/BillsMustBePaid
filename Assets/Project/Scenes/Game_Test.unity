@@ -26180,7 +26180,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7996c31b219cfcd4e802b17f9e535c14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _unlockTable: []
+  _unlockTable:
+  - unlockCount: 5
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
 --- !u!4 &1210809508
 Transform:
   m_ObjectHideFlags: 0
