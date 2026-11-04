@@ -11,8 +11,11 @@ public class GrowthManager : MonoBehaviour
     public static GrowthManager Instance { get; private set; }
     #endregion
 
+    private readonly Dictionary<EUpgradeStat, float> _appliedSkillSetStatValues = new Dictionary<EUpgradeStat, float>();
+
     #region 속성
     public IReadOnlyList<UpgradeData> Upgrades => _upgrades;
+    public IReadOnlyList<GrowthSkillSetData> SkillSets => _skillSets;
     public string SelectedUpgradeId => _selectedUpgradeId;
     #endregion
 
@@ -29,11 +32,13 @@ public class GrowthManager : MonoBehaviour
 
     #region 인스펙터
     [SerializeField] private UpgradeData[] _upgrades = new UpgradeData[0];
+    [SerializeField] private GrowthSkillSetData[] _skillSets = new GrowthSkillSetData[0];
     #endregion
 
     #region 내부 변수
     private readonly Dictionary<string, int> _levels = new Dictionary<string, int>();
     private readonly HashSet<string> _unlockedIds = new HashSet<string>();
+    private readonly Dictionary<EUpgradeStat, UpgradeData> _skillSetUpgradeData = new Dictionary<EUpgradeStat, UpgradeData>();
     private string _selectedUpgradeId;
     #endregion
 
@@ -50,6 +55,10 @@ public class GrowthManager : MonoBehaviour
         if (_upgrades == null)
         {
             _upgrades = new UpgradeData[0];
+        }
+        if (_skillSets == null)
+        {
+            _skillSets = new GrowthSkillSetData[0];
         }
     }
 
@@ -72,6 +81,8 @@ public class GrowthManager : MonoBehaviour
         {
             Instance = null;
         }
+
+        _skillSetUpgradeData.Clear();
     }
     #endregion
 
@@ -126,6 +137,7 @@ public class GrowthManager : MonoBehaviour
             ApplyStatGrowth(upgrade, upgrade.ValuePerLevel);
         }
 
+        RefreshSkillSetEffects();
         OnUpgradePurchased?.Invoke(upgradeId, level, upgrade.ValuePerLevel);
         OnGrowthChanged?.Invoke();
         return true;
@@ -216,7 +228,48 @@ public class GrowthManager : MonoBehaviour
             }
         }
 
+        // [GROW-03-01] 스킬 세트 보너스 적용
+        for (int i = 0; i < _skillSets.Length; i++)
+        {
+            GrowthSkillSetData skillSet = _skillSets[i];
+            if (skillSet == null || !IsSkillSetActive(skillSet) || skillSet.Bonuses == null)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < skillSet.Bonuses.Length; j++)
+            {
+                SkillSetBonus bonus = skillSet.Bonuses[j];
+                if (bonus.TargetStat == stat)
+                {
+                    total += bonus.BonusValue;
+                }
+            }
+        }
+
         return total;
+    }
+
+    /// <summary>
+    /// [GROW-03-01] 해당 세트의 모든 스킬 레벨 조건이 충족됐는지 반환
+    /// </summary>
+    public bool IsSkillSetActive(GrowthSkillSetData skillSet)
+    {
+        if (skillSet == null || skillSet.Requirements == null || skillSet.Requirements.Length == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < skillSet.Requirements.Length; i++)
+        {
+            SkillSetRequirement requirement = skillSet.Requirements[i];
+            if (string.IsNullOrEmpty(requirement.UpgradeId) || GetLevel(requirement.UpgradeId) < requirement.RequiredLevel)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -284,6 +337,7 @@ public class GrowthManager : MonoBehaviour
         }
 
         _selectedUpgradeId = GetUpgrade(saveData.SelectedUpgradeId) != null ? saveData.SelectedUpgradeId : null;
+        RefreshSkillSetEffects();
         OnGrowthChanged?.Invoke();
         OnSelectionChanged?.Invoke(_selectedUpgradeId);
     }
@@ -295,6 +349,7 @@ public class GrowthManager : MonoBehaviour
     {
         _levels.Clear();
         _unlockedIds.Clear();
+        _appliedSkillSetStatValues.Clear();
         _selectedUpgradeId = null;
         OnGrowthChanged?.Invoke();
         OnSelectionChanged?.Invoke(null);
@@ -306,6 +361,7 @@ public class GrowthManager : MonoBehaviour
     /// </summary>
     public void ReapplyPlayerStatSkills()
     {
+        _appliedSkillSetStatValues.Clear();
         for (int i = 0; i < _upgrades.Length; i++)
         {
             UpgradeData upgrade = _upgrades[i];
@@ -318,6 +374,8 @@ public class GrowthManager : MonoBehaviour
             float value = level * upgrade.ValuePerLevel;
             ApplyStatGrowth(upgrade, value);
         }
+
+        RefreshSkillSetEffects();
     }
 
     #endregion
@@ -356,6 +414,67 @@ public class GrowthManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    
+
+    /// <summary>
+    /// [GROW-03-01] 스킬 세트 효과를 계산하고 최종 변경분을 플레이어 담당 이벤트 구독자에게 전달
+    /// </summary>
+    private void RefreshSkillSetEffects()
+    {
+        Dictionary<EUpgradeStat, float> currentValues = new Dictionary<EUpgradeStat, float>();
+        for (int i = 0; i < _skillSets.Length; i++)
+        {
+            GrowthSkillSetData skillSet = _skillSets[i];
+            if (skillSet == null || !IsSkillSetActive(skillSet) || skillSet.Bonuses == null)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < skillSet.Bonuses.Length; j++)
+            {
+                SkillSetBonus bonus = skillSet.Bonuses[j];
+                currentValues.TryGetValue(bonus.TargetStat, out float value);
+                currentValues[bonus.TargetStat] = value + bonus.BonusValue;
+            }
+        }
+
+        foreach (KeyValuePair<EUpgradeStat, float> pair in _appliedSkillSetStatValues)
+        {
+            currentValues.TryGetValue(pair.Key, out float currentValue);
+            float difference = currentValue - pair.Value;
+            if (!Mathf.Approximately(difference, 0.0f))
+            {
+                ApplySkillSetStatGrowth(pair.Key, difference);
+            }
+        }
+
+        foreach (KeyValuePair<EUpgradeStat, float> pair in currentValues)
+        {
+            if (!_appliedSkillSetStatValues.ContainsKey(pair.Key) && !Mathf.Approximately(pair.Value, 0.0f))
+            {
+                ApplySkillSetStatGrowth(pair.Key, pair.Value);
+            }
+        }
+
+        _appliedSkillSetStatValues.Clear();
+        foreach (KeyValuePair<EUpgradeStat, float> pair in currentValues)
+        {
+            _appliedSkillSetStatValues.Add(pair.Key, pair.Value);
+        }
+    }
+
+    private void ApplySkillSetStatGrowth(EUpgradeStat stat, float amount)
+    {
+        if (!_skillSetUpgradeData.TryGetValue(stat, out UpgradeData runtimeUpgrade) || runtimeUpgrade == null)
+        {
+            runtimeUpgrade = UpgradeData.CreateRuntimeStatGrowthData(stat, amount);
+            _skillSetUpgradeData[stat] = runtimeUpgrade;
+        }
+
+        runtimeUpgrade.SetRuntimeStatGrowthValue(amount);
+        OnApplyStatGrowth?.Invoke(runtimeUpgrade, amount);
     }
     #endregion
 }

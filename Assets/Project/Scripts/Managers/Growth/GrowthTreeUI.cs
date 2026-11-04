@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -25,7 +26,16 @@ public class GrowthTreeUI : MonoBehaviour
 
     private readonly Dictionary<string, Button> _nodeButtons = new Dictionary<string, Button>();
     private readonly List<Image> _connections = new List<Image>();
+    private readonly Dictionary<GrowthSkillSetData, SkillSetFrameControl> _skillSetFrames = new Dictionary<GrowthSkillSetData, SkillSetFrameControl>();
     private bool _hasUserSelectedUpgrade;
+    private bool _detailsLayoutApplied;
+    private bool _detailsFooterAdjusted;
+
+    private sealed class SkillSetFrameControl
+    {
+        public GameObject Root;
+        public readonly List<Image> Images = new List<Image>();
+    }
 
     #region 인스펙터
     [SerializeField] private GrowthManager _growthManager;
@@ -114,6 +124,7 @@ public class GrowthTreeUI : MonoBehaviour
         }
 
         RefreshConnections();
+        RefreshSkillSetVisuals();
         RefreshGold();
         if (_hasUserSelectedUpgrade)
         {
@@ -146,17 +157,23 @@ public class GrowthTreeUI : MonoBehaviour
             _detailsRoot = detailsTransform as RectTransform;
         }
 
+        SetDetailsPanelPositionAndSize();
+
         ClearChildren(_nodeRoot);
         if (_connecitonRoot != _nodeRoot)
         {
-            ClearChildren(_connecitonRoot);
+            ClearConnectionChildren();
         }
 
         _nodeButtons.Clear();
         _connections.Clear();
+        _skillSetFrames.Clear();
         BindDetailsPanel();
+        ConfigureScrollableDetails();
 
         IReadOnlyList<UpgradeData> upgrades = _growthManager.Upgrades;
+        BindSkillSetVisuals();
+
         for (int i = 0; i < upgrades.Count; i++)
         {
             UpgradeData upgrade = upgrades[i];
@@ -191,10 +208,29 @@ public class GrowthTreeUI : MonoBehaviour
             _detailsText = detailsText != null ? detailsText.GetComponent<TMP_Text>() : null;
         }
 
+        if (_detailsText != null)
+        {
+            _detailsText.fontSize = 20.0f;
+            _detailsText.enableAutoSizing = true;
+            _detailsText.fontSizeMin = 18.0f;
+            _detailsText.fontSizeMax = 20.0f;
+            _detailsText.fontWeight = FontWeight.Regular;
+            _detailsText.lineSpacing = 0.0f;
+            _detailsText.paragraphSpacing = 1.0f;
+            _detailsText.characterSpacing = 0.0f;
+            _detailsText.wordWrappingRatios = 0.5f;
+        }
+
         if (_goldText == null)
         {
             Transform goldText = _detailsRoot.Find("GoldBalance");
             _goldText = goldText != null ? goldText.GetComponent<TMP_Text>() : null;
+        }
+
+        if (_goldText != null && !_detailsFooterAdjusted)
+        {
+            _goldText.rectTransform.anchoredPosition += Vector2.up * 14.0f;
+            _detailsFooterAdjusted = true;
         }
 
         if (_purchaseLabel == null)
@@ -220,6 +256,23 @@ public class GrowthTreeUI : MonoBehaviour
             _purchaseButton.onClick.RemoveListener(PurchaseSelectedUpgrade);
             _purchaseButton.onClick.AddListener(PurchaseSelectedUpgrade);
         }
+    }
+
+    private void ConfigureScrollableDetails()
+    {
+        // TODO: 상세 내용이 패널 높이를 초과할 때 스크롤 뷰포트와 콘텐츠 크기를 설정한다.
+    }
+
+    private void SetDetailsPanelPositionAndSize()
+    {
+        if (_detailsRoot == null || _detailsLayoutApplied)
+        {
+            return;
+        }
+
+        _detailsRoot.anchoredPosition += Vector2.up * 77.5f;
+        _detailsRoot.sizeDelta += Vector2.up * 155.0f;
+        _detailsLayoutApplied = true;
     }
 
     private void CreateNode(UpgradeData upgrade)
@@ -284,24 +337,11 @@ public class GrowthTreeUI : MonoBehaviour
         lineObject.transform.SetAsFirstSibling();
         RectTransform rect = lineObject.GetComponent<RectTransform>();
         Vector2 difference = end - start;
-
-        //rect.anchorMin = new Vector2(0.3f, 0.7f);
-        //rect.anchorMax = new Vector2(0.3f, 0.7f);
-        //rect.pivot = new Vector2(0, 0.7f);
-
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.0f, 0.5f);
         rect.anchoredPosition = start;
         rect.sizeDelta = new Vector2(difference.magnitude, 3.0f);
-
-        //float angle = 0f;
-        //if (difference.x > 0 && difference.y == 0) angle = 0f;
-        //else if (difference.x > 0 && difference.y > 0) angle = 45f;
-        //else if (difference.x == 0 && difference.y > 0) angle = 90f;
-        //else if (difference.x < 0 && difference.y > 0) angle = 135f;
-        //rect.localRotation = Quaternion.Euler(0, 0, angle);
-
         rect.localRotation = Quaternion.Euler(0.0f, 0.0f, Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg);
         Image image = lineObject.GetComponent<Image>();
         image.sprite = _uiSprite;
@@ -312,8 +352,63 @@ public class GrowthTreeUI : MonoBehaviour
 
     private string GetConnectionName(int skillIndex, int lineIndex)
     {
-        // S01_Line01~02
         return "S" + (skillIndex + 1).ToString("D2") + "_Line" + (lineIndex + 1).ToString("D2");
+    }
+
+    private void BindSkillSetVisuals()
+    {
+        if (_connecitonRoot == null)
+        {
+            return;
+        }
+
+        Transform frameContainer = _connecitonRoot.Find("SkillSetFrames");
+        if (frameContainer == null)
+        {
+            Debug.LogError("SkillSetFarmes 객체 누락", this);
+            return;
+        }
+
+        IReadOnlyList<GrowthSkillSetData> skillSets = _growthManager.SkillSets;
+        for (int i = 0; i < skillSets.Count; i++)
+        {
+            GrowthSkillSetData skillSet = skillSets[i];
+            if (skillSet == null)
+            {
+                continue;
+            }
+
+            Transform setRoot = frameContainer.Find("SkillSet_" + skillSet.SetId);
+            if (setRoot == null)
+            {
+                continue;
+            }
+
+            SkillSetFrameControl control = new SkillSetFrameControl { Root = setRoot.gameObject };
+            string[] barNames = { "Top", "Bottom", "Left", "Right" };
+            for (int j = 0; j < barNames.Length; j++)
+            {
+                Image image = setRoot.Find(barNames[j]) != null ? setRoot.Find(barNames[j]).GetComponent<Image>() : null;
+                if (image != null)
+                {
+                    control.Images.Add(image);
+                }
+            }
+            _skillSetFrames[skillSet] = control;
+        }
+    }
+
+    private void RefreshSkillSetVisuals()
+    {
+        foreach (KeyValuePair<GrowthSkillSetData, SkillSetFrameControl> pair in _skillSetFrames)
+        {
+            bool active = _growthManager.IsSkillSetActive(pair.Key);
+            pair.Value.Root.SetActive(active);
+            for (int i = 0; i < pair.Value.Images.Count; i++)
+            {
+                pair.Value.Images[i].color = new Color(0.27f, 0.58f, 0.36f, 0.9f);
+            }
+        }
     }
 
     private void RefreshNode(UpgradeData upgrade, Button button)
@@ -392,13 +487,14 @@ public class GrowthTreeUI : MonoBehaviour
         EUpgradeNodeStatus status = _growthManager.GetNodeStatus(upgradeId);
         int level = _growthManager.GetLevel(upgradeId);
         _detailsText.text =
-            upgrade.DisplayName + "\n" +
-            upgrade.Description + "\n\n레벨: " + level + "/" + upgrade.MaxLevel +
+            upgrade.DisplayName + "\n" + upgrade.Description +
+            "\n\n레벨: " + level + "/" + upgrade.MaxLevel +
             "\n상태: " + GetStatusText(status) +
-            "\n비용: " + upgrade.Cost +
-            " Gold\n효과: " + GetStatText(upgrade.TargetStat) + " " +
+            "\n비용: " + upgrade.Cost + " Gold" +
+            "\n효과: " + GetStatText(upgrade.TargetStat) + " " +
             (upgrade.ValuePerLevel >= 0 ? "+" : string.Empty) + upgrade.ValuePerLevel +
-            "\n누적 능력치: " + _growthManager.GetStatValue(upgrade.TargetStat) + GetPrerequisiteText(upgrade);
+            "\n누적: " + GetStatText(upgrade.TargetStat) + " " + _growthManager.GetStatValue(upgrade.TargetStat) +
+            GetPrerequisiteText(upgrade) + GetSkillSetDetailsText(upgrade);
 
         if (_detailsIcon != null)
         {
@@ -445,7 +541,15 @@ public class GrowthTreeUI : MonoBehaviour
         {
             PrerequisiteUpgrade prerequisite = upgrade.PrerequisiteIds[i];
             UpgradeData required = _growthManager.GetUpgrade(prerequisite.upgradeId);
-            text += "\n· " + (required != null ? required.DisplayName : prerequisite.upgradeId) + " Lv." + prerequisite.requiredLevel;
+            if (i > 0)
+            {
+                text += "\n· ";
+            }
+            else
+            {
+                text += "\n· ";
+            }
+            text += (required != null ? required.DisplayName : prerequisite.upgradeId) + " Lv." + prerequisite.requiredLevel;
         }
 
         return text;
@@ -555,6 +659,113 @@ public class GrowthTreeUI : MonoBehaviour
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
             Destroy(parent.GetChild(i).gameObject);
+        }
+    }
+
+    private void ClearConnectionChildren()
+    {
+        if (_connecitonRoot == null)
+        {
+            return;
+        }
+
+        for (int i = _connecitonRoot.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _connecitonRoot.GetChild(i);
+            if (child.name != "SkillSetFrames")
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private string GetSkillSetDetailsText(UpgradeData selectedUpgrade)
+    {
+        IReadOnlyList<GrowthSkillSetData> skillSets = _growthManager.SkillSets;
+        StringBuilder detailsBuilder = new StringBuilder();
+
+        for (int i = 0; i < skillSets.Count; i++)
+        {
+            GrowthSkillSetData skillSet = skillSets[i];
+            if (skillSet == null || skillSet.Requirements == null)
+            {
+                continue;
+            }
+
+            bool containsSelectedUpgrade = false;
+            for (int j = 0; j < skillSet.Requirements.Length; j++)
+            {
+                if (skillSet.Requirements[j].UpgradeId == selectedUpgrade.UpgradeId)
+                {
+                    containsSelectedUpgrade = true;
+                    break;
+                }
+            }
+
+            if (!containsSelectedUpgrade)
+            {
+                continue;
+            }
+
+            bool active = _growthManager.IsSkillSetActive(skillSet);
+            AppendSkillSetRequirements(detailsBuilder, skillSet);
+            AppendSkillSetBonus(detailsBuilder, skillSet, active);
+        }
+
+        return detailsBuilder.ToString();
+    }
+
+    private void AppendSkillSetRequirements(StringBuilder builder, GrowthSkillSetData skillSet)
+    {
+        // builder.Append("\n<color=#DF3720>세트 효과 요구 조건</color>");
+        builder.Append("\n\n<color=#D9A64E>세트 효과 요구 조건</color>");
+
+        for (int i = 0; i < skillSet.Requirements.Length; i++)
+        {
+            SkillSetRequirement requirement = skillSet.Requirements[i];
+            UpgradeData requiredUpgrade = _growthManager.GetUpgrade(requirement.UpgradeId);
+            string displayName = requiredUpgrade != null ? requiredUpgrade.DisplayName : requirement.UpgradeId;
+            int currentLevel = _growthManager.GetLevel(requirement.UpgradeId);
+            string color = currentLevel >= requirement.RequiredLevel ? "#75D994" : "#A5A5A5";
+
+            builder.Append("\n<color=")
+                .Append(color)
+                .Append('>')
+                .Append(displayName)
+                .Append(' ')
+                .Append(currentLevel)
+                .Append('/')
+                .Append(requirement.RequiredLevel)
+                .Append("</color>");
+        }
+    }
+
+    private void AppendSkillSetBonus(StringBuilder builder, GrowthSkillSetData skillSet, bool active)
+    {
+        if (skillSet.Bonuses == null || skillSet.Bonuses.Length == 0)
+        {
+            return;
+        }
+
+        string color = active ? "#FFC857" : "#8A8175";
+        builder.Append("\n\n<color=#D9A64E><b>세트 효과</b></color>");
+
+        for (int i = 0; i < skillSet.Bonuses.Length; i++)
+        {
+            SkillSetBonus bonus = skillSet.Bonuses[i];
+            builder.Append("\n<color=")
+                .Append(color)
+                .Append("><b>효과: ")
+                .Append(GetStatText(bonus.TargetStat))
+                .Append(' ');
+
+            if (bonus.BonusValue >= 0.0f)
+            {
+                builder.Append('+');
+            }
+
+            builder.Append(bonus.BonusValue)
+                .Append("</b></color>");
         }
     }
     #endregion
