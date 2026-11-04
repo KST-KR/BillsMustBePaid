@@ -26183,6 +26183,8 @@ MonoBehaviour:
   _unlockTable:
   - unlockCount: 5
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 15
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
 --- !u!4 &1210809508
 Transform:
   m_ObjectHideFlags: 0
