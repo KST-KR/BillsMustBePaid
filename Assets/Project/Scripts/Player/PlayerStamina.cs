@@ -112,7 +112,10 @@ public class PlayerStamina : MonoBehaviour
             return;
         }
 
-        SetCurrent(_current - _drainPerSecond * Time.deltaTime);
+        float drainMultiplier = _playerStats.StaminaDrainMultiplier;
+        float drainAmount = _drainPerSecond * drainMultiplier * Time.deltaTime;
+
+        SetCurrent(_current - drainAmount);
     }
     #endregion
 

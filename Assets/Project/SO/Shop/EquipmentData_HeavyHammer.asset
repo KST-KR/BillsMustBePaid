@@ -16,6 +16,9 @@ MonoBehaviour:
   _description: "\uAC15\uB825\uD55C \uD53C\uD574\uB97C \uC8FC\uB294 \uB9DD\uCE58"
   _price: 4000
   _attackPower: 30
-  _attackInterval: -1
+  _attackInterval: 1
   _attackRange: 1
-  _equippedPrefab: {fileID: 6733701313703116601, guid: d773dca8864b85d459a781700e89eadf, type: 3}
+  _criticalChance: 0.6
+  _criticalDamageBonus: 1.5
+  _staminaDrainMultiplier: 1.5
+  _equipmentId: Heavy
