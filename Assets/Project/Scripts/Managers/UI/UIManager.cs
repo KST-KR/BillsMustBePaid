@@ -23,11 +23,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _upgradePanel;
     [SerializeField] private GameObject _growthSkillTreePanel;
     [SerializeField] private GameObject _billPanel;
+    [SerializeField] private GameObject _shopPanel;
 
     [Header("업그레이드 탭 선택 표시")]
     [SerializeField] private GameObject _billTabSelectedImage;
     [SerializeField] private GameObject _skillTreeTabSelectedImage;
     [SerializeField] private GameObject _piggyBankTabSelectedImage;
+    [SerializeField] private GameObject _shopTabSelectedImage;
     [SerializeField] private GameObject _collectionTabSelectedImage;
 
     // [UI-04-02] 일시정지 메뉴
@@ -480,6 +482,7 @@ public class UIManager : MonoBehaviour
         SetPanelActive(_upgradePanel, true);
         SetPanelActive(_growthSkillTreePanel, selectedSection == _growthSkillTreePanel);
         SetPanelActive(_billPanel, selectedSection == _billPanel);
+        SetPanelActive(_shopPanel, selectedSection == _shopPanel);
         RefreshCurrencyUI();
     }
 
@@ -488,6 +491,7 @@ public class UIManager : MonoBehaviour
         SetPanelActive(_billTabSelectedImage, selectedImage == _billTabSelectedImage);
         SetPanelActive(_skillTreeTabSelectedImage, selectedImage == _skillTreeTabSelectedImage);
         SetPanelActive(_piggyBankTabSelectedImage, selectedImage == _piggyBankTabSelectedImage);
+        SetPanelActive(_shopTabSelectedImage, selectedImage == _shopTabSelectedImage);
         SetPanelActive(_collectionTabSelectedImage, selectedImage == _collectionTabSelectedImage);
     }
 
@@ -865,6 +869,15 @@ public class UIManager : MonoBehaviour
     {
         ShowUpgradeSection(_billPanel);
         SetSelectedUpgradeTab(_billTabSelectedImage);
+    }
+
+    /// <summary>
+    /// 상점 탭 활성화
+    /// </summary>
+    public void OnShopTabButtonClicked()
+    {
+        ShowUpgradeSection(_shopPanel);
+        SetSelectedUpgradeTab(_shopTabSelectedImage);
     }
 
     /// <summary>

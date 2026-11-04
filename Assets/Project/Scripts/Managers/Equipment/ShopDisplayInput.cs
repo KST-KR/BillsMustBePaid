@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// ShopCamera의 Raycast로 진열된 망치를 찾기
 /// </summary>
 [RequireComponent(typeof(RawImage))]
-public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
+public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IPointerClickHandler
 {
     #region 인스펙터
     [Header("상점 카메라")]
@@ -29,6 +29,9 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     // 마우스가 망치에서 벗어났을 때 발생
     public event Action OnShopItemHoverExited;
+
+    // 망치를 클릭했을 때 발생
+    public event Action<ShopItem> OnShopItemClicked;
     #endregion
 
     #region 프로퍼티
@@ -60,6 +63,19 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
     {
         ClearHoveredItem();
     }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // 클릭 순간에도 현재 마우스 아래의 망치를 다시 확인
+        UpdateHoveredItem(eventData);
+
+        if (_currentShopItem == null)
+        {
+            return;
+        }
+
+        OnShopItemClicked?.Invoke(_currentShopItem);
+    }
     #endregion
 
     #region 커스텀 (private)
@@ -77,7 +93,7 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             _rawImageRect,
             eventData.position,
-            eventData.pressEventCamera,
+            eventData.enterEventCamera,
             out Vector2 localPoint))
         {
             ClearHoveredItem();
@@ -90,8 +106,7 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
         float viewportX = (localPoint.x - rect.xMin) / rect.width;
         float viewportY = (localPoint.y - rect.yMin) / rect.height;
 
-        if (viewportX < 0f || viewportX > 1f ||
-            viewportY < 0f || viewportY > 1f)
+        if (viewportX < 0f || viewportX > 1f || viewportY < 0f || viewportY > 1f)
         {
             ClearHoveredItem();
             return;
