@@ -9126,7 +9126,6 @@ MonoBehaviour:
   _detailPanel: {fileID: 1843823726}
   _equipmentNameText: {fileID: 1321969680}
   _descriptionText: {fileID: 2073809924}
-  _priceText: {fileID: 0}
   _attackPowerBeforeText: {fileID: 2104054038}
   _attackIntervalBeforeText: {fileID: 1948814323}
   _criticalChanceBeforeText: {fileID: 420934418}
@@ -9140,7 +9139,6 @@ MonoBehaviour:
   _staminaCostAfterText: {fileID: 727445901}
   _attackRangeAfterText: {fileID: 1187859742}
   _equipmentManager: {fileID: 903722551}
-  _playerEquipment: {fileID: 5489345558399541590}
 --- !u!114 &623142247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14480,6 +14478,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1002302602}
   m_CullTransparentMesh: 1
+--- !u!1 &1003672567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1003672569}
+  - component: {fileID: 1003672568}
+  m_Layer: 0
+  m_Name: PigBankUnlockManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1003672568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1003672567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7996c31b219cfcd4e802b17f9e535c14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _unlockTable:
+  - unlockCount: 5
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 15
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+--- !u!4 &1003672569
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1003672567}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.6750462, y: 6.4565005, z: -4.447928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1005236584
 GameObject:
   m_ObjectHideFlags: 0
@@ -47396,3 +47443,4 @@ SceneRoots:
   - {fileID: 1124395593}
   - {fileID: 1967748637}
   - {fileID: 903722552}
+  - {fileID: 1003672569}
