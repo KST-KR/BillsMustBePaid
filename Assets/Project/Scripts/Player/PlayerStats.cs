@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// [PL-STAT-01] 플레이어의 기본 능력치와 최종 능력치 계산
 /// GrowthManager.OnApplyStatGrowth로 전달되는 변경분(amount)을 성장값에 누적
-/// 최종 능력치 = 기본 능력치 + 누적된 성장값 (+ 최소값 보정)
+/// 최종 능력치 = 기본 능력치 + 누적된 성장값 + 장비 능력치 + 영구 성장값
 /// </summary>
 public class PlayerStats : MonoBehaviour
 {
@@ -16,6 +14,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float _baseAttackInterval = 0.5f;
     [SerializeField] private float _baseAttackRange = 2f;
     [SerializeField] private float _baseCriticalChance = 0f;
+    [SerializeField] private float _baseCriticalDamageMultiplier = 2f;
     [SerializeField] private float _baseLuck = 0f;
     [SerializeField] private float _baseMaxStamina = 100f;
 
@@ -42,6 +41,9 @@ public class PlayerStats : MonoBehaviour
     private float _hammerAttackPower;
     private float _hammerAttackInterval;
     private float _hammerAttackRange;
+    private float _hammerCriticalChance;
+    private float _hammerCriticalDamageBonus;
+    private float _hammerStaminaDrainMultiplier = 1f;
 
     private GrowthManager _growthManager;
     private LegacyShopManager _legacyShopManager;
@@ -49,21 +51,39 @@ public class PlayerStats : MonoBehaviour
 
     #region 프로퍼티
     /// <summary>
-    /// 각 기본 능력치 + 성장 능력치 합
+    /// 최종 공격력
     /// </summary>
     public float AttackPower => _baseAttackPower + _attackPowerGrowth + _hammerAttackPower + GetLegacyShopBonus(EUpgradeStat.Attack);
 
+    /// <summary>
+    /// 최종 공격 간격
+    /// </summary>
     public float AttackInterval => Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
 
+    /// <summary>
+    /// 최종 타격 판정 범위
+    /// </summary>
     public float AttackRange => Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + _hammerAttackRange + GetLegacyShopBonus(EUpgradeStat.AttackRange));
 
-    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth +
-        GetLegacyShopBonus(EUpgradeStat.CriticalChance));
+    /// <summary>
+    /// 최종 치명타 확률
+    /// </summary>
+    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth + _hammerCriticalChance + GetLegacyShopBonus(EUpgradeStat.CriticalChance));
+
+    /// <summary>
+    /// 최종 치명타 피해 배율
+    /// </summary>
+    public float CriticalDamageMultiplier => _baseCriticalDamageMultiplier + _hammerCriticalDamageBonus;
 
     public float Luck => _baseLuck + _luckGrowth + GetLegacyShopBonus(EUpgradeStat.Luck);
 
     public float MaxStamina => Mathf.Max(_minMaxStamina,
         _baseMaxStamina + _maxStaminaGrowth + GetLegacyShopBonus(EUpgradeStat.Stamina));
+
+    /// <summary>
+    /// 장착한 망치의 스태미나 소모 배율
+    /// </summary>
+    public float StaminaDrainMultiplier => _hammerStaminaDrainMultiplier;
 
     /// <summary>
     /// 한 번의 공격 동작 시간
@@ -93,6 +113,7 @@ public class PlayerStats : MonoBehaviour
     {
         _growthManager = GrowthManager.Instance;
         _legacyShopManager = LegacyShopManager.Instance;
+
         if (_legacyShopManager != null)
         {
             _legacyShopManager.OnOwnershipDataChanged += HandleLegacyShopDataChanged;
@@ -118,6 +139,7 @@ public class PlayerStats : MonoBehaviour
             _growthManager.OnResetRunGrowth -= ResetGrowth;
             _growthManager = null;
         }
+
         if (_legacyShopManager != null)
         {
             _legacyShopManager.OnOwnershipDataChanged -= HandleLegacyShopDataChanged;
@@ -155,13 +177,31 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// 망치 장착시 장비 능력치 교체
+    /// </summary>
+    /// <param name="data"></param>
+    public void SetHammerEquipment(EquipmentData data)
+    {
+        _hammerAttackPower = data != null ? data.AttackPower : 0f;
+        _hammerAttackInterval = data != null ? data.AttackInterval : 0f;
+        _hammerAttackRange = data != null ? data.AttackRange : 0f;
+        _hammerCriticalChance = data != null ? data.CriticalChance : 0f;
+
+        _hammerCriticalDamageBonus = data != null ? data.CriticalDamageBonus : 0f;
+
+        _hammerStaminaDrainMultiplier = data != null ? Mathf.Max(0f, data.StaminaDrainMultiplier) : 1f;
+
+        OnStateChanged?.Invoke();
+    }
+
+    /// <summary>
     /// 장비 교체 시 예상 공격력을 계산
     /// </summary>
     public float GetAttackPowerWithEquipment(EquipmentData data)
     {
         float equipmentValue = data != null ? data.AttackPower : 0f;
 
-        return _baseAttackPower + _attackPowerGrowth + equipmentValue;
+        return _baseAttackPower + _attackPowerGrowth + equipmentValue + GetLegacyShopBonus(EUpgradeStat.Attack);
     }
 
     /// <summary>
@@ -171,7 +211,7 @@ public class PlayerStats : MonoBehaviour
     {
         float equipmentValue = data != null ? data.AttackInterval : 0f;
 
-        return Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + equipmentValue);
+        return Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + equipmentValue + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
     }
 
     /// <summary>
@@ -181,7 +221,36 @@ public class PlayerStats : MonoBehaviour
     {
         float equipmentValue = data != null ? data.AttackRange : 0f;
 
-        return Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + equipmentValue);
+        return Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + equipmentValue + GetLegacyShopBonus(EUpgradeStat.AttackRange));
+    }
+
+    public float GetCriticalChanceWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.CriticalChance : 0f;
+
+        return Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth + equipmentValue + GetLegacyShopBonus(EUpgradeStat.CriticalChance));
+    }
+
+    /// <summary>
+    /// 장비 교체 시 예상 치명타 피해 배율을 계산
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    public float GetCriticalDamageMultiplierWithEquipment(EquipmentData data)
+    {
+        float equipmentValue = data != null ? data.CriticalDamageBonus : 0f;
+
+        return _baseCriticalDamageMultiplier + equipmentValue;
+    }
+
+    /// <summary>
+    /// 장비 교체시 예상 스태미나 소모 배율을 계산
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    public float GetStaminaDrainMultiplierWithEquipment(EquipmentData data)
+    {
+        return data != null ? Mathf.Max(0f, data.StaminaDrainMultiplier) : 1f;
     }
     #endregion
 
@@ -253,7 +322,5 @@ public class PlayerStats : MonoBehaviour
         _luckGrowth = 0f;
         _maxStaminaGrowth = 0f;
     }
-
     #endregion
-
 }

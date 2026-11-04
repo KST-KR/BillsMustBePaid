@@ -19,4 +19,7 @@ MonoBehaviour:
   _attackPower: 0
   _attackInterval: 0
   _attackRange: 0
-  _equippedPrefab: {fileID: 6644154770516376773, guid: 9bd922c7e4b618047a60efaf6e988708, type: 3}
+  _criticalChance: 0
+  _criticalDamageBonus: 0
+  _staminaDrainMultiplier: 1
+  _equipmentId: Basic
