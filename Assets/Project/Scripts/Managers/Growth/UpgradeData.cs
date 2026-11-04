@@ -96,6 +96,43 @@ public sealed class UpgradeData : ScriptableObject
     public ESkillEffectMode EffectMode => _effectMode;
     #endregion
 
+    /// <summary>
+    /// 업그레이드 데이터 기본값 생성
+    /// </summary>
+    public static UpgradeData CreateRuntimeStatGrowthData(EUpgradeStat stat, float value)
+    {
+        UpgradeData upgrade = CreateInstance<UpgradeData>();
+        upgrade._upgradeId = GetStatId(stat) + "_" + stat;
+        upgrade._displayName = stat.ToString();
+        upgrade._targetStat = stat;
+        upgrade._valuePerLevel = value;
+        upgrade._cost = 0;
+        upgrade._maxLevel = 1;
+        upgrade._prerequisiteIds = new PrerequisiteUpgrade[0];
+        upgrade._treePosition = Vector2.zero;
+        upgrade._effectMode = ESkillEffectMode.PlayerStat;
+        return upgrade;
+    }
+
+    public void SetRuntimeStatGrowthValue(float value)
+    {
+        _valuePerLevel = value;
+    }
+
+    private static string GetStatId(EUpgradeStat stat)
+    {
+        switch (stat)
+        {
+            case EUpgradeStat.Attack: return "ATT";
+            case EUpgradeStat.Stamina: return "STA";
+            case EUpgradeStat.AttackSpeed: return "ATS";
+            case EUpgradeStat.AttackRange: return "ATR";
+            case EUpgradeStat.CriticalChance: return "CRI";
+            case EUpgradeStat.Luck: return "LUK";
+            default: return "UNKNOWN";
+        }
+    }
+
     private void OnValidate()
     {
         _upgradeId = _upgradeId != null ? _upgradeId.Trim() : string.Empty;

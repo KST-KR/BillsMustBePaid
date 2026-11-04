@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b9f1d2c3a4e5f67890123456789abcd, type: 3}
+  m_Name: SET_03_LUCK_COMPLETE
+  m_EditorClassIdentifier: 
+  _setId: LUCK_COMPLETE
+  _displayName: "\uD589\uC6B4 \uD2B8\uB9AC \uC644\uC131"
+  _requirements:
+  - _upgrade: {fileID: 11400000, guid: 7000000000000000000000000000000a, type: 2}
+    _requiredLevel: 5
+  - _upgrade: {fileID: 11400000, guid: 7000000000000000000000000000000b, type: 2}
+    _requiredLevel: 3
+  - _upgrade: {fileID: 11400000, guid: 7000000000000000000000000000000c, type: 2}
+    _requiredLevel: 3
+  - _upgrade: {fileID: 11400000, guid: 7000000000000000000000000000000d, type: 2}
+    _requiredLevel: 2
+  _bonuses:
+  - _targetStat: 5
+    _bonusValue: 15
