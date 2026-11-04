@@ -17,6 +17,9 @@ MonoBehaviour:
     \uADF8\uB2E5...\n"
   _price: 1000
   _attackPower: -2
-  _attackInterval: 1
+  _attackInterval: -1
   _attackRange: 0
-  _equippedPrefab: {fileID: 3049651363412743094, guid: 8dba85d720979b2459cf3eac318581cb, type: 3}
+  _criticalChance: 0.2
+  _criticalDamageBonus: 0.2
+  _staminaDrainMultiplier: 0.8
+  _equipmentId: Fast
