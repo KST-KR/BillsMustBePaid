@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d947fd260e7813418ab0a57d9cd3542, type: 3}
+  m_Name: PigBankDataSO_Tourist
+  m_EditorClassIdentifier: 
+  _id: PigBank_Tourist
+  _pigBankName: Tourist
+  _pigBankHP: 30
+  _moveSpeed: 7
+  _pigPrefab: {fileID: 2085024267059949473, guid: 96c9569073c57e34fb0594b33000c0b6, type: 3}
+  _crashLevel: 2
+  _rewardCoin: 150
+  _jackpotChance: 0.05
+  _shinePigBankChance: 0.01
+  _specialCoinChance: 0.02
