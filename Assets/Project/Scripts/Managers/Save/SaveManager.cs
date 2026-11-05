@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// 게임 데이터의 저장 및 불러오기를 관리
@@ -83,7 +84,7 @@ public class SaveManager : MonoBehaviour
 
         if (saveDate.playerData.permanentGrowth.purchasedItemIds == null)
         {
-            saveDate.playerData.permanentGrowth.purchasedItemIds = new System.Collections.Generic.List<string>();
+            saveDate.playerData.permanentGrowth.purchasedItemIds = new List<string>();
         }
 
         if (saveDate.runData == null)
@@ -94,6 +95,22 @@ public class SaveManager : MonoBehaviour
         if (saveDate.runData.runGrowth == null)
         {
             saveDate.runData.runGrowth = new RunGrowthSaveData();
+        }
+
+        // 장비 저장 데이터 확인
+        if (saveDate.runData.equipmentData == null)
+        {
+            saveDate.runData.equipmentData = new EquipmentSaveData();
+        }
+
+        if (saveDate.runData.equipmentData.ownedEquipmentIds == null)
+        {
+            saveDate.runData.equipmentData.ownedEquipmentIds = new List<string>();
+        }
+
+        if (saveDate.runData.equipmentData.purchasedEquipmentIds == null)
+        {
+            saveDate.runData.equipmentData.purchasedEquipmentIds = new List<string>();
         }
     }
 
@@ -153,20 +170,20 @@ public class SaveManager : MonoBehaviour
     #region 커스텀 메서드 (Public)
 
     /// <summary>
-    /// 전달받은 게임 데이터를 저장합니다.
+    /// 전달받은 게임 데이터를 저장
     /// </summary>
-    public void SaveGame(SaveSlotData saveData)
+    public bool SaveGame(SaveSlotData saveData)
     {
         if (saveData == null)
         {
             Debug.LogError("저장할 데이터가 없음.");
-            return;
+            return false;
         }
 
         if (!IsValidSlotIndex(saveData.slotIndex))
         {
             Debug.LogError("잘못된 저장 슬롯 번호");
-            return;
+            return false;
         }
 
         try
@@ -180,15 +197,18 @@ public class SaveManager : MonoBehaviour
 
             Directory.CreateDirectory(Application.persistentDataPath);
             File.WriteAllText(path, json);
-
-            OnGameSaved?.Invoke();
-
-            Debug.Log($"저장 완료: 슬롯 {saveData.slotIndex}");
         }
         catch (Exception exception)
         {
             Debug.LogError($"게임 저장 실패: {exception.Message}");
+            return false;
         }
+
+        Debug.Log($"저장 완료: 슬롯 {saveData.slotIndex}");
+
+        OnGameSaved?.Invoke();
+        
+        return true;
     }
 
     /// <summary>
@@ -234,8 +254,15 @@ public class SaveManager : MonoBehaviour
         saveData.runData.currentGold = 0;
         saveData.runData.currentStamina = 0.0f;
         saveData.runData.runGrowth = new RunGrowthSaveData();
-        SaveGame(saveData);
+        saveData.runData.equipmentData = new EquipmentSaveData();
+
+        if (!SaveGame(saveData))
+        {
+            return false;
+        }
+
         SaveSlotData savedData = LoadGame(CurrentSlotIndex);
+
         return savedData != null && savedData.playerData.bankruptcyCycle == cycle && !savedData.runData.isRunActive;
     }
 

@@ -22,4 +22,4 @@ MonoBehaviour:
   _criticalChance: 0.2
   _criticalDamageBonus: 0.2
   _staminaDrainMultiplier: 0.8
-  _equipmentId: Fast
+  _equipmentId: hammer_fast
