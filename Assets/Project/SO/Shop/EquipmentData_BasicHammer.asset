@@ -22,4 +22,4 @@ MonoBehaviour:
   _criticalChance: 0
   _criticalDamageBonus: 0
   _staminaDrainMultiplier: 1
-  _equipmentId: Basic
+  _equipmentId: hammer_basic

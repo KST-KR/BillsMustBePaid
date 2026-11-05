@@ -22,4 +22,4 @@ MonoBehaviour:
   _criticalChance: 0.5
   _criticalDamageBonus: 1
   _staminaDrainMultiplier: 1.2
-  _equipmentId: Multi
+  _equipmentId: hammer_multi

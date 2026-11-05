@@ -11,54 +11,65 @@ public class GameSceneBootstrap : MonoBehaviour
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
         yield return null;
 
-        if (GameManager.Instance == null)
+        try
         {
-            Debug.LogError("GameManager를 찾을 수 없음.");
-            yield break;
-        }
+            if (GameManager.Instance == null)
+            {
+                Debug.LogError("GameManager를 찾을 수 없음.");
+                yield break;
+            }
 
-        if (StageManager.Instance == null)
+            if (StageManager.Instance == null)
+            {
+                Debug.LogError("StageManager를 찾을 수 없음.");
+                yield break;
+            }
+
+            if (SaveManager.Instance == null)
+            {
+                Debug.LogError("SaveManager를 찾을 수 없음.");
+                yield break;
+            }
+
+            int slotIndex = GameLaunchData.SlotIndex;
+            GameLaunchData.ELaunchMode launchMode = GameLaunchData.LaunchMode;
+
+            if (slotIndex < 1 || slotIndex > 3)
+            {
+                Debug.LogError("게임 실행에 필요한 저장 슬롯 정보가 없음.");
+                yield break;
+            }
+
+            switch (launchMode)
+            {
+                case GameLaunchData.ELaunchMode.NewGame:
+                    StartNewGame();
+                    break;
+
+                case GameLaunchData.ELaunchMode.LoadGame:
+                    LoadSavedGame(slotIndex);
+                    break;
+
+                case GameLaunchData.ELaunchMode.OpenSkillTree:
+                    LoadSavedGameForSkillTree(slotIndex);
+                    break;
+
+                case GameLaunchData.ELaunchMode.StartNextCycle:
+                    StartNextCycle(slotIndex);
+                    break;
+
+                default:
+                    Debug.LogError($"지원하지 않는 게임 실행 모드: {launchMode}");
+                    break;
+            }
+        }
+        finally
         {
-            Debug.LogError("StageManager를 찾을 수 없음.");
-            yield break;
+            // 실행 성공 여부와 관계없이 진입 데이터 정리
+            GameLaunchData.Clear();
         }
-
-        if (SaveManager.Instance == null)
-        {
-            Debug.LogError("SaveManager를 찾을 수 없음.");
-            yield break;
-        }
-
-        int slotIndex = GameLaunchData.SlotIndex;
-        GameLaunchData.ELaunchMode launchMode = GameLaunchData.LaunchMode;
-
-        if (slotIndex < 1 || slotIndex > 3)
-        {
-            Debug.LogError("게임 실행에 필요한 저장 슬롯 정보가 없음.");
-            yield break;
-        }
-
-        switch (launchMode)
-        {
-            case GameLaunchData.ELaunchMode.NewGame:
-                StartNewGame();
-                break;
-
-            case GameLaunchData.ELaunchMode.LoadGame:
-                LoadSavedGame(slotIndex);
-                break;
-
-            case GameLaunchData.ELaunchMode.OpenSkillTree:
-                LoadSavedGameForSkillTree(slotIndex);
-                break;
-
-            case GameLaunchData.ELaunchMode.StartNextCycle:
-                StartNextCycle(slotIndex);
-                break;
-        }
-
-        GameLaunchData.Clear();
     }
+
 
     /// <summary>
     /// 새로운 런을 시작합니다.
@@ -137,9 +148,9 @@ public class GameSceneBootstrap : MonoBehaviour
         // 1. 저장 데이터 읽기 (아직 복원 이벤트는 발생하지 않음)
         SaveSlotData saveData = saveManager.LoadGame(slotIndex);
 
-        if (saveData == null)
+        if (saveData == null || saveData.runData == null || saveData.playerData == null)
         {
-            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터를 불러오지 못했습니다.");
+            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터가 올바르지 않음.");
             return;
         }
 
@@ -162,28 +173,43 @@ public class GameSceneBootstrap : MonoBehaviour
             RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
         }
 
-        // 4. 성장 시스템에 검증된 저장 데이터 전달
-        // GrowthManager가 OnGameLoaded를 구독하고 있으므로
-        // 이 시점에 런 성장 데이터 복원이 실행
-        saveManager.NotifyGameLoaded(saveData);
+        GameSaveController saveController = GameSaveController.Instance;
 
-        // 5. 런 활성 상태 복원
-        GameManager.Instance.RestoreRunState();
-
-        // 6. 저장 당시 스테이지 상태에 따라 복원
-        if (saveData.runData.isStageInProgress)
+        if (saveController == null)
         {
-            // 진행 중이던 스테이지를 처음부터 다시 시작
-            StageManager.Instance.StartStage(saveData.runData.currentStage);
-
-            Debug.Log($"진행 중이던 스테이지 재시작: {saveData.runData.currentStage}");
+            Debug.LogError("GameSaveController를 찾을 수 없음.");
+            return;
         }
-        else
-        {
-            // 클리어 후 결과 화면 상태 복원
-            StageManager.Instance.RestoreStageClear(saveData.runData.currentStage);
 
-            Debug.Log($"스테이지 결과 화면 복원: {saveData.runData.currentStage}");
+        saveController.SetRestoringSaveData(true);
+
+        try
+        {
+            // 4. 성장 및 장비 데이터 복원
+            saveManager.NotifyGameLoaded(saveData);
+
+            // 5. 런 활성 상태 복원
+            GameManager.Instance.RestoreRunState();
+
+            // 6. 저장 당시 스테이지 상태에 따라 복원
+            if (saveData.runData.isStageInProgress)
+            {
+                // 진행 중이던 스테이지를 처음부터 다시 시작
+                StageManager.Instance.StartStage(saveData.runData.currentStage);
+
+                Debug.Log($"진행 중이던 스테이지 재시작: {saveData.runData.currentStage}");
+            }
+            else
+            {
+                // 클리어 후 결과 화면 상태 복원
+                StageManager.Instance.RestoreStageClear(saveData.runData.currentStage);
+
+                Debug.Log($"스테이지 결과 화면 복원: {saveData.runData.currentStage}");
+            }
+        }
+        finally
+        {
+            saveController.SetRestoringSaveData(false);
         }
 
         Debug.Log($"이어하기 데이터 복원 완료: " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
@@ -209,9 +235,9 @@ public class GameSceneBootstrap : MonoBehaviour
         // 1. 저장 데이터 읽기
         SaveSlotData saveData = saveManager.LoadGame(slotIndex);
 
-        if (saveData == null)
+        if (saveData == null || saveData.runData == null || saveData.playerData == null)
         {
-            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터를 불러오지 못함.");
+            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터가 올바르지 않음.");
             return;
         }
 
@@ -229,14 +255,11 @@ public class GameSceneBootstrap : MonoBehaviour
             return;
         }
 
-        // 4. 성장 데이터 복원
-        saveManager.NotifyGameLoaded(saveData);
-
-        // 5. 런 활성 상태 복원
-        GameManager.Instance.RestoreRunState();
-
-        // 6. 스테이지 번호만 복원
-        StageManager.Instance.RestoreStageProgress(saveData.runData.currentStage);
+        // 파산 사이클 수 복원
+        if (RoguelikeManager.Instance != null)
+        {
+            RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
+        }
 
         GameSaveController saveController = GameSaveController.Instance;
 
@@ -244,6 +267,30 @@ public class GameSceneBootstrap : MonoBehaviour
         {
             Debug.LogError("GameSaveController를 찾을 수 없음.");
             return;
+        }
+
+        saveController.SetRestoringSaveData(true);
+
+        try
+        {
+            // 4. 성장 및 장비 데이터 복원
+            saveManager.NotifyGameLoaded(saveData);
+
+            // 5. 런 활성 상태 복원
+            GameManager.Instance.RestoreRunState();
+
+            // 6. 스테이지 번호와 진행 여부 복원
+            StageManager.Instance.RestoreStageProgress(saveData.runData.currentStage);
+
+            // 7. 스킬트리 전용 모드 설정
+            saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);
+
+            // 8. 스킬트리 화면 진입을 위한 게임 상태 설정
+            GameManager.Instance.ChangeGameState(EGameState.StageClear);
+        }
+        finally
+        {
+            saveController.SetRestoringSaveData(false);
         }
 
         saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);

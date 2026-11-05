@@ -507,13 +507,31 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 진행 상황 저장
-    ///  TODO: SaveManager의 저장 메서드 연결 
+    /// 메인 메뉴로 이동하기 전 현재 진행 상황 저장
     /// </summary>
     /// <returns></returns>
     private bool SaveProgress()
     {
-        return true;
+        GameSaveController saveController = GameSaveController.Instance;
+
+        if (saveController == null)
+        {
+            Debug.LogError("GameSaveController를 찾을 수 없어 저장할 수 없음.");
+            return false;
+        }
+
+        if (_currencyManager == null)
+        {
+            _currencyManager = CurrencyManager.Instance;
+        }
+
+        if (_currencyManager == null)
+        {
+            Debug.LogError("CurrencyManager를 찾을 수 없어 저장할 수 없음.");
+            return false;
+        }
+
+        return saveController.SaveCurrentProgress(_currencyManager.Gold);
     }
 
     /// <summary>
@@ -990,7 +1008,6 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void OnMainMenuConfirmButtonClicked()
     {
-        SaveProgress();
         SetPanelActive(_mainMenuConfirmPanel, true);
 
         if (_mainMenuConfirmPanel != null)
@@ -1012,7 +1029,15 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void OnMainMenuConfirmYesButtonClicked()
     {
+        // 저장 실패 시 메인 메뉴로 이동하지 않음
+        if (!SaveProgress())
+        {
+            Debug.LogError("저장에 실패하여 메인 메뉴 이동을 취소함.");
+            return;
+        }
+
         SetPanelActive(_mainMenuConfirmPanel, false);
+
         MoveToMainMenu();
     }
 
