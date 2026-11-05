@@ -17,11 +17,14 @@ public class GameSaveController : MonoBehaviour
     private CurrencyManager _currencyManager;
     private GrowthManager _growthManager;
     private GameManager _gameManager;
+    private EquipmentManager _equipmentManager;
+    private PlayerEquipment _playerEquipment;
 
     private bool _isSubscribed;
     private bool _isSavedForCurrentResult;
     private bool _isSkillTreeOnlyMode;
     private bool _savedStageInProgress;
+    private bool _isRestoringSaveData;
     #endregion
 
     #region 프로퍼티
@@ -74,6 +77,12 @@ public class GameSaveController : MonoBehaviour
         _currencyManager = CurrencyManager.Instance;
         _growthManager = GrowthManager.Instance;
         _gameManager = GameManager.Instance;
+        _equipmentManager = EquipmentManager.Instance;
+
+        if (_playerEquipment == null)
+        {
+            _playerEquipment = FindObjectOfType<PlayerEquipment>();
+        }
     }
 
     private void SubscribeEvents()
@@ -96,6 +105,11 @@ public class GameSaveController : MonoBehaviour
         if (_growthManager != null)
         {
             _growthManager.OnUpgradePurchased += HandleUpgradePurchased;
+        }
+
+        if (_equipmentManager != null)
+        {
+            _equipmentManager.OnEquipmentEquipped += HandleEquipmentEquipped;
         }
 
         _isSubscribed = true;
@@ -126,6 +140,11 @@ public class GameSaveController : MonoBehaviour
             _growthManager.OnUpgradePurchased -= HandleUpgradePurchased;
         }
 
+        if (_equipmentManager != null)
+        {
+            _equipmentManager.OnEquipmentEquipped -= HandleEquipmentEquipped;
+        }
+
         _isSubscribed = false;
     }
 
@@ -149,9 +168,10 @@ public class GameSaveController : MonoBehaviour
             return;
         }
 
-        SaveCurrentProgress(_currencyManager.Gold);
-
-        Debug.Log($"스테이지 시작 데이터 저장: 스테이지 {stageNumber}");
+        if (SaveCurrentProgress(_currencyManager.Gold))
+        {
+            Debug.Log($"스테이지 시작 데이터 저장 완료: 스테이지 {stageNumber}");
+        }
     }
 
     /// <summary>
@@ -177,14 +197,21 @@ public class GameSaveController : MonoBehaviour
             return;
         }
 
-        // 중복 이벤트로 같은 결과가 여러번 저장되는 것을 방지
-        _isSavedForCurrentResult = true;
-
-        SaveCurrentProgress(totalGold);
+        // 저장에 성공한 경우에만 중복 저장 방지 플래그 설정
+        if (SaveCurrentProgress(totalGold))
+        {
+            _isSavedForCurrentResult = true;
+        }
     }
 
     private void HandleUpgradePurchased(string upgradeId, int level, float amount)
     {
+        if (_isRestoringSaveData)
+        {
+            Debug.Log("저장 데이터 복원 중이므로 자동 저장을 건너뜀.");
+            return;
+        }
+
         CacheManagers();
 
         if (_currencyManager == null)
@@ -197,6 +224,34 @@ public class GameSaveController : MonoBehaviour
 
         Debug.Log($"스킬 구매 저장 요청: {upgradeId}, 레벨 {level}");
     }
+
+
+    /// <summary>
+    /// 장비 구매 및 장착 이후 현재 진행 상황 저장
+    /// </summary>
+    private void HandleEquipmentEquipped(EquipmentData equipment)
+    {
+        if (_isRestoringSaveData)
+        {
+            Debug.Log("저장 데이터 복원 중이므로 자동 저장을 건너뜀.");
+            return;
+        }
+
+        if (equipment == null)
+        {
+            return;
+        }
+
+        CacheManagers();
+
+        if (_currencyManager == null)
+        {
+            Debug.LogWarning("[GameSaveController] CurrencyManager를 찾을 수 없음.");
+            return;
+        }
+
+        SaveCurrentProgress(_currencyManager.Gold, equipment);
+    }
     #endregion
 
     #region 커스텀 (public)
@@ -204,20 +259,21 @@ public class GameSaveController : MonoBehaviour
     /// 현재 진행 데이터를 저장용 DTO로 구성하고 저장을 요청
     /// </summary>
     /// <param name="settledGold">정산 완료된 현재 골드 잔고</param>
-    public void SaveCurrentProgress(int settledGold)
+    public bool SaveCurrentProgress(int settledGold, EquipmentData equippedEquipment = null)
     {
         CacheManagers();
 
         if (_saveManager == null)
         {
             Debug.LogError("SaveManager를 찾을 수 없어 저장할 수 없음.");
-            return;
+            return false;
         }
 
-        if (_stageManager == null || _currencyManager == null || _growthManager == null || _gameManager == null)
+        if (_stageManager == null || _currencyManager == null ||
+            _growthManager == null || _gameManager == null)
         {
             Debug.LogError("저장에 필요한 게임 매니저가 준비되지 않음.");
-            return;
+            return false;
         }
 
         int slotIndex = _saveManager.CurrentSlotIndex;
@@ -225,69 +281,81 @@ public class GameSaveController : MonoBehaviour
         if (slotIndex < 1 || slotIndex > 3)
         {
             Debug.LogError("저장 슬롯이 지정되지 않음.");
-            return;
+            return false;
         }
 
-        // 기존 저장 데이터가 있다면 불러와서 재사용
         SaveSlotData saveData;
 
         if (_saveManager.HasSaveData(slotIndex))
         {
             saveData = _saveManager.LoadGame(slotIndex);
 
-            // 기존 파일을 읽지 못했다면 새 데이터로 덮으쓰지 않음.
             if (saveData == null)
             {
                 Debug.LogError($"슬롯 {slotIndex}의 기존 저장 데이터를 읽지 못해 저장 중단");
-                return;
+                return false;
             }
         }
         else
         {
-            // 저장 데이터가 없는 새 게임이라면 새 DTO를 생성
             saveData = new SaveSlotData();
             saveData.slotIndex = slotIndex;
         }
 
         // 현재 플레이어의 영구 재화 정보
         saveData.playerData.legacyPoints = _currencyManager.LegacyPoints;
+
         if (RoguelikeManager.Instance != null)
         {
             saveData.playerData.bankruptcyCycle = RoguelikeManager.Instance.CycleCount;
         }
 
-        // 현재 런의 진행 정보 데이터
+        // 현재 런의 진행 정보
         saveData.runData.isRunActive = _gameManager.IsRunActive;
         saveData.runData.currentStage = _stageManager.CurrentStage;
 
-        // 현재 스테이지 진행 여부
         if (_isSkillTreeOnlyMode)
         {
-            // 스킬트리 전용 진입 중에는 진입 당시 저장된 상태 유지
             saveData.runData.isStageInProgress = _savedStageInProgress;
         }
         else
         {
-            //일반 게임 진행 중에는 실제 스테이지 활성 상태 반영
             saveData.runData.isStageInProgress = _stageManager.IsStageActive;
         }
 
-        // 런 중 현재 번 돈
         saveData.runData.currentGold = settledGold;
-
-        // 스태미나는 저장, 복원 대상으로 사용하지 않음.
         saveData.runData.currentStamina = 0f;
 
-        // 최신 스킬 레벨과 해금 상태를 반영
         saveData.runData.runGrowth = _growthManager.ExportSaveData();
 
-        // 기존 영구 성장 데이터와 구매 아이템 목록은 별도로 초기화하지 않음.
-        _saveManager.SaveGame(saveData);
+        // 장비 데이터 저장
+        if (_equipmentManager == null || _playerEquipment == null)
+        {
+            Debug.LogError("장비 저장에 필요한 참조가 없음.");
+            return false;
+        }
 
-        Debug.Log($"결과 화면 저장 요청: 슬롯 {slotIndex}, " + 
-            $"스테이지 {saveData.runData.currentStage}" +
-            $"진행 중 여부 {saveData.runData.isStageInProgress}, " + 
-            $"보유 골드 {saveData.runData.currentGold}");
+        EquipmentData equipmentToSave =
+            equippedEquipment != null
+                ? equippedEquipment
+                : _playerEquipment.CurrentEquipment;
+
+        saveData.runData.equipmentData =
+            _equipmentManager.CreateSaveData(equipmentToSave);
+
+        // 실제 파일 저장
+        bool isSaved = _saveManager.SaveGame(saveData);
+
+        if (!isSaved)
+        {
+            Debug.LogError("현재 진행 데이터 저장에 실패.");
+            return false;
+        }
+
+        Debug.Log(
+            $"진행 데이터 저장 완료: 슬롯 {slotIndex}, " + $"런 활성화 여부 {saveData.runData.isRunActive}, " + $"스테이지 {saveData.runData.currentStage}, " + $"스테이지 진행 여부 {saveData.runData.isStageInProgress}, " + $"보유 골드 {saveData.runData.currentGold}");
+
+        return true;
     }
 
     /// <summary>
@@ -301,6 +369,15 @@ public class GameSaveController : MonoBehaviour
 
         Debug.Log($"스킬트리 전용 진입 설정: 기존 스테이지 진행 여부 {_savedStageInProgress}");
     }
+
+    /// <summary>
+    /// 저장 데이터 복원 중인지 설정
+    /// </summary>
+    public void SetRestoringSaveData(bool isRestoring)
+    {
+        _isRestoringSaveData = isRestoring;
+    }
+
     #endregion
 
 }
