@@ -76,8 +76,10 @@ public class PlayerEquipment : MonoBehaviour
             return;
         }
 
-        foreach (EquipmentVisual visual in _equipmentVisuals)
+        for (int i = 0; i < _equipmentVisuals.Length; i++)
         {
+            EquipmentVisual visual = _equipmentVisuals[i];
+
             if (visual == null || !visual.gameObject.activeSelf)
             {
                 continue;
@@ -161,5 +163,4 @@ public class PlayerEquipment : MonoBehaviour
         Debug.Log($"{data.EquipmentName} 장착 완료!");
     }
     #endregion
-
 }

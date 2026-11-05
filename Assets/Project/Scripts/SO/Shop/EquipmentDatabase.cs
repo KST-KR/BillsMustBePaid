@@ -18,4 +18,36 @@ public class EquipmentDatabase : ScriptableObject
 	/// </summary>
 	public IReadOnlyList<EquipmentData> Equipments => _equipments;
 	#endregion
+
+	#region 커스텀 (public)
+	/// <summary>
+	/// 장비 ID를 이용해 해당 장비 데이터를 찾기
+	/// </summary>
+	/// <param name="equipmnetId"></param>
+	/// <returns></returns>
+	public EquipmentData FindEquipmentById(string equipmentId)
+	{
+		if (string.IsNullOrWhiteSpace(equipmentId))
+		{
+			return null;
+		}
+
+        for (int i = 0; i < _equipments.Count; i++)
+        {
+            EquipmentData equipment = _equipments[i];
+
+            if (equipment == null)
+            {
+                continue;
+            }
+
+            if (equipment.EquipmentId == equipmentId)
+            {
+                return equipment;
+            }
+        }
+
+        return null;
+	}
+	#endregion
 }

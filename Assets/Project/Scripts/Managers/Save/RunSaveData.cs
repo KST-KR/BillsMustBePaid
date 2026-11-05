@@ -17,8 +17,12 @@ public class RunSaveData
 
     public RunGrowthSaveData runGrowth;
 
+    // 장비저장 데이터
+    public EquipmentSaveData equipmentData;
+
     public RunSaveData()
     {
         runGrowth = new RunGrowthSaveData();
+        equipmentData = new EquipmentSaveData();
     }
 }
