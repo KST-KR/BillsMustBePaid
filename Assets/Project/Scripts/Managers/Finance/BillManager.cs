@@ -9,6 +9,8 @@ using UnityEngine.UI;
 /// </summary>
 public class BillManager : MonoBehaviour
 {
+    public const float CTonyLoanPenaltyRate = 0.5f;
+
     #region 싱글톤
     public static BillManager Instance { get; private set; }
     #endregion
@@ -18,6 +20,7 @@ public class BillManager : MonoBehaviour
     public IReadOnlyList<BillRecord> UnpaidBills => GetUnpaidBills();
     public BillRecord CurrentBill => GetNextUnpaidBill();
     public int CurrentDay => _currentDay;
+    public bool CanTakeTonyLoan => GetTonyLoanAmount() > 0 && !_hasTakenTonyLoan && !HasExpiredBills && (GameManager.Instance == null || GameManager.Instance.IsRunActive);
     public bool HasExpiredBills
     {
         get
@@ -60,6 +63,7 @@ public class BillManager : MonoBehaviour
     private readonly HashSet<string> _dueSoonNotifiedIds = new HashSet<string>();
     private StageManager _stageManager;
     private int _currentDay;
+    private bool _hasTakenTonyLoan;
     #endregion
 
     #region 이벤트 함수
@@ -187,6 +191,39 @@ public class BillManager : MonoBehaviour
         return TryPayCurrentBill();
     }
 
+    public int GetTonyLoanAmount()
+    {
+        BillRecord bill = CurrentBill;
+        if (bill == null || CurrencyManager.Instance == null || HasExpiredBills)
+        {
+            return 0;
+        }
+
+        return Mathf.Max(0, bill.Amount - CurrencyManager.Instance.Gold);
+    }
+
+    public bool TryCreateTonyLoan(int principal, int dueDays)
+    {
+        if (!CanTakeTonyLoan || principal != GetTonyLoanAmount() || dueDays < 1 || CurrencyManager.Instance == null)
+        {
+            return false;
+        }
+
+        long repaymentAmount = ((long)principal * 125L + 99L) / 100L;
+        if (repaymentAmount > int.MaxValue || !CurrencyManager.Instance.TryAdd(ECurrencyType.Gold, principal))
+        {
+            return false;
+        }
+
+        BillRecord loanBill = new BillRecord("TONY_LOAN", "대출", "빅 토니 대출", _currentDay, dueDays, (int)repaymentAmount, CTonyLoanPenaltyRate);
+        _bills.Add(loanBill);
+        _hasTakenTonyLoan = true;
+        OnBillIssued?.Invoke(loanBill);
+        OnBillChanged?.Invoke(loanBill);
+        RefreshPayButtonImage();
+        return true;
+    }
+
     /// <summary>
     /// [BILL-01-04] 미납 청구서를 납기일 오름차순으로 조회
     /// 납기일이 같으면 발행일 순으로 정렬
@@ -307,6 +344,7 @@ public class BillManager : MonoBehaviour
         _issuedKeys.Clear();
         _dueSoonNotifiedIds.Clear();
         _currentDay = 0;
+        _hasTakenTonyLoan = false;
         OnBillChanged?.Invoke(CurrentBill);
         RefreshPayButtonImage();
     }

@@ -63,6 +63,25 @@ public class BillRecord
         Status = EBillStatus.Unpaid;
     }
 
+    public BillRecord(string billTypeId, string category, string billName, int issueDay, int dueDays, int amount, float penaltyRate = 0.0f)
+    {
+        BillId = Guid.NewGuid().ToString("N");
+        BillTypeId = billTypeId;
+        Category = category;
+        BillName = billName;
+        IssueDay = issueDay;
+        DueDay = issueDay + dueDays;
+        DueDays = dueDays;
+        Amount = amount;
+        Cycle = 1;
+        PenaltyType = EBillPenaltyType.IncomeDeduction;
+        PenaltyRate = penaltyRate;
+        PerkRewardCount = 0;
+        LegacyPointRate = 0.0f;
+        EarlyPaymentBonus = 0.0f;
+        Status = EBillStatus.Unpaid;
+    }
+
     /// <summary>
     /// [BILL-01-02] 청구서 납부 상태 변경
     /// </summary>
