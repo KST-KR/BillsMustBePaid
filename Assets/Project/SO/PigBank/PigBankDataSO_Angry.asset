@@ -22,3 +22,4 @@ MonoBehaviour:
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
+  _spawnProbability: 10

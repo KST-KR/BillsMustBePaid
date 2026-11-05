@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 {
+    #region ¼Ó¼º
+    public PigBankGameDataSO GameData => _gameData;
+    #endregion
+
     private PigBankGameDataSO _gameData;
     private int _currentHP;
 

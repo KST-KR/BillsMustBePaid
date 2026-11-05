@@ -20,6 +20,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
     public float ShinePigBankChance => _shinePigBankChance;
 
     public int CrashLevel => _crashLevel;
+
+    public float SpawnProbability => _spawnProbability;
     #endregion
 
     #region 인스펙터
@@ -47,6 +49,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
     [SerializeField] protected float _shinePigBankChance = 0.01f;
     [Tooltip("특수 코인 등장 확률 (0 = 0 %, 1 = 100 %)")]
     [SerializeField] protected float _specialCoinChance = 0.02f;
+    [Tooltip("필드에 등장할 확률 (높을수록 자주 등장)")]
+    [SerializeField] protected float _spawnProbability;
     #endregion
 
 

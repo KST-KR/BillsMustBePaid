@@ -20,8 +20,8 @@ public class SpawnPigBankManager : MonoBehaviour
 
     #region 내부 변수
     private List<GameObject> _spawnedPigBanks = new List<GameObject>();
-    private PigBankGameDataSO _pigData;
     private float _currentRespawnTimer = 0f;
+    private int _stageSpawnUnlockLevel = 1;
     #endregion
 
     #region 이벤트 함수
@@ -30,6 +30,8 @@ public class SpawnPigBankManager : MonoBehaviour
         if (StageManager.Instance != null)
         {
             StageManager.Instance.OnStageStarted += HandleStageStarted;
+            StageManager.Instance.OnStageCleared += HandleStageCleared; 
+            StageManager.Instance.OnStageFailed += HandleStageFailed;   
         }
     }
 
@@ -55,6 +57,8 @@ public class SpawnPigBankManager : MonoBehaviour
         if (StageManager.Instance != null)
         {
             StageManager.Instance.OnStageStarted -= HandleStageStarted;
+            StageManager.Instance.OnStageCleared -= HandleStageCleared; 
+            StageManager.Instance.OnStageFailed -= HandleStageFailed;   
         }
     }
 
@@ -74,42 +78,52 @@ public class SpawnPigBankManager : MonoBehaviour
     /// </summary>
     private void HandleStageStarted(int stageNumber)
     {
+        if (PigBankUnlock.Instance != null)
+        {
+            _stageSpawnUnlockLevel = PigBankUnlock.Instance.UnlockLevel; 
+        }
+        else
+        {
+            _stageSpawnUnlockLevel = 1;
+        }
+
         SpawnPigForStage(stageNumber);
+    }
+
+    private void HandleStageCleared(int stageNumber)
+    {
+        ReturnToPool();
+    }
+
+    private void HandleStageFailed()
+    {
+        ReturnToPool();
     }
 
     private void SpawnPigForStage(int stageNumber)
     {
-        ReturnToPool();
-
-        string pigID = GetRandomPigID();
-
-        if (_pigDatabase != null)
-        {
-            if (!_pigDatabase.TryGet(pigID, out _pigData))
-            {
-                Debug.LogError($"데이터베이스에서 ID를 찾지 못했습니다: {pigID}");
-                return;
-            }
-        }
-        else
-        {
-            Debug.LogError("SpawnPigBank에 PigBankDataBaseSO가 연결되지 않았습니다!");
-            return;
-        }
+        ReturnToPool();       
 
         if (PigBankObjectPoolManager.Instance != null)
         {
             for (int i = 0; i < _spawnCount; i++)
             {
-                Vector3 spawnPosition = RandomSpawnPoint();
+                string pigID = GetRandomPigID();
 
+                if (!_pigDatabase.TryGet(pigID, out var spawnedPigData))
+                {
+                    continue;
+                }
+
+                Vector3 spawnPosition = RandomSpawnPoint();
                 GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
+
                 if (pig != null)
                 {
                     _spawnedPigBanks.Add(pig);
                 }
             }
-            Debug.Log($"성공적으로 {pigID} 돼지를 {_spawnCount}마리 스폰했습니다.");
+            Debug.Log($"성공적으로 돼지를 {_spawnCount}마리 스폰했습니다.");
         }
         else
         {
@@ -197,29 +211,39 @@ public class SpawnPigBankManager : MonoBehaviour
     { 
         _currentRespawnTimer = 0;
 
-        if (_pigData != null && PigBankObjectPoolManager.Instance != null)
+        if (PigBankObjectPoolManager.Instance != null)
         {
             foreach (var pig in _spawnedPigBanks)
             {
                 if (pig != null && pig.activeInHierarchy)
                 {
-                    PigBankObjectPoolManager.Instance.ReturnPigBank(_pigData, pig);
+                    PigBankHealth health = pig.GetComponent<PigBankHealth>();
+                    if (health != null && health.GameData != null)
+                    {
+                        PigBankObjectPoolManager.Instance.ReturnPigBank(health.GameData, pig);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("반환하려는 돼지에 PigBankHealth 또는 GameData가 없습니다.", pig);
+                        pig.SetActive(false);
+                    }
                 }
             }
         }
 
         _spawnedPigBanks.Clear();
-        _pigData = null;
     }
 
     private string GetRandomPigID()
     {
-        List<string> availablePigIDs = new List<string>();
+        List<PigBankGameDataSO> availablePigs = new List<PigBankGameDataSO>();
+        List<float> probability = new List<float>();
+        float totalProbability = 0f;
 
-        if(_pigDatabase != null && _pigDatabase.Datas != null)
+        if (_pigDatabase != null && _pigDatabase.Datas != null)
         {
-            int currentUnlockLevel = 1;
-            currentUnlockLevel = PigBankUnlock.Instance.UnlockLevel;
+            int currentUnlockLevel = _stageSpawnUnlockLevel;
+            currentUnlockLevel = PigBankUnlock.Instance.UnlockLevel; 
 
             foreach(var pigData in _pigDatabase.Datas)
             {
@@ -230,19 +254,43 @@ public class SpawnPigBankManager : MonoBehaviour
 
                 if(pigData.CrashLevel <=  currentUnlockLevel)
                 {
-                    availablePigIDs.Add(pigData.ID);
+                    availablePigs.Add(pigData);
+
+                    float currentProbability = pigData.SpawnProbability;
+
+                    // 레벨이 1오를때마다 스폰확률 15씩 감소 (최소 10은 유지)
+                    if (pigData.ID == "PigBank_Basic")
+                    {
+                        currentProbability = Mathf.Max(10f, pigData.SpawnProbability - ((currentUnlockLevel - 1) * 15f));
+                    }
+
+                    probability.Add(currentProbability);
+                    totalProbability += currentProbability;
                 }
             }
         }
         // 리스트가 비어있다면 기본 돼지 저금통 반환
-        if(availablePigIDs.Count == 0)
+        if(availablePigs.Count == 0)
         {
             return "PigBank_Basic";
         }
 
-        // 해금된 돼지 저금통 들중 하나를 골라 반환
-        int randomIndex = Random.Range(0, availablePigIDs.Count);
-        return availablePigIDs[randomIndex];
+        float randomValue = Random.Range(0f, totalProbability);
+        float currentProbabilitySum = 0f;
+
+        for(int i = 0; i < availablePigs.Count; i++)
+        {
+            currentProbabilitySum += probability[i];
+
+            if(randomValue <= currentProbabilitySum)
+            {
+                return availablePigs[i].ID;
+            }
+
+        }
+
+        return availablePigs[availablePigs.Count - 1].ID;
+
     }
     #endregion
 }

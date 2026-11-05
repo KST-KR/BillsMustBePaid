@@ -243,7 +243,7 @@ public class StageRewardManager : MonoBehaviour
                 if (_currentCrashLevel < _maxLevel)
                 {
                     _currentCrashLevel++;
-                    Debug.LogError($"★★ LevelUp  ★★ : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
+                    Debug.Log($"★★ LevelUp  ★★ : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
                 }
             }
         }
