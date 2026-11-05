@@ -63,7 +63,7 @@ public class PigBankUnlock : MonoBehaviour
             if (_totalCrash >= _unlockTable[currentIndex].unlockCount)
             {
                 _unlockLevel++;
-                Debug.LogError($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");              
+                Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");              
             }
         }
     }
