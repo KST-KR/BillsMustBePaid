@@ -96,6 +96,11 @@ public class GameManager : MonoBehaviour
             StageRewardManager.Instance.ResetCrashLevelSystem();
         }
 
+        if (PigBankUnlock.Instance != null)
+        {
+            PigBankUnlock.Instance.ResetUnlockSystem();
+        }
+
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }
