@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2640136974404820062}
+  - component: {fileID: 3566148744494098905}
+  - component: {fileID: 4424997690122792161}
   m_Layer: 0
   m_Name: 'MES_Silver_Coin '
   m_TagString: Untagged
@@ -32,6 +34,38 @@ Transform:
   - {fileID: 8314139665890285351}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3566148744494098905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429253270662170218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e31ae0eb4a9d4409ea2148c716ff33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _coinType: 1
+--- !u!114 &4424997690122792161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429253270662170218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12f4ff2a840b6ef44b8042e3c4800c24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _heightY: 1.5
+  _minDistance: 2
+  _maxDistance: 4
+  _upModifier: 1
+  _torqueMin: 1
+  _torqueMax: 3
+  _removeTime: 2
 --- !u!1 &3170414474692612393
 GameObject:
   m_ObjectHideFlags: 0

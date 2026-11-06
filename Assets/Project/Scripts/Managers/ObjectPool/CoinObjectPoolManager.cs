@@ -1,23 +1,42 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
+public struct CoinInfo
+{
+    [Tooltip("코인 프리팹")]
+    public GameObject _coinPrefab;
+
+    [Tooltip("코인 값 설정")]
+    public int _value;
+}
+
 public class CoinObjectPoolManager : MonoBehaviour
 {
+    #region Enum
+    public enum CoinType
+    {
+        GOLD = 0,
+        SILVER = 1
+    }
+    #endregion
+
     #region 싱글톤
     public static CoinObjectPoolManager Instance { get; private set; }
     #endregion
 
     #region 인스펙터
-    [Header("코인 설정")]
-    [SerializeField] private GameObject _coinPrefab;
+    [Header("해금 데이터 설정 (인스펙터에서 수정 가능)")]
+    [SerializeField] private CoinInfo[] _coinTable;
 
     [Header("생성 개수")]
     [SerializeField] private int _generationCount = 50;
     #endregion
 
     #region 내부 변수
-    private Queue<GameObject> _coinPool = new Queue<GameObject>();
+    private Dictionary<CoinType, Queue<GameObject>> _coinPools = new Dictionary<CoinType, Queue<GameObject>>();
+
     #endregion
 
     #region 이벤트
@@ -39,18 +58,29 @@ public class CoinObjectPoolManager : MonoBehaviour
     #endregion
 
     #region 커스텀 메소드 (Public)
-    public GameObject GetCoin(Vector3 position, Quaternion rotation)
+    /// <summary>
+    /// 특정 타입의 코인을 풀에서 가져옴
+    /// </summary>
+    public GameObject GetCoin(CoinType type, Vector3 position, Quaternion rotation)
     {
+        if(!_coinPools.ContainsKey(type))
+        {
+            _coinPools[type] = new Queue<GameObject>();
+        }
+
+        Queue<GameObject> pool = _coinPools[type];
         GameObject coin;
 
-        if(_coinPool.Count > 0)
+        if(pool.Count > 0)
         {
-            coin = _coinPool.Dequeue();
+            coin = pool.Dequeue();
         }
 
         else
         {
-            coin = Instantiate(_coinPrefab, transform);
+            int index = (int)type;
+            GameObject prefab = _coinTable[index]._coinPrefab;
+            coin = Instantiate(prefab, transform);
         }
 
         coin.transform.position = position;
@@ -59,36 +89,54 @@ public class CoinObjectPoolManager : MonoBehaviour
         return coin;      
     }
 
-    public void ReturnCoin(GameObject coin)
+    /// <summary>
+    /// 사용이 끝난 코인을 반환
+    /// </summary>
+    public void ReturnCoin(CoinType type, GameObject coin)
     {
         coin.SetActive(false);
         coin.transform.SetParent(transform);
-        _coinPool.Enqueue(coin);
 
-        ResetCoinObject(coin);
+        if(_coinPools.ContainsKey(type))
+        {
+            _coinPools[type].Enqueue(coin);
+        }
+    }
+
+    /// <summary>
+    /// 코인 타입에 해당하는 설정 정보(가치 등)를 가져옵니다.
+    /// </summary>
+    public CoinInfo GetCoinInfo(CoinType type)
+    {
+        int index = (int)type;
+        if (index >= 0 && index < _coinTable.Length)
+        {
+            return _coinTable[index];
+        }
+        return default;
     }
     #endregion
 
     #region 커스텀 메소드 (Private)
     private void InitializePool()
     {
-        for(int i = 0;  i < _coinPool.Count; i++)
+        // Enum에 정의된 모든 코인 종류를 순회하며 각각 풀 생성
+        foreach (CoinType type in Enum.GetValues(typeof(CoinType)))
         {
-            GameObject coin = Instantiate(_coinPrefab, transform);
-            coin.SetActive(false);
-            _coinPool.Enqueue(coin);
-        }
-    }
+            _coinPools[type] = new Queue<GameObject>();
 
-    private void ResetCoinObject(GameObject coin)
-    {
-        Rigidbody rb = coin.GetComponent<Rigidbody>();
+            int index = (int)type;
+            if (index >= _coinTable.Length) continue;
 
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.Sleep();
+            GameObject prefab = _coinTable[index]._coinPrefab;
+            if (prefab == null) continue;
+
+            for (int i = 0; i < _generationCount; i++)
+            {
+                GameObject coin = Instantiate(prefab, transform);
+                coin.SetActive(false);
+                _coinPools[type].Enqueue(coin);
+            }
         }
     }
     #endregion
