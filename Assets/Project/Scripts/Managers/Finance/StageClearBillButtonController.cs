@@ -103,18 +103,13 @@ public class StageClearBillButtonController : MonoBehaviour
             _billManager = BillManager.Instance;
         }
 
-        BillRecord bill = _billManager != null ? _billManager.CurrentBill : null;
+        BillRecord bill = null;
         bool hasExpiredBill = _billManager != null && _billManager.HasExpiredBills;
-        if (bill == null && hasExpiredBill)
+        if (_billManager != null)
         {
-            for (int i = _billManager.Bills.Count - 1; i >= 0; i--)
-            {
-                if (_billManager.Bills[i].Status == EBillStatus.Expired)
-                {
-                    bill = _billManager.Bills[i];
-                    break;
-                }
-            }
+            bill = hasExpiredBill
+                ? FindMostRecentBill(EBillStatus.Expired)
+                : _billManager.CurrentBill;
         }
 
         if (bill == null && _billManager != null)
@@ -183,6 +178,24 @@ public class StageClearBillButtonController : MonoBehaviour
             _billButton.interactable = canOpenBillPanel;
             SetPaidButtonAppearance(bill != null && bill.Status == EBillStatus.Paid);
         }
+    }
+
+    private BillRecord FindMostRecentBill(EBillStatus status)
+    {
+        if (_billManager == null)
+        {
+            return null;
+        }
+
+        for (int i = _billManager.Bills.Count - 1; i >= 0; i--)
+        {
+            if (_billManager.Bills[i].Status == status)
+            {
+                return _billManager.Bills[i];
+            }
+        }
+
+        return null;
     }
 
     private void CacheButtonAppearance()
