@@ -4980,77 +4980,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 390461630}
   m_CullTransparentMesh: 1
---- !u!1 &408602937
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 408602939}
-  - component: {fileID: 408602938}
-  - component: {fileID: 408602940}
-  m_Layer: 0
-  m_Name: ObjectPoolManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &408602938
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 408602937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 632182f7f9cc4784fb9d0705a5995c87, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  _generationCount: 30
---- !u!4 &408602939
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 408602937}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.360285, y: 1.3755335, z: 5.965895}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &408602940
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 408602937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da11ee825c0511149b0fbd248796d905, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _fragmentPrefabA: {fileID: 3987814852309806043, guid: 18939a80c04e9a140aa8a6aba082a93f, type: 3}
-  _fragmentPrefabB: {fileID: 3550816705152422411, guid: d493c24afba2d1a499d069892085a0d3, type: 3}
-  _fragmentPrefabC: {fileID: 4418607277694165234, guid: 32ca3e7fcbc4f714f812955d22fddf3d, type: 3}
-  _fragmentPrefabD: {fileID: 9206516277384608304, guid: 50c79e46c8e269c44b3079af983f2555, type: 3}
-  _fragmentPrefabE: {fileID: 1202351960221713280, guid: 095ed7e3dac6f754799797c3bdfbb7e4, type: 3}
-  _fragmentCount: 5
-  _minDistance: 0.5
-  _maxDistance: 0.7
-  _upModifier: 0.4
-  _torqueMin: 0.5
-  _torqueMax: 1
-  _removeTime: 2
 --- !u!1 &412094498
 GameObject:
   m_ObjectHideFlags: 0
@@ -21156,6 +21085,96 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -18, y: -18}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1376145192
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1376145196}
+  - component: {fileID: 1376145195}
+  - component: {fileID: 1376145194}
+  - component: {fileID: 1376145193}
+  m_Layer: 0
+  m_Name: 'ObjectPoolManager '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1376145193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376145192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4dfa6781d2e9141a149c089aa88406, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _coinTable:
+  - _coinPrefab: {fileID: 1317179249874708815, guid: f49d8908e36101e4e93e4a76876e9d97, type: 3}
+    _value: 100
+  - _coinPrefab: {fileID: 1429253270662170218, guid: fd8ddabd7042da2438726fde5c4c8eec, type: 3}
+    _value: 10
+  _generationCount: 50
+--- !u!114 &1376145194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376145192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da11ee825c0511149b0fbd248796d905, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _fragmentPrefabA: {fileID: 3987814852309806043, guid: 18939a80c04e9a140aa8a6aba082a93f, type: 3}
+  _fragmentPrefabB: {fileID: 3550816705152422411, guid: d493c24afba2d1a499d069892085a0d3, type: 3}
+  _fragmentPrefabC: {fileID: 4418607277694165234, guid: 32ca3e7fcbc4f714f812955d22fddf3d, type: 3}
+  _fragmentPrefabD: {fileID: 9206516277384608304, guid: 50c79e46c8e269c44b3079af983f2555, type: 3}
+  _fragmentPrefabE: {fileID: 1202351960221713280, guid: 095ed7e3dac6f754799797c3bdfbb7e4, type: 3}
+  _fragmentCount: 5
+  _minDistance: 0.5
+  _maxDistance: 0.7
+  _upModifier: 0.4
+  _torqueMin: 0.5
+  _torqueMax: 1
+  _removeTime: 2
+--- !u!114 &1376145195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376145192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 632182f7f9cc4784fb9d0705a5995c87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  _generationCount: 30
+--- !u!4 &1376145196
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376145192}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.360285, y: 1.3755335, z: 5.965895}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1376154731
 GameObject:
   m_ObjectHideFlags: 0
@@ -33786,7 +33805,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _initialGold: 100
   _initialLegacyPoints: 0
-  _legacyPointText: {fileID: 0}
 --- !u!4 &2104043097
 Transform:
   m_ObjectHideFlags: 0
@@ -50286,7 +50304,7 @@ SceneRoots:
   - {fileID: 370864698}
   - {fileID: 2104043097}
   - {fileID: 1737088453}
-  - {fileID: 408602939}
+  - {fileID: 1376145196}
   - {fileID: 478845474}
   - {fileID: 861456829}
   - {fileID: 1967141270}
