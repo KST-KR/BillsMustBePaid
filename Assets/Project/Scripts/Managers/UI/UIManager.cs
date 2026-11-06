@@ -392,6 +392,7 @@ public class UIManager : MonoBehaviour
     private void UpdateLateFeeUI(int amount)
     {
         bool hasFee = amount > 0;
+
         if (_lateFeePanel != null)
         {
             _lateFeePanel.SetActive(hasFee);
@@ -402,7 +403,8 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        _lateFeeText.text = hasFee ? "-$ " + amount.ToString("N0") : string.Empty;
+        _lateFeeText.text = hasFee ? "-$ " + NumberFormatter.FormatCompact(amount) : string.Empty;
+
         if (_lateFeePanel == null)
         {
             _lateFeeText.gameObject.SetActive(hasFee);
@@ -413,7 +415,7 @@ public class UIManager : MonoBehaviour
     {
         if (_resultNetIncomeText != null)
         {
-            _resultNetIncomeText.text = "$ " + amount.ToString("N0");
+            _resultNetIncomeText.text = "$ " + NumberFormatter.FormatCompact(amount);
         }
     }
 
@@ -574,7 +576,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        _accuracyPercentText.text = $"{accuracy:0.0}%";
+        _accuracyPercentText.text = NumberFormatter.FormatFixed(accuracy, 1) + "%";
     }
     #endregion
 
@@ -705,7 +707,7 @@ public class UIManager : MonoBehaviour
     {
         if (_staminaText != null)
         {
-            _staminaText.text = $"{currentStamina:0} / {maxStamina:0}";
+            _staminaText.text = $"{NumberFormatter.FormatFixed(currentStamina, 0)} / " + $"{NumberFormatter.FormatFixed(maxStamina, 0)}";
         }
 
         if (_staminaBar != null)
@@ -721,7 +723,7 @@ public class UIManager : MonoBehaviour
     {
         if (_upgradeGoldText != null)
         {
-            _upgradeGoldText.text = amount.ToString();
+            _upgradeGoldText.text = "$ " + NumberFormatter.FormatCompact(amount);
         }
     }
 
@@ -732,7 +734,7 @@ public class UIManager : MonoBehaviour
     {
         if (_upgradeLegacyPointText != null)
         {
-            _upgradeLegacyPointText.text = amount.ToString();
+            _upgradeLegacyPointText.text = NumberFormatter.FormatCompact(amount);
         }
     }
 
@@ -743,7 +745,7 @@ public class UIManager : MonoBehaviour
     {
         if (_stageRewardGoldText != null)
         {
-            _stageRewardGoldText.text = "$ " + amount.ToString();
+            _stageRewardGoldText.text = "$ " + NumberFormatter.FormatCompact(amount);
         }
     }
 
@@ -754,7 +756,7 @@ public class UIManager : MonoBehaviour
     {
         if (_resultTotalGoldText != null)
         {
-            _resultTotalGoldText.text = amount.ToString();
+            _resultTotalGoldText.text = "$ " + NumberFormatter.FormatCompact(amount);
         }
     }
 
@@ -780,24 +782,6 @@ public class UIManager : MonoBehaviour
     {
         // TODO: 레벨 UI 갱신
         // 레벨 UI 구현 단계에서 연결
-    }
-
-    /// <summary>
-    /// 청구서 금액을 갱신
-    /// </summary>
-    public void UpdateBillUI(int amount)
-    {
-        // TODO: 청구서 UI 갱신
-        // 청구서 UI 구현 단계에서 연결
-    }
-
-    /// <summary>
-    /// 성장 및 보상 선택 UI를 표시합니다.
-    /// </summary>
-    public void ShowRewardUI()
-    {
-        // TODO: 성장 및 보상 UI 표시
-        // 보상 선택 UI 구현 단계에서 연결
     }
 
     /// <summary>

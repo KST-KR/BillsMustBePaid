@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 public enum ECurrencyTransactionType
@@ -39,9 +38,6 @@ public class CurrencyManager : MonoBehaviour
     [Header("초기 잔고")]
     [SerializeField, Min(0)] private int _initialGold = 100;
     [SerializeField, Min(0)] private int _initialLegacyPoints;
-
-    [SerializeField] private TMP_Text _legacyPointText;
-
     #endregion
 
     #region 내부 변수
@@ -282,18 +278,6 @@ public class CurrencyManager : MonoBehaviour
     {
         _gold = Mathf.Max(0, _initialGold);
         _legacyPoints = Mathf.Max(0, _initialLegacyPoints);
-
-        if (_legacyPointText != null)
-        {
-            _legacyPointText.text = FormatBalance(_legacyPoints);
-        }
-    }
-
-    private static string FormatBalance(int balance)
-    {
-        return balance >= 10000
-            ? (balance / 10000.0f).ToString("0.##") + "만"
-            : balance.ToString("N0");
     }
 
     /// <summary>
