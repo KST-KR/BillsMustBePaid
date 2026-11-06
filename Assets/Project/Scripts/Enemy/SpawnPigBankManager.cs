@@ -243,7 +243,6 @@ public class SpawnPigBankManager : MonoBehaviour
         if (_pigDatabase != null && _pigDatabase.Datas != null)
         {
             int currentUnlockLevel = _stageSpawnUnlockLevel;
-            currentUnlockLevel = PigBankUnlock.Instance.UnlockLevel; 
 
             foreach(var pigData in _pigDatabase.Datas)
             {
