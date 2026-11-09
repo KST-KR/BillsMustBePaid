@@ -12,7 +12,6 @@ public class DamageText : MonoBehaviour
     #endregion
 
     #region 내부 변수
-    private float _timer;
     private Color _startColor;
     private Coroutine _animateCoroutine;
     #endregion
@@ -36,7 +35,7 @@ public class DamageText : MonoBehaviour
             _text.color = _startColor;
         }
 
-        transform.localRotation = Quaternion.Euler(30f, 0f, 0f);
+        transform.localRotation = Quaternion.Euler(40f, 0f, 0f);
 
         gameObject.SetActive(true);
 
@@ -55,7 +54,7 @@ public class DamageText : MonoBehaviour
 
         while(timer < _duration)
         {
-            _timer += Time.deltaTime;
+            timer += Time.deltaTime;
             transform.position += Vector3.up * (_moveSpeed * Time.deltaTime);
 
             if (_text != null)
