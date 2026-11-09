@@ -52,6 +52,13 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 
         _currentHP = Mathf.Max(0, _currentHP - damageAmount);
 
+        // 데미지 텍스트 표시 추가
+        if (DamageTextManager.Instance != null)
+        {
+            Vector3 spawnPos = transform.position + Vector3.up;
+            DamageTextManager.Instance.ShowDamage(damageAmount, spawnPos);
+        }
+
         // 피격시 색 변화
         HitEffect hitEffect = GetComponent<HitEffect>();
         if (hitEffect != null)
