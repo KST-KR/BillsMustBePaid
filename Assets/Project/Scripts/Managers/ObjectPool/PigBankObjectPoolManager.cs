@@ -5,12 +5,8 @@ using UnityEngine;
 /// <summary>
 /// [OBJECT-02-01] 돼지 저금통 오브젝트 풀 매니저
 /// </summary>
-public class PigBankObjectPoolManager : MonoBehaviour
+public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 {
-    #region 싱글톤
-    public static PigBankObjectPoolManager Instance { get; private set; }
-    #endregion
-
     #region 인스펙터
     [Header("등록된 돼지 저금통 리스트")]
     [SerializeField] private PigBankDataBaseSO _pigDatabase;
@@ -25,19 +21,8 @@ public class PigBankObjectPoolManager : MonoBehaviour
     #endregion
 
     #region 이벤트
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-
-            return;
-        }
-
         InitPools();
     }
 

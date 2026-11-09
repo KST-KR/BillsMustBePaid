@@ -5,19 +5,11 @@ using UnityEngine;
 /// 게임의 BGM 및 효과음 재생을 관리합니다.
 /// 사전 매핑된 사운드를 외부 요청에 따라 재생합니다.
 /// </summary>
-public class AudioManager : MonoBehaviour
+public class AudioManager : PersistentSingleton<AudioManager>
 {
-    #region 싱글톤
-
-    public static AudioManager Instance { get; private set; }
-
-    #endregion
-
     #region 속성
-
     public float BGMVolume => _bgmVolume;
     public float SFXVolume => _sfxVolume;
-
     #endregion
 
     #region 이벤트
@@ -41,38 +33,6 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField, Range(0f, 1f)]
     private float _sfxVolume = 1f;
-
-    #endregion
-
-    #region 이벤트 함수
-
-    /// <summary>
-    /// AudioManager 싱글톤을 등록합니다.
-    /// 씬 전환 시 유지
-    /// </summary>
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-
-        DontDestroyOnLoad(gameObject);
-    }
-
-    /// <summary>
-    /// AudioManager가 파괴될 때 싱글톤 참조를 해제합니다.
-    /// </summary>
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
 
     #endregion
 
