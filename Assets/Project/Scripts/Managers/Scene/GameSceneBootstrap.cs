@@ -293,11 +293,6 @@ public class GameSceneBootstrap : MonoBehaviour
             saveController.SetRestoringSaveData(false);
         }
 
-        saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);
-
-        // 7. 스테이지 클리어 상태로 변경
-        GameManager.Instance.ChangeGameState(EGameState.StageClear);
-
         // 8. 스킬트리 화면 표시
         uiManager.ShowSkillTreeFromMainMenu();
 
