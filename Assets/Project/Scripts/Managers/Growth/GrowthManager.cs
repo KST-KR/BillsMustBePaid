@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// [GROW-01-01][GROW-01-05] 스킬 트리 진행 데이터 및 저장 연동 계약 관리
+/// [GROW-01-01][GROW-01-05][PL-ASKILL-01] 스킬 트리 진행 데이터 및 저장 연동 계약 관리
 /// </summary>
 public class GrowthManager : Singleton<GrowthManager>
 {
@@ -104,7 +104,8 @@ public class GrowthManager : Singleton<GrowthManager>
             return false;
         }
 
-        return CurrencyManager.Instance != null && CurrencyManager.Instance.Gold >= upgrade.Cost;
+        int cost = GetUpgradeCost(upgradeId);
+        return CurrencyManager.Instance != null && CurrencyManager.Instance.Gold >= cost;
     }
 
     /// <summary>
@@ -113,8 +114,9 @@ public class GrowthManager : Singleton<GrowthManager>
     public bool PurchaseUpgrade(string upgradeId)
     {
         UpgradeData upgrade = GetUpgrade(upgradeId);
+        int cost = GetUpgradeCost(upgradeId);
         if (upgrade == null || !CanPurchase(upgradeId) ||
-            !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, upgrade.Cost, ECurrencyTransactionType.Upgrade))
+            !CurrencyManager.Instance.TrySpend(ECurrencyType.Gold, cost, ECurrencyTransactionType.Upgrade))
         {
             return false;
         }
@@ -131,6 +133,50 @@ public class GrowthManager : Singleton<GrowthManager>
         OnUpgradePurchased?.Invoke(upgradeId, level, upgrade.ValuePerLevel);
         OnGrowthChanged?.Invoke();
         return true;
+    }
+
+    /// <summary>
+    /// [GROW-01-01] 스킬 레벨에 따른 구매 비용 계산
+    /// </summary>
+    /// <param name="upgradeId"></param>
+    /// <returns></returns>
+    public int GetUpgradeCost(string upgradeId)
+    {
+        UpgradeData upgrade = GetUpgrade(upgradeId);
+        if (upgrade == null)
+        {
+            return 0;
+        }
+
+        int currentLevel = GetLevel(upgradeId);
+        int cost = upgrade.Cost + (upgrade.CostIncreasePerLevel * currentLevel);
+        return Mathf.Max(0, cost);
+    }
+
+    /// <summary>
+    /// [GROW-01-01] 스킬 레벨에 따른 누적 구매 비용 계산
+    /// </summary>
+    /// <param name="upgradeId"></param>
+    /// <returns></returns>
+    public int GetUpgradeAccumulatedCost(string upgradeId)
+    {
+        UpgradeData upgrade = GetUpgrade(upgradeId);
+        if (upgrade == null)
+        {
+            return 0;
+        }
+
+        int currentLevel = GetLevel(upgradeId);
+        int clampedLevel = Mathf.Clamp(currentLevel, 0, upgrade.MaxLevel);
+        int accumulatedCost = 0;
+
+        for (int level = 0; level < clampedLevel; level++)
+        {
+            int stepCost = upgrade.Cost + (upgrade.CostIncreasePerLevel * level);
+            accumulatedCost += Mathf.Max(0, stepCost);
+        }
+
+        return accumulatedCost;
     }
 
     /// <summary>
@@ -238,6 +284,128 @@ public class GrowthManager : Singleton<GrowthManager>
         }
 
         return total;
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 현재 학습된 액티브 스킬 목록 반환
+    /// </summary>
+    /// <returns></returns>
+    public IReadOnlyList<UpgradeData> GetLearnedActiveSkills()
+    {
+        List<UpgradeData> activeSkills = new List<UpgradeData>();
+
+        for (int i = 0; i < _upgrades.Length; i++)
+        {
+            UpgradeData upgrade = _upgrades[i];
+            if (upgrade == null || upgrade.TargetStat != EUpgradeStat.ActiveSkill)
+            {
+                continue;
+            }
+
+            if (GetLevel(upgrade.UpgradeId) > 0)
+            {
+                activeSkills.Add(upgrade);
+            }
+        }
+
+        return activeSkills;
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 현재 쿨타임 반환
+    /// </summary>
+    /// <param name="upgradeId"></param>
+    /// <returns></returns>
+    public float GetActiveSkillCooldownSec(string upgradeId)
+    {
+        UpgradeData upgrade = GetUpgrade(upgradeId);
+        if (upgrade == null || upgrade.TargetStat != EUpgradeStat.ActiveSkill)
+        {
+            return 0.0f;
+        }
+
+        return GetActiveSkillCooldownSec(upgrade, GetLevel(upgrade.UpgradeId));
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 현재 쿨타임 반환
+    /// </summary>
+    /// <param name="upgrade"></param>
+    /// <param name="level"></param>
+    /// <returns></returns>
+    public float GetActiveSkillCooldownSec(UpgradeData upgrade, int level)
+    {
+        if (upgrade == null || upgrade.TargetStat != EUpgradeStat.ActiveSkill)
+        {
+            return 0.0f;
+        }
+
+        float perLevelReduction = Mathf.Max(0.0f, upgrade.CooldownReductionPerLevelSec);
+        float appliedReduction = Mathf.Max(0, level - 1) * perLevelReduction;
+        return Mathf.Max(0.0f, upgrade.CooldownTimeSec - appliedReduction);
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 레벨당 쿨타임 감소량 반환
+    /// </summary>
+    /// <param name="upgrade"></param>
+    /// <returns></returns>
+    public float GetActiveSkillCooldownReductionPerLevel(UpgradeData upgrade)
+    {
+        if (upgrade == null || upgrade.TargetStat != EUpgradeStat.ActiveSkill)
+        {
+            return 0.0f;
+        }
+
+        return Mathf.Max(0.0f, upgrade.CooldownReductionPerLevelSec);
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 현재 지속시간 반환
+    /// </summary>
+    /// <param name="upgradeId"></param>
+    /// <returns></returns>
+    public float GetUpgradeDurationSec(string upgradeId)
+    {
+        UpgradeData upgrade = GetUpgrade(upgradeId);
+        if (upgrade == null)
+        {
+            return 0.0f;
+        }
+
+        return GetUpgradeDurationSec(upgrade, GetLevel(upgrade.UpgradeId));
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 현재 지속시간 반환
+    /// </summary>
+    /// <param name="upgrade"></param>
+    /// <param name="level"></param>
+    /// <returns></returns>
+    public float GetUpgradeDurationSec(UpgradeData upgrade, int level)
+    {
+        if (upgrade == null)
+        {
+            return 0.0f;
+        }
+
+        float additional = Mathf.Max(0, level - 1) * upgrade.AdditionalDurationTimeSecPerLevel;
+        return Mathf.Max(0.0f, upgrade.DurationTimeSec + additional);
+    }
+
+    /// <summary>
+    /// [PL-ASKILL-01] 액티브 스킬의 레벨당 지속시간 증가량 반환
+    /// </summary>
+    /// <param name="upgrade"></param>
+    /// <returns></returns>
+    public float GetUpgradeDurationPerLevel(UpgradeData upgrade)
+    {
+        if (upgrade == null)
+        {
+            return 0.0f;
+        }
+
+        return Mathf.Max(0.0f, upgrade.AdditionalDurationTimeSecPerLevel);
     }
 
     /// <summary>

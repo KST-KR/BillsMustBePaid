@@ -26,5 +26,9 @@ public enum EUpgradeStat
     /// <summary>
     /// [GROW-01-01] 행운
     /// </summary>
-    Luck
+    Luck,
+    /// <summary>
+    /// [PL-ASKILL-01] 엑티브 스킬
+    /// </summary>
+    ActiveSkill,
 }

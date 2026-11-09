@@ -42,8 +42,13 @@ public sealed class UpgradeData : ScriptableObject
     [SerializeField, TextArea] private string _description;
     [SerializeField] private EUpgradeStat _targetStat;
     [SerializeField, Min(0)] private int _cost;
+    [SerializeField, Min(0)] private int _costIncreasePerLevel;
     [SerializeField] private float _valuePerLevel;
     [SerializeField, Min(1)] private int _maxLevel = 1;
+    [SerializeField, Min(0)] private int _cooldownTimeSec;
+    [SerializeField, Min(0f)] private float _cooldownReductionPerLevelSec;
+    [SerializeField, Min(0f)] private float _durationTimeSec;
+    [SerializeField, Min(0f)] private float _additionalDurationTimeSecPerLevel;
     [SerializeField] private PrerequisiteUpgrade[] _prerequisiteIds = new PrerequisiteUpgrade[0];
     [SerializeField] private Sprite _icon;
     [SerializeField] private Vector2 _treePosition;
@@ -71,6 +76,10 @@ public sealed class UpgradeData : ScriptableObject
     /// </summary>
     public int Cost => _cost;
     /// <summary>
+    /// [GROW-01-01] 레벨당 구매 비용 증가값
+    /// </summary>
+    public int CostIncreasePerLevel => _costIncreasePerLevel;
+    /// <summary>
     /// [GROW-01-01] 레벨당 효과 수치
     /// </summary>
     public float ValuePerLevel => _valuePerLevel;
@@ -78,6 +87,22 @@ public sealed class UpgradeData : ScriptableObject
     /// [GROW-01-01] 최대 레벨
     /// </summary>
     public int MaxLevel => _maxLevel;
+    /// <summary>
+    /// [PL-ASKILL-01] 스킬 쿨타임 시간 (초)
+    /// </summary>
+    public int CooldownTimeSec => _cooldownTimeSec;
+    /// <summary>
+    /// [PL-ASKILL-01] 레벨당 쿨타임 감소 시간 (초)
+    /// </summary>
+    public float CooldownReductionPerLevelSec => _cooldownReductionPerLevelSec;
+    /// <summary>
+    /// [PL-ASKILL-01] 스킬 기본 유지 시간 (초)
+    /// </summary>
+    public float DurationTimeSec => _durationTimeSec;
+    /// <summary>
+    /// [PL-ASKILL-01] 레벨당 추가 유지 시간 (초)
+    /// </summary>
+    public float AdditionalDurationTimeSecPerLevel => _additionalDurationTimeSecPerLevel;
     /// <summary>
     /// [GROW-01-01] 선행 스킬 조건
     /// </summary>
@@ -137,7 +162,18 @@ public sealed class UpgradeData : ScriptableObject
     {
         _upgradeId = _upgradeId != null ? _upgradeId.Trim() : string.Empty;
         _cost = Mathf.Max(0, _cost);
+        _costIncreasePerLevel = Mathf.Max(0, _costIncreasePerLevel);
         _maxLevel = Mathf.Max(1, _maxLevel);
+        _cooldownReductionPerLevelSec = Mathf.Max(0f, _cooldownReductionPerLevelSec);
+        _durationTimeSec = Mathf.Max(0f, _durationTimeSec);
+        _additionalDurationTimeSecPerLevel = Mathf.Max(0f, _additionalDurationTimeSecPerLevel);
+
+        if (_targetStat == EUpgradeStat.ActiveSkill && _cooldownReductionPerLevelSec <= 0f && !Mathf.Approximately(_valuePerLevel, 0f))
+        {
+            _cooldownReductionPerLevelSec = Mathf.Abs(_valuePerLevel);
+            _valuePerLevel = 0f;
+        }
+
         if (_prerequisiteIds == null)
         {
             _prerequisiteIds = new PrerequisiteUpgrade[0];
