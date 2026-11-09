@@ -43,20 +43,29 @@ public class CoinBounce : MonoBehaviour
         float randomDistance = UnityEngine.Random.Range(_maxDistance, _maxDistance);
         Vector3 targetPos = startPos + new Vector3(randomDir.x, 0, randomDir.y) * randomDistance;
 
+        targetPos.y = 1.6f;
+
         // 회전 을 위한 랜덤 회전 속도 설전
         Vector3 randomTorque = new Vector3(
             UnityEngine.Random.Range(_torqueMin, _torqueMax),
             UnityEngine.Random.Range(_torqueMin, _torqueMax),
             UnityEngine.Random.Range(_torqueMin, _torqueMax)
-            ) * 100f;
+            ) * 150f;
 
         float duration = 0.4f;
         float elapsedTime = 0f;
 
-        while(elapsedTime < duration)
+        // 착지 직전의 회전을 부드럽게 처리하기 위한 시작 회전값 저장
+        Quaternion startRot = transform.rotation;
+        // 바닥에 누울 목표 회전값 (평평한 상태)
+        Quaternion targetRot = Quaternion.identity;
+
+        while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
-            float t = elapsedTime / duration;
+            float rawT = elapsedTime / duration;
+
+            float t = Mathf.SmoothStep(0f, 1f, rawT);
 
             // xz 평면 선형 보간
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
@@ -65,13 +74,23 @@ public class CoinBounce : MonoBehaviour
             currentPos.y += Mathf.Sin(t * Mathf.PI) * _heightY;
             transform.position = currentPos;
 
-            // 회전적용
-            transform.Rotate(randomTorque * Time.deltaTime);
+            if (rawT > 0.7f)
+            {
+                // 0.7 ~ 1.0 구간을 0 ~ 1 로 환산
+                float landingT = (rawT - 0.7f) / 0.3f;
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, landingT);
+            }
+            else
+            {
+                // 전반부에는 회전 적용
+                transform.Rotate(randomTorque * (1f - rawT) * Time.deltaTime);
+            }
 
             yield return null;
         }
 
         transform.position = targetPos;
+        transform.rotation = targetRot;
 
         float waitElapsedTime = 0f;
         while(waitElapsedTime < _removeTime)
