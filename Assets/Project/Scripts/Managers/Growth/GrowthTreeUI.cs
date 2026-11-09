@@ -486,14 +486,49 @@ public class GrowthTreeUI : MonoBehaviour
         _detailsRoot.gameObject.SetActive(true);
         EUpgradeNodeStatus status = _growthManager.GetNodeStatus(upgradeId);
         int level = _growthManager.GetLevel(upgradeId);
+        int cost = _growthManager.GetUpgradeCost(upgradeId);
+        int accumulatedCost = _growthManager.GetUpgradeAccumulatedCost(upgradeId);
+
+        string effectText;
+        // [PL-ASKILL-01] 엑티브 스킬 상세 분기
+        if (upgrade.TargetStat == EUpgradeStat.ActiveSkill)
+        {
+            float cooldown = level > 0
+                ? _growthManager.GetActiveSkillCooldownSec(upgradeId)
+                : upgrade.CooldownTimeSec;
+            float reductionPerLevel = _growthManager.GetActiveSkillCooldownReductionPerLevel(upgrade);
+            effectText = "\n재사용 대기시간: " + FormatStatValue(cooldown) + "초" +
+                (reductionPerLevel > 0.0f && level < upgrade.MaxLevel
+                    ? " (-" + FormatStatValue(reductionPerLevel) + "초)"
+                    : string.Empty);
+        }
+        else
+        {
+            effectText = "\n효과: " + GetStatText(upgrade.TargetStat) + " " +
+                (upgrade.ValuePerLevel >= 0 ? "+" : string.Empty) + FormatStatValue(upgrade.ValuePerLevel) +
+                "\n누적: " + GetStatText(upgrade.TargetStat) + " " + FormatStatValue(_growthManager.GetStatValue(upgrade.TargetStat));
+        }
+
+        string durationText = string.Empty;
+        if (upgrade.DurationTimeSec > 0.0f || upgrade.AdditionalDurationTimeSecPerLevel > 0.0f)
+        {
+            float duration = _growthManager.GetUpgradeDurationSec(upgradeId);
+            float additionalDuration = _growthManager.GetUpgradeDurationPerLevel(upgrade);
+            durationText = "\n지속시간 " + FormatStatValue(duration) + "초" +
+                (additionalDuration > 0.0f && level < upgrade.MaxLevel
+                    ? " (+" + FormatStatValue(additionalDuration) + "초)"
+                    : string.Empty);
+        }
+
+        string description = GetFormattedDescription(upgrade, level);
+
         _detailsText.text =
-            upgrade.DisplayName + "\n" + upgrade.Description +
+            upgrade.DisplayName + "\n" + description +
             "\n\n레벨: " + level + "/" + upgrade.MaxLevel +
             "\n상태: " + GetStatusText(status) +
-            "\n비용: " + upgrade.Cost + " Gold" +
-            "\n효과: " + GetStatText(upgrade.TargetStat) + " " +
-            (upgrade.ValuePerLevel >= 0 ? "+" : string.Empty) + upgrade.ValuePerLevel +
-            "\n누적: " + GetStatText(upgrade.TargetStat) + " " + _growthManager.GetStatValue(upgrade.TargetStat) +
+            "\n비용: " + accumulatedCost + " Gold" +
+            effectText +
+            durationText +
             GetPrerequisiteText(upgrade) + GetSkillSetDetailsText(upgrade);
 
         if (_detailsIcon != null)
@@ -510,7 +545,7 @@ public class GrowthTreeUI : MonoBehaviour
         }
         if (_purchaseLabel != null)
         {
-            _purchaseLabel.text = level > 0 ? "강화 - " + upgrade.Cost + " Gold" : "해금 - " + upgrade.Cost + " Gold";
+            _purchaseLabel.text = level > 0 ? "강화 - " + cost + " Gold" : "해금 - " + cost + " Gold";
         }
     }
 
@@ -636,9 +671,46 @@ public class GrowthTreeUI : MonoBehaviour
                 return "치명타 확률";
             case EUpgradeStat.Luck:
                 return "행운";
+            case EUpgradeStat.ActiveSkill:
+                return "엑티브 스킬";
             default:
                 return "알 수 없음";
         }
+    }
+
+    private string FormatStatValue(float value)
+    {
+        return value.ToString("0.##");
+    }
+
+    /// <summary>
+    /// 설명 문자열에서 치환 가능한 약속어를 계산된 값으로 치환
+    /// {value} 계산된 값으로 치환됨
+    /// {value:per} 계산된 값의 백분로 치환됨
+    /// {dts} 지속 시간 으로 치환됨
+    /// </summary>
+    /// <param name="upgrade"></param>
+    /// <param name="level"></param>
+    /// <returns></returns>
+    private string GetFormattedDescription(UpgradeData upgrade, int level)
+    {
+        if (upgrade == null || string.IsNullOrEmpty(upgrade.Description))
+        {
+            return string.Empty;
+        }
+
+        float calculatedValue = upgrade.ValuePerLevel * Mathf.Max(0, level);
+        string valueText = FormatStatValue(calculatedValue);
+        string valuePercentText = FormatStatValue(calculatedValue * 100.0f);
+        float durationSec = _growthManager != null
+            ? _growthManager.GetUpgradeDurationSec(upgrade, level)
+            : upgrade.DurationTimeSec;
+        string durationText = FormatStatValue(durationSec);
+
+        return upgrade.Description
+            .Replace("{value:per}", valuePercentText)
+            .Replace("{value}", valueText)
+            .Replace("{dts}", durationText);
     }
 
     private GameObject CreateText(string name, Transform parent, string value, int size, TextAlignmentOptions alignment, Color color)
