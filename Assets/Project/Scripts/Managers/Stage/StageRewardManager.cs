@@ -15,18 +15,13 @@ public struct CrashLevelInfo
 /// 스테이지에서 획득한 골드를 기록하고,
 /// 스테이지 클리어 시 보유 골드에 정산합니다.
 /// </summary>
-public class StageRewardManager : MonoBehaviour
+public class StageRewardManager : Singleton<StageRewardManager>
 {
-    #region 싱글톤
-
-    public static StageRewardManager Instance { get; private set; }
-    #endregion
-
     #region 속성
 
     public int StageRewardGold => _stageRewardGold;
     public int StagePenaltyGold => _stagePenaltyGold;
-    
+
     public int AccuracyBonusGold => _accuracyBonusGold;
     public int StageRewardBeforePenaltyGold => _stageRewardGold + _accuracyBonusGold;
 
@@ -68,20 +63,9 @@ public class StageRewardManager : MonoBehaviour
 
     #region 이벤트 함수
 
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
-
     private void Start()
     {
-        if (Instance != this)
+        if (!IsActiveInstance)
         {
             return;
         }
@@ -89,14 +73,9 @@ public class StageRewardManager : MonoBehaviour
         SubscribeEvents();
     }
 
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
         UnsubscribeEvents();
-
-        if (Instance == this)
-        {
-            Instance = null;
-        }
     }
 
     #endregion

@@ -4,12 +4,8 @@
 /// 게임 진행 데이터를 모아 저장을 요청
 /// 스테이지 보상 정산이 완료되면 결과 화면의 진행 데이터를 자동 저장
 /// </summary>
-public class GameSaveController : MonoBehaviour
+public class GameSaveController : Singleton<GameSaveController>
 {
-    #region 싱글톤
-    public static GameSaveController Instance { get; private set; }
-    #endregion
-
     #region 내부 변수
     private SaveManager _saveManager;
     private StageManager _stageManager;
@@ -33,16 +29,6 @@ public class GameSaveController : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
     void Start()
     {
         if (Instance != this)
@@ -54,14 +40,18 @@ public class GameSaveController : MonoBehaviour
         SubscribeEvents();
     }
 
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
         UnsubscribeEvents();
 
-        if (Instance == this)
-        {
-            Instance = null;
-        }
+        _saveManager = null;
+        _stageManager = null;
+        _stageRewardManager = null;
+        _currencyManager = null;
+        _growthManager = null;
+        _gameManager = null;
+        _equipmentManager = null;
+        _playerEquipment = null;
     }
     #endregion
 
@@ -335,13 +325,9 @@ public class GameSaveController : MonoBehaviour
             return false;
         }
 
-        EquipmentData equipmentToSave =
-            equippedEquipment != null
-                ? equippedEquipment
-                : _playerEquipment.CurrentEquipment;
+        EquipmentData equipmentToSave = equippedEquipment != null ? equippedEquipment : _playerEquipment.CurrentEquipment;
 
-        saveData.runData.equipmentData =
-            _equipmentManager.CreateSaveData(equipmentToSave);
+        saveData.runData.equipmentData = _equipmentManager.CreateSaveData(equipmentToSave);
 
         // 실제 파일 저장
         bool isSaved = _saveManager.SaveGame(saveData);
@@ -352,8 +338,7 @@ public class GameSaveController : MonoBehaviour
             return false;
         }
 
-        Debug.Log(
-            $"진행 데이터 저장 완료: 슬롯 {slotIndex}, " + $"런 활성화 여부 {saveData.runData.isRunActive}, " + $"스테이지 {saveData.runData.currentStage}, " + $"스테이지 진행 여부 {saveData.runData.isStageInProgress}, " + $"보유 골드 {saveData.runData.currentGold}");
+        Debug.Log($"진행 데이터 저장 완료: 슬롯 {slotIndex}, " + $"런 활성화 여부 {saveData.runData.isRunActive}, " + $"스테이지 {saveData.runData.currentStage}, " + $"스테이지 진행 여부 {saveData.runData.isStageInProgress}, " + $"보유 골드 {saveData.runData.currentGold}");
 
         return true;
     }

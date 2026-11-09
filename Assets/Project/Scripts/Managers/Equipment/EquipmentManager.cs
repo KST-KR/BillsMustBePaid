@@ -5,12 +5,8 @@ using UnityEngine;
 /// <summary>
 /// 장비 구매 여부와 골드 차감 및 장착 요청을 관리
 /// </summary>
-public class EquipmentManager : MonoBehaviour
+public class EquipmentManager : Singleton<EquipmentManager>
 {
-    #region 싱글톤
-    public static EquipmentManager Instance { get; private set; }
-    #endregion
-
     #region 인스펙터
     [Header("장비 데이터베이스")]
     [SerializeField] private EquipmentDatabase _equipmentDatabase;
@@ -38,17 +34,6 @@ public class EquipmentManager : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
-
     private void OnEnable()
     {
         _saveManager = SaveManager.Instance;
@@ -65,14 +50,6 @@ public class EquipmentManager : MonoBehaviour
         {
             _saveManager.OnGameLoaded -= HandleGameLoaded;
             _saveManager = null;
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
         }
     }
     #endregion

@@ -6,12 +6,8 @@ using UnityEngine;
 /// 일시정지는 게임 상태와 별개의 겹침(overlay) 플래그로 관리
 /// 일시정지 해제시 상태 유지와 이전화면으로 돌아가기
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
-    #region 싱글톤
-    public static GameManager Instance { get; private set; }
-    #endregion
-
     #region 속성
     public EGameState State => _state;
     public bool IsRunActive => _isRunActive;
@@ -49,30 +45,12 @@ public class GameManager : MonoBehaviour
 
     #region 이벤트 함수
     /// <summary>
-    /// GameManager 싱글톤을 등록
+    /// GameManager가 파괴될 때 실행
+    /// 일시 정지 중 씬이 바뀌어도 시간이 멈춘 채로 남지 않도록 복구
     /// </summary>
-    private void Awake()
+    protected override void OnSingletonDestroy()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
-
-    /// <summary>
-    /// GameManager가 파괴될 때 싱글톤 참조를 해제
-    /// </summary>
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            // 일시 정지 중 씬이 바뀌어도 시간이 멈춘채로 남지 않도록 복구
-            Time.timeScale = 1f;
-            Instance = null;
-        }
+        Time.timeScale = 1f;
     }
     #endregion
 
@@ -258,4 +236,5 @@ public class GameManager : MonoBehaviour
         OnPauseChanged?.Invoke(paused);
     }
     #endregion
+
 }

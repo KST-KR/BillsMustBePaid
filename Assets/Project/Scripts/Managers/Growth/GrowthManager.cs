@@ -5,12 +5,8 @@ using UnityEngine;
 /// <summary>
 /// [GROW-01-01][GROW-01-05][PL-ASKILL-01] 스킬 트리 진행 데이터 및 저장 연동 계약 관리
 /// </summary>
-public class GrowthManager : MonoBehaviour
+public class GrowthManager : Singleton<GrowthManager>
 {
-    #region 싱글톤
-    public static GrowthManager Instance { get; private set; }
-    #endregion
-
     private readonly Dictionary<EUpgradeStat, float> _appliedSkillSetStatValues = new Dictionary<EUpgradeStat, float>();
 
     #region 속성
@@ -40,22 +36,18 @@ public class GrowthManager : MonoBehaviour
     private readonly HashSet<string> _unlockedIds = new HashSet<string>();
     private readonly Dictionary<EUpgradeStat, UpgradeData> _skillSetUpgradeData = new Dictionary<EUpgradeStat, UpgradeData>();
     private string _selectedUpgradeId;
+
+    private SaveManager _saveManager;
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
         if (_upgrades == null)
         {
             _upgrades = new UpgradeData[0];
         }
+
         if (_skillSets == null)
         {
             _skillSets = new GrowthSkillSetData[0];
@@ -64,22 +56,20 @@ public class GrowthManager : MonoBehaviour
 
     private void Start()
     {
+        _saveManager = SaveManager.Instance;
+
         if (SaveManager.Instance != null)
         {
             SaveManager.Instance.OnGameLoaded += HandleGameLoaded;
         }
     }
 
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
-        if (SaveManager.Instance != null)
+        if (_saveManager != null)
         {
-            SaveManager.Instance.OnGameLoaded -= HandleGameLoaded;
-        }
-
-        if (Instance == this)
-        {
-            Instance = null;
+            _saveManager.OnGameLoaded -= HandleGameLoaded;
+            _saveManager = null;
         }
 
         _skillSetUpgradeData.Clear();
