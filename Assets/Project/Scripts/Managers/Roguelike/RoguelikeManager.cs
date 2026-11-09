@@ -4,42 +4,18 @@ using UnityEngine;
 /// <summary>
 /// 청구 사이클, 이벤트 파산 후처리와 성장 선택 요청을 관리
 /// </summary>
-public class RoguelikeManager : MonoBehaviour
+public class RoguelikeManager : Singleton<RoguelikeManager>
 {
     #region 상수
     private const int CLegacyPointsPerGold = 50;
-    #endregion
-
-    #region 싱글톤
-    public static RoguelikeManager Instance { get; private set; }
     #endregion
 
     #region 속성
     public int CycleCount { get; private set; } = 1;
     #endregion
 
+    #region 내부 변수
     private bool _isRestartingAfterBankruptcy;
-
-
-    #region 이벤트 함수
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
     #endregion
 
     #region 커스텀 (Public)

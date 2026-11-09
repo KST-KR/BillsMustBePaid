@@ -272,6 +272,20 @@ public class MainMenuUI : MonoBehaviour
 
         SceneTransitionManager.Instance.LoadGameScene();
     }
+
+    /// <summary>
+    /// 게임 종료 버튼 클릭 시 호출
+    /// </summary>
+    public void OnExitButtonClicked()
+    {
+        Debug.Log("게임 종료");
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
     #endregion
 
 }

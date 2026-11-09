@@ -12,7 +12,7 @@ public struct CoinInfo
     public int _value;
 }
 
-public class CoinObjectPoolManager : MonoBehaviour
+public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
 {
     #region Enum
     public enum CoinType
@@ -20,10 +20,6 @@ public class CoinObjectPoolManager : MonoBehaviour
         GOLD = 0,
         SILVER = 1
     }
-    #endregion
-
-    #region ΩÃ±€≈Ê
-    public static CoinObjectPoolManager Instance { get; private set; }
     #endregion
 
     #region ¿ŒΩ∫∆Â≈Õ
@@ -40,17 +36,11 @@ public class CoinObjectPoolManager : MonoBehaviour
     #endregion
 
     #region ¿Ã∫•∆Æ
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if(Instance == null)
+        if (_coinTable == null)
         {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-
-            return;
+            _coinTable = new CoinInfo[0];
         }
 
         InitializePool();

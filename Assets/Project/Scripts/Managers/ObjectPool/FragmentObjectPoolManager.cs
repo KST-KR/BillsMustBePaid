@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FragmentObjectPoolManager : MonoBehaviour
+public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
 {
     #region Enum
     public enum EFragmentType
@@ -13,10 +13,6 @@ public class FragmentObjectPoolManager : MonoBehaviour
         D,
         E
     }
-    #endregion
-
-    #region ΩÃ±€≈Ê
-    public static FragmentObjectPoolManager Instance { get; private set; }
     #endregion
 
     #region ¿ŒΩ∫∆Â≈Õ
@@ -52,20 +48,8 @@ public class FragmentObjectPoolManager : MonoBehaviour
     #endregion
 
     #region ¿Ã∫•∆Æ
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-
-        else
-        {
-            Destroy(gameObject);
-
-            return;
-        }
-
         InitializePools();
     }
     #endregion
