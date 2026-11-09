@@ -9,12 +9,8 @@ using UnityEngine.UI;
 /// 스테이지 이벤트는 상태가 바뀌지 않는 경우(예: Playing → Playing)의 보정에만 사용
 /// 일시정지는 게임 상태와 별개의 겹침(overlay)이므로 현재 화면을 그대로 두고 그 위에 표시
 /// </summary>
-public class UIManager : MonoBehaviour
+public class UIManager : Singleton<UIManager>
 {
-    #region 싱글톤
-    public static UIManager Instance { get; private set; }
-    #endregion
-
     #region 인스펙터
     [Header("화면 패널")]
     [SerializeField] private GameObject _pausePanel;
@@ -78,18 +74,8 @@ public class UIManager : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-    /// <summary>
-    /// UIManager 싱글톤을 등록
-    /// </summary>
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
         SetSelectedUpgradeTab(null);
     }
 
@@ -153,19 +139,10 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// UIManager가 파괴될 때 구독과 싱글톤 참조를 해제합
-    /// </summary>
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
         UnsubscribeEvents();
-
-        if (Instance == this)
-        {
-            Instance = null;
-        }
     }
-
     #endregion
 
     #region 커스텀 (private)

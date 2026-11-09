@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// 씬 전환을 관리
 /// </summary>
-public class SceneTransitionManager : MonoBehaviour
+public class SceneTransitionManager : PersistentSingleton<SceneTransitionManager>
 {
     #region 인스펙터
     [Header("씬 설정")]
@@ -12,30 +12,7 @@ public class SceneTransitionManager : MonoBehaviour
     [SerializeField] private string _legacyShopSceneName = "GameLegacyShop";
     #endregion
 
-    #region 프로퍼티
-    public static SceneTransitionManager Instance { get; private set; }
-    #endregion
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
-
+    #region 커스텀 (public)
     public void LoadGameScene()
     {
         if (!Application.CanStreamedLevelBeLoaded(_gameSceneName))
@@ -61,4 +38,6 @@ public class SceneTransitionManager : MonoBehaviour
         SceneManager.LoadScene(_legacyShopSceneName);
         return true;
     }
+    #endregion
+
 }

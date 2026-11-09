@@ -7,13 +7,9 @@ using UnityEngine.UI;
 /// [BILL-01-02][BILL-01-03][BILL-01-04][BILL-01-05][BILL-02-01] 청구서 발행과 납부 기한 관리
 /// 런 진행 일자에 맞춰 청구 대기열과 UI 이벤트 갱신
 /// </summary>
-public class BillManager : MonoBehaviour
+public class BillManager : Singleton<BillManager>
 {
     public const float CTonyLoanPenaltyRate = 0.5f;
-
-    #region 싱글톤
-    public static BillManager Instance { get; private set; }
-    #endregion
 
     #region 속성
     public IReadOnlyList<BillRecord> Bills => _bills;
@@ -61,21 +57,17 @@ public class BillManager : MonoBehaviour
     private readonly Dictionary<BillData, int> _issuedCounts = new Dictionary<BillData, int>();
     private readonly HashSet<string> _issuedKeys = new HashSet<string>();
     private readonly HashSet<string> _dueSoonNotifiedIds = new HashSet<string>();
+
     private StageManager _stageManager;
+    private CurrencyManager _currencyManager;
+
     private int _currentDay;
     private bool _hasTakenTonyLoan;
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
         if (_billRules == null)
         {
             _billRules = new BillData[0];
@@ -89,42 +81,38 @@ public class BillManager : MonoBehaviour
             _payBillButton.onClick.AddListener(HandlePayButtonClicked);
         }
 
+        _currencyManager = CurrencyManager.Instance;
+
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.OnBalanceChanged += HandleBalanceChanged;
         }
 
         _stageManager = StageManager.Instance;
+
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted += HandleStageStarted;
         }
 
-
         RefreshPayButtonImage();
     }
 
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
         if (_payBillButton != null)
         {
             _payBillButton.onClick.RemoveListener(HandlePayButtonClicked);
         }
 
-        if (CurrencyManager.Instance != null)
+        if (_currencyManager != null)
         {
-            CurrencyManager.Instance.OnBalanceChanged -= HandleBalanceChanged;
+            _currencyManager.OnBalanceChanged -= HandleBalanceChanged;
         }
 
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted -= HandleStageStarted;
-        }
-
-
-        if (Instance == this)
-        {
-            Instance = null;
         }
     }
     #endregion

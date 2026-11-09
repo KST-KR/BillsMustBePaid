@@ -16,12 +16,8 @@ public enum ECurrencyTransactionType
 /// 공통 재화 증감과 잔고 알림 제공
 /// 거래 유형별 지출 검증과 결과 알림 제공
 /// </summary>
-public class CurrencyManager : MonoBehaviour
+public class CurrencyManager : PersistentSingleton<CurrencyManager>
 {
-    #region 싱글톤
-    public static CurrencyManager Instance { get; private set; }
-    #endregion
-
     #region 속성
     public int Gold => _gold;
     public int LegacyPoints => _legacyPoints;
@@ -48,22 +44,9 @@ public class CurrencyManager : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
         InitializeBalances();
-    }
-
-    private void Start()
-    {
-        
     }
 
     private void Update()
@@ -72,14 +55,6 @@ public class CurrencyManager : MonoBehaviour
         {
             TryAdd(ECurrencyType.Gold, 10000);
             Debug.Log($"골드 추가 후 잔고: {Gold}");
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
         }
     }
     #endregion

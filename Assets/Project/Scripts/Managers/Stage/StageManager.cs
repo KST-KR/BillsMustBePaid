@@ -2,18 +2,14 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// 스테이지의 시작, 클리어 및 전환을 관리합니다.
-/// 게임 전체 상태는 GameManager에서 관리합니다.
+/// 스테이지의 시작, 클리어 및 전환을 관리
+/// 게임 전체 상태는 GameManager에서 관리
 /// </summary>
-public class StageManager : MonoBehaviour
+public class StageManager : Singleton<StageManager>
 {
     #region 인스펙터
     [Header("스테이지 환경")]
     [SerializeField] private TableCrackEffect _tableCrackEffect;
-    #endregion
-
-    #region 싱글톤
-    public static StageManager Instance { get; private set; }
     #endregion
 
     #region 속성
@@ -30,6 +26,7 @@ public class StageManager : MonoBehaviour
 
     #region 내부 변수
     private PlayerStamina _playerStamina;
+    private GameManager _gameManager;
 
     private int _currentStage;
     private bool _isStageActive;
@@ -37,19 +34,8 @@ public class StageManager : MonoBehaviour
 
     #region 이벤트 함수
 
-    /// <summary>
-    /// StageManager 싱글톤을 등록합니다.
-    /// </summary>
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-
         if (_playerStamina == null)
         {
             _playerStamina = FindAnyObjectByType<PlayerStamina>();
@@ -58,6 +44,11 @@ public class StageManager : MonoBehaviour
 
     private void Start()
     {
+        if (!IsActiveInstance)
+        {
+            return;
+        }
+
         /// <summary>
         /// 스태미나에 따른 스테이지 실패 이벤트 구독과 해제
         /// </summary>
@@ -66,10 +57,12 @@ public class StageManager : MonoBehaviour
             _playerStamina.OnExhausted += HandleStaminaDepleted;
         }
 
-        if (GameManager.Instance != null)
+        _gameManager = GameManager.Instance;
+
+        if (_gameManager != null)
         {
-            GameManager.Instance.OnRunStarted += HandleRunStarted;
-            GameManager.Instance.OnRunEnded += HandleRunEnded;
+            _gameManager.OnRunStarted += HandleRunStarted;
+            _gameManager.OnRunEnded += HandleRunEnded;
         }
 
         if (_playerStamina == null)
@@ -78,26 +71,21 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// StageManager가 파괴될 때 싱글톤 참조를 해제합니다.
-    /// </summary>
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-
         if (_playerStamina != null)
         {
             _playerStamina.OnExhausted -= HandleStaminaDepleted;
         }
 
-        if (GameManager.Instance != null)
+        if (_gameManager != null)
         {
-            GameManager.Instance.OnRunStarted -= HandleRunStarted;
-            GameManager.Instance.OnRunEnded -= HandleRunEnded;
+            _gameManager.OnRunStarted -= HandleRunStarted;
+            _gameManager.OnRunEnded -= HandleRunEnded;
         }
+
+        _playerStamina = null;
+        _gameManager = null;
     }
     #endregion
 
@@ -111,7 +99,7 @@ public class StageManager : MonoBehaviour
     {
         ResetStage();
         // 런 시작 시 1스테이지 자동 시작
-        StartStage(1); 
+        StartStage(1);
     }
 
     private void HandleRunEnded()

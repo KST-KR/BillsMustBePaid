@@ -8,12 +8,8 @@ using UnityEngine.UI;
 /// <summary>
 /// 구매 아이템은 사이클이 초기화되어도 저장 슬롯의 영구 성장 데이터에 유지
 /// </summary>
-public sealed class LegacyShopManager : MonoBehaviour
+public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 {
-    #region 싱글톤
-    public static LegacyShopManager Instance { get; private set; }
-    #endregion
-
     #region 속성
     public IReadOnlyCollection<string> PurchasedItemIds => _purchasedItemIds;
     #endregion
@@ -40,16 +36,8 @@ public sealed class LegacyShopManager : MonoBehaviour
     #endregion
 
     #region 이벤트 함수
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
         CacheManagers();
         SceneManager.sceneLoaded += HandleSceneLoaded;
     }
@@ -62,18 +50,17 @@ public sealed class LegacyShopManager : MonoBehaviour
         UpdateNextCycleButtonLabel();
     }
 
-    private void OnDestroy()
+    protected override void OnSingletonDestroy()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+
         UnbindShopButtons();
         UnsubscribeEvents();
+
         if (_currencyManager != null)
         {
             _currencyManager.OnBalanceChanged -= HandleBalanceChanged;
-        }
-        if (Instance == this)
-        {
-            Instance = null;
+            _currencyManager = null;
         }
     }
     #endregion
@@ -91,9 +78,9 @@ public sealed class LegacyShopManager : MonoBehaviour
         }
 
         LegacyShopManager existing = FindObjectOfType<LegacyShopManager>();
+
         if (existing != null)
         {
-            Instance = existing;
             return existing;
         }
 

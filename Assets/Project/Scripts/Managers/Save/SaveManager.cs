@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 게임 데이터의 저장 및 불러오기를 관리
 /// </summary>
-public class SaveManager : MonoBehaviour
+public class SaveManager : PersistentSingleton<SaveManager>
 {
     #region 상수
     private const int MinSlotIndex = 1;
@@ -17,10 +17,6 @@ public class SaveManager : MonoBehaviour
     private const string SaveFileNameFormat = "save_slot_{0}.json";
     #endregion
 
-    #region 싱글톤
-    public static SaveManager Instance { get; private set; }
-    #endregion
-
     #region 프로퍼티
     public int CurrentSlotIndex { get; private set; } = -1;
     #endregion
@@ -28,34 +24,6 @@ public class SaveManager : MonoBehaviour
     #region 이벤트
     public event Action OnGameSaved;
     public event Action<SaveSlotData> OnGameLoaded;
-    #endregion
-
-    #region 이벤트 함수
-    /// <summary>
-    /// SaveManager 싱글톤을 등록합니다.
-    /// </summary>
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
-    /// <summary>
-    /// SaveManager가 파괴될 때 싱글톤 참조를 해제합니다.
-    /// </summary>
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
     #endregion
 
     #region 커스텀 (Private)
