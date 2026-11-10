@@ -1,12 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DamageTextManager : MonoBehaviour
+public class DamageTextManager : Singleton<DamageTextManager>
 {
-    #region ΩÃ±€≈Ê
-    public static DamageTextManager Instance { get; private set; }
-    #endregion
-
     #region ¿ŒΩ∫∆Â≈Õ
     [Header("º≥¡§")]
     [SerializeField] private DamageText _prefab;
@@ -19,17 +15,8 @@ public class DamageTextManager : MonoBehaviour
     #endregion
 
     #region ¿Ã∫•∆Æ «‘ºˆ
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-
         for (int i = 0; i < _initialPoolSize; i++)
         {
             DamageText item = Instantiate(_prefab, _canvasTransform);
