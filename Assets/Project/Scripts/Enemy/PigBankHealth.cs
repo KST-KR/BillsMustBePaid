@@ -70,6 +70,11 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
             Debug.LogError("돼지 저금통에 HitEffect가 없습니다!", this);
         }
 
+        if(_gameData.HitMechanism != null)
+        {
+            _gameData.HitMechanism.Execute(gameObject);
+        }
+
         Debug.Log($"{_gameData.PigBankName} 피격: 피해량 {damageAmount}, 남은 HP {_currentHP}");
 
         if (_currentHP <= 0)
