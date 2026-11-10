@@ -17,10 +17,13 @@ public class PlayerEquipment : MonoBehaviour
     #region 내부 변수
     private EquipmentVisual[] _equipmentVisuals;
     private EquipmentData _currentEquipment;
+    private EquipmentVisual _currentEquipmentVisual;
     #endregion
 
     #region 프로퍼티
     public EquipmentData CurrentEquipment => _currentEquipment;
+
+    public Transform CurrentHammerTransform => _currentEquipmentVisual != null ? _currentEquipmentVisual.transform : null;
     #endregion
 
     #region 이벤트 함수
@@ -92,6 +95,7 @@ public class PlayerEquipment : MonoBehaviour
             }
 
             _currentEquipment = visual.EquipmentData;
+            _currentEquipmentVisual = visual;
 
             // 기본 장비를 보유 목록에 등록
             _equipmentManager.RegisterStartingEquipment(_currentEquipment);
@@ -156,6 +160,7 @@ public class PlayerEquipment : MonoBehaviour
         }
 
         _currentEquipment = data;
+        _currentEquipmentVisual = targetVisual;
 
         // 플레이어 능력치에 장비 능력치 반영
         _playerStats.SetHammerEquipment(data);

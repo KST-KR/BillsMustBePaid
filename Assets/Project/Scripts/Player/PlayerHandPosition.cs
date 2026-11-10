@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// [PL-MOVE-02] 손의 위치를 마우스 좌표에 일치시킴
