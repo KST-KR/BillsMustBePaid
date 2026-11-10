@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _id: PigBank_Angry
   _pigBankName: Angry
-  _pigBankHP: 40
+  _pigBankHP: 80
   _moveSpeed: 7
   _pigPrefab: {fileID: 5129206302073926321, guid: e71b891515ee9e045937ff429ce5547b, type: 3}
   _crashLevel: 3
@@ -22,4 +22,5 @@ MonoBehaviour:
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
-  _spawnProbability: 10
+  _spawnProbability: 20
+  _hitMechanism: {fileID: 11400000, guid: 491eeabc95a9f6e46b094c7aa591bb27, type: 2}

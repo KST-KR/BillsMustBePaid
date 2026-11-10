@@ -22,6 +22,9 @@ public class PigBankMoveing : MonoBehaviour
     #region 내부 변수
     private float _startY;
     private Vector3 _moveDir;
+
+    public float SpeedMultiplier { get; set; } = 1f;
+    private Coroutine _mechanismCoroutine;
     #endregion
 
     #region 이벤트
@@ -52,6 +55,16 @@ public class PigBankMoveing : MonoBehaviour
         PushOut();
     }
 
+    private void OnDisable()
+    {
+        if (_mechanismCoroutine != null)
+        {
+            StopCoroutine(_mechanismCoroutine);
+            _mechanismCoroutine = null;
+        }
+        SpeedMultiplier = 1f;
+    }
+
     /// <summary>
     /// 에디터에서 반구 범위를 그리기 위한 기즈모
     /// </summary>
@@ -60,6 +73,18 @@ public class PigBankMoveing : MonoBehaviour
     //    Gizmos.color = Color.yellow;
     //    Gizmos.DrawSphere(transform.position, _radius);
     //}
+    #endregion
+
+    #region 커스텀 메서드 (public)
+    public void RunMechanismCoroutine(IEnumerator routine)
+    {
+        if(_mechanismCoroutine != null)
+        {
+            StopCoroutine(_mechanismCoroutine);
+        }
+
+        _mechanismCoroutine = StartCoroutine(routine);
+    }
     #endregion
 
     #region 커스텀 메서드 (private)
@@ -71,7 +96,7 @@ public class PigBankMoveing : MonoBehaviour
             return;
         }
 
-        float currentSpeed = _pigData.MoveSpeed;
+        float currentSpeed = _pigData.MoveSpeed * SpeedMultiplier;
         Vector3 finalDir = _moveDir.normalized;
 
         float moveDiatance = currentSpeed * Time.deltaTime;

@@ -22,6 +22,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
     public int CrashLevel => _crashLevel;
 
     public float SpawnProbability => _spawnProbability;
+
+    public MechanismSO HitMechanism => _hitMechanism;
     #endregion
 
     #region 인스펙터
@@ -51,6 +53,9 @@ public abstract class PigBankGameDataSO : ScriptableObject
     [SerializeField] protected float _specialCoinChance = 0.02f;
     [Tooltip("필드에 등장할 확률 (높을수록 자주 등장)")]
     [SerializeField] protected float _spawnProbability;
+
+    [Header("특수 기믹")]
+    [SerializeField] protected MechanismSO _hitMechanism;
     #endregion
 
 

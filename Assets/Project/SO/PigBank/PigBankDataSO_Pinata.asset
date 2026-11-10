@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89508eaeb0b14ee448066d125e1b61d0, type: 3}
+  m_Name: PigBankDataSO_Pinata
+  m_EditorClassIdentifier: 
+  _id: PigBank_Pinata
+  _pigBankName: Pinata
+  _pigBankHP: 95
+  _moveSpeed: 7
+  _pigPrefab: {fileID: 3796336627844551131, guid: 5e12c08a8be6596428cd8387529b68d9, type: 3}
+  _crashLevel: 5
+  _rewardCoin: 100
+  _jackpotChance: 0.35
+  _shinePigBankChance: 0.01
+  _specialCoinChance: 0.02
+  _spawnProbability: 15
+  _hitMechanism: {fileID: 0}
