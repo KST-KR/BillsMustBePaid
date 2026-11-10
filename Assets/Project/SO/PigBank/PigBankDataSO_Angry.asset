@@ -22,5 +22,5 @@ MonoBehaviour:
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
-  _spawnProbability: 10
+  _spawnProbability: 20
   _hitMechanism: {fileID: 11400000, guid: 491eeabc95a9f6e46b094c7aa591bb27, type: 2}

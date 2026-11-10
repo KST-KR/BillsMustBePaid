@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d088efd1857d62a4e8c6b2bf8d0d1713, type: 3}
+  m_Name: PigBankDataSO_Woody
+  m_EditorClassIdentifier: 
+  _id: PigBank_Woody
+  _pigBankName: Woody
+  _pigBankHP: 90
+  _moveSpeed: 7
+  _pigPrefab: {fileID: 9022015776915262669, guid: bf60bd9aa80fa2a4389c69a7c93d65d6, type: 3}
+  _crashLevel: 4
+  _rewardCoin: 300
+  _jackpotChance: 0.05
+  _shinePigBankChance: 0.01
+  _specialCoinChance: 0.02
+  _spawnProbability: 20
+  _hitMechanism: {fileID: 0}
