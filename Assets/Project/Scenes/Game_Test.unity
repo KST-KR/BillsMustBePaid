@@ -17414,6 +17414,8 @@ MonoBehaviour:
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
   - unlockCount: 30
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 40
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
 --- !u!4 &1003672569
 Transform:
   m_ObjectHideFlags: 0
