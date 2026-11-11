@@ -3,42 +3,56 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// [PIG-AI] µÅÁö Àú±İÅë ¿òÁ÷ÀÓ °ü¸®
+/// [PIG-AI] ë¼ì§€ ì €ê¸ˆí†µ ì›€ì§ì„ ê´€ë¦¬
 /// </summary>
 public class PigBankMoveing : MonoBehaviour
 {
-    #region ÀÎ½ºÆåÅÍ
-    [Header("µ¥ÀÌÅÍ ÂüÁ¶")]
+    #region ìƒìˆ˜
+    /// <summary>
+    /// ê²½ì§ ìŠ¤í‚¬ ID (ìŠ¤í‚¬ ì‚¬ìš©ì‹œ ë¼ì§€ ì €ê¸ˆí†µ ì›€ì§ì„ ë©ˆì¶¤)
+    /// </summary>
+    private const string CStopSkillUpgradeId = "ACT_01"; 
+    #endregion
+
+    #region ì¸ìŠ¤í™í„°
+    [Header("ë°ì´í„° ì°¸ì¡°")]
     [SerializeField] private PigBankGameDataSO _pigData;
 
-    [Header("Á¡ÇÁ ¼³Á¤")]
+    [Header("ì í”„ ì„¤ì •")]
     [SerializeField] private float _jumpHeight = 0.5f;
     [SerializeField] private float _jumpSpeed = 3f;
 
-    [Header("°ãÄ§ ¼³Á¤")]
+    [Header("ê²¹ì¹¨ ì„¤ì •")]
     [SerializeField] private float _radius = 3.5f;
     #endregion
 
-    #region ³»ºÎ º¯¼ö
+    #region ë‚´ë¶€ ë³€ìˆ˜
     private float _startY;
     private Vector3 _moveDir;
+    private bool _isFrozenByActiveSkill;
 
     public float SpeedMultiplier { get; set; } = 1f;
     private Coroutine _mechanismCoroutine;
     #endregion
 
-    #region ÀÌº¥Æ®
+    #region ì´ë²¤íŠ¸
+    private void OnEnable()
+    {
+        InitActiveSkillEvents();
+        SyncFrozenState();
+    }
+
     void Start()
     {
         if (_pigData == null)
         {
-            Debug.LogError("PigData°¡ ¾ø´Ù È®ÀÎ ÇÊ¿ä");
+            Debug.LogError("PigDataê°€ ì—†ë‹¤ í™•ì¸ í•„ìš”");
             return;
         }
 
         _startY = transform.position.y;
 
-        // °ÔÀÓ ½ÃÀÛ½Ã ¹«ÀÛÀ§ ¹æÇâ ¼³Á¤
+        // ê²Œì„ ì‹œì‘ì‹œ ë¬´ì‘ìœ„ ë°©í–¥ ì„¤ì •
         float randomAngle = Random.Range(0f, 360f);
         _moveDir = new Vector3(Mathf.Sin(randomAngle * Mathf.Deg2Rad), 0, Mathf.Cos(randomAngle * Mathf.Deg2Rad)).normalized;
     }
@@ -51,22 +65,31 @@ public class PigBankMoveing : MonoBehaviour
             return;
         }
 
+        if (_isFrozenByActiveSkill)
+        {
+            return;
+        }
+
         Moveing();
         PushOut();
     }
 
     private void OnDisable()
     {
+        InitActiveSkillEvents(false);
+
         if (_mechanismCoroutine != null)
         {
             StopCoroutine(_mechanismCoroutine);
             _mechanismCoroutine = null;
         }
+
+        _isFrozenByActiveSkill = false;
         SpeedMultiplier = 1f;
     }
 
     /// <summary>
-    /// ¿¡µğÅÍ¿¡¼­ ¹İ±¸ ¹üÀ§¸¦ ±×¸®±â À§ÇÑ ±âÁî¸ğ
+    /// ì—ë””í„°ì—ì„œ ë°˜êµ¬ ë²”ìœ„ë¥¼ ê·¸ë¦¬ê¸° ìœ„í•œ ê¸°ì¦ˆëª¨
     /// </summary>
     //private void OnDrawGizmos()
     //{
@@ -75,7 +98,7 @@ public class PigBankMoveing : MonoBehaviour
     //}
     #endregion
 
-    #region Ä¿½ºÅÒ ¸Ş¼­µå (public)
+    #region ì»¤ìŠ¤í…€ ë©”ì„œë“œ (public)
     public void RunMechanismCoroutine(IEnumerator routine)
     {
         if(_mechanismCoroutine != null)
@@ -87,12 +110,12 @@ public class PigBankMoveing : MonoBehaviour
     }
     #endregion
 
-    #region Ä¿½ºÅÒ ¸Ş¼­µå (private)
+    #region ì»¤ìŠ¤í…€ ë©”ì„œë“œ (private)
     private void Moveing()
     {
         if(_pigData == null)
         {
-            Debug.LogError("PigData°¡ ¾ø´Ù È®ÀÎ ÇÊ¿ä");
+            Debug.LogError("PigDataê°€ ì—†ë‹¤ í™•ì¸ í•„ìš”");
             return;
         }
 
@@ -103,12 +126,12 @@ public class PigBankMoveing : MonoBehaviour
         float castRadius = 1f;
         float castDistance = moveDiatance + 0.2f;
 
-        // ÁøÇà ¹æÇâ ¾Õ¿¡ º¸ÀÌÁö ¾Ê´Â º®(Wall)ÀÌ ÀÖ´ÂÁö ·¹ÀÌÄ³½ºÆ®·Î °Ë»ç
+        // ì§„í–‰ ë°©í–¥ ì•ì— ë³´ì´ì§€ ì•ŠëŠ” ë²½(Wall)ì´ ìˆëŠ”ì§€ ë ˆì´ìºìŠ¤íŠ¸ë¡œ ê²€ì‚¬
         if (Physics.SphereCast(transform.position, castRadius,finalDir, out RaycastHit hit, 0.6f))
         {
             if (hit.collider.CompareTag("Wall"))
             {
-                // º®¿¡ ºÎµúÈ÷¸é ¹İ»ç°¢(Reflect)À¸·Î ÀÚ¿¬½º·´°Ô ¹æÇâ ÀüÈ¯
+                // ë²½ì— ë¶€ë”ªíˆë©´ ë°˜ì‚¬ê°(Reflect)ìœ¼ë¡œ ìì—°ìŠ¤ëŸ½ê²Œ ë°©í–¥ ì „í™˜
                 _moveDir = Vector3.Reflect(_moveDir, hit.normal);
                 _moveDir.y = 0;
                 _moveDir.Normalize();
@@ -117,23 +140,23 @@ public class PigBankMoveing : MonoBehaviour
             }
         }
 
-        // ÀüÁø
+        // ì „ì§„
         transform.Translate(finalDir * currentSpeed * Time.deltaTime, Space.World);
 
-        // È¸Àü
+        // íšŒì „
         if (finalDir != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(new Vector3(finalDir.x, 0, finalDir.z));
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
         }
 
-        // YÃà Á¡ÇÁ ¿¬Ãâ
+        // Yì¶• ì í”„ ì—°ì¶œ
         float newY = _startY + Mathf.Abs(Mathf.Sin(Time.time * _jumpSpeed)) * _jumpHeight;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
     }
 
     /// <summary>
-    /// µÅÁö Àú±İÅëµé°úÀÇ °Å¸®¸¦ °è»êÇØ ¸Ö¾îÁö·Á´Â ¹æÇâ º¤ÅÍ¸¦ ¸ğ¾Æ ¹İÈ¯
+    /// ë¼ì§€ ì €ê¸ˆí†µë“¤ê³¼ì˜ ê±°ë¦¬ë¥¼ ê³„ì‚°í•´ ë©€ì–´ì§€ë ¤ëŠ” ë°©í–¥ ë²¡í„°ë¥¼ ëª¨ì•„ ë°˜í™˜
     /// </summary>
     private void PushOut()
     {
@@ -141,7 +164,7 @@ public class PigBankMoveing : MonoBehaviour
 
         foreach (Collider col in colliders)
         {
-            // ÀÚ±â ÀÚ½Å Á¦¿Ü
+            // ìê¸° ìì‹  ì œì™¸
             if (col.gameObject == gameObject)
             {
                 continue;
@@ -152,37 +175,93 @@ public class PigBankMoveing : MonoBehaviour
                 continue;
             }
 
-            // ¹İ±¸ ÇüÅÂÀÌ¹Ç·Î Áß½Éº¸´Ù ¾Æ·¡¿¡ ÀÖ´Â ¿ÀºêÁ§Æ®´Â Á¦¿Ü 
+            // ë°˜êµ¬ í˜•íƒœì´ë¯€ë¡œ ì¤‘ì‹¬ë³´ë‹¤ ì•„ë˜ì— ìˆëŠ” ì˜¤ë¸Œì íŠ¸ëŠ” ì œì™¸ 
             if (col.transform.position.y < transform.position.y)
             {
                 continue;
             }
 
-            // Áß½É¿¡¼­ ¿ÀºêÁ§Æ®±îÁöÀÇ ¹æÇâ°ú °Å¸® °è»ê
+            // ì¤‘ì‹¬ì—ì„œ ì˜¤ë¸Œì íŠ¸ê¹Œì§€ì˜ ë°©í–¥ê³¼ ê±°ë¦¬ ê³„ì‚°
             Vector3 direction = col.transform.position - transform.position;
             direction.y = 0;
             float distance = direction.magnitude;
 
-            // °Å¸®°¡ ¹İÁö¸§º¸´Ù ÀÛ´Ù¸é (¹İ±¸ ³»ºÎ¿¡ ÀÖ´Ù¸é)
+            // ê±°ë¦¬ê°€ ë°˜ì§€ë¦„ë³´ë‹¤ ì‘ë‹¤ë©´ (ë°˜êµ¬ ë‚´ë¶€ì— ìˆë‹¤ë©´)
             if (distance < _radius && distance > 0)
             {
                 Vector3 normalizedDir = direction / distance;
                 Vector3 targetPos = transform.position + normalizedDir * _radius;
 
-                // ³» À§Ä¡¿¡¼­ ¹Ğ¾î³»·Á´Â ¸ñÇ¥ À§Ä¡ »çÀÌ¿¡ º®ÀÌ ÀÖ´ÂÁö ·¹ÀÌÄ³½ºÆ®·Î °Ë»ç
+                // ë‚´ ìœ„ì¹˜ì—ì„œ ë°€ì–´ë‚´ë ¤ëŠ” ëª©í‘œ ìœ„ì¹˜ ì‚¬ì´ì— ë²½ì´ ìˆëŠ”ì§€ ë ˆì´ìºìŠ¤íŠ¸ë¡œ ê²€ì‚¬
                 if (Physics.Raycast(transform.position, normalizedDir, out RaycastHit wallHit, _radius))
                 {
                     if (wallHit.collider.CompareTag("Wall"))
                     {
-                        // ¹Ì´Â °æ·Î(¹İ°æ ³»)¿¡ º®ÀÌ ÀÖ´Ù¸é º®À» ¶Õ°í ³ª°¡Áö ¾Êµµ·Ï ¹Ğ¾î³»±â Ãë¼Ò
+                        // ë¯¸ëŠ” ê²½ë¡œ(ë°˜ê²½ ë‚´)ì— ë²½ì´ ìˆë‹¤ë©´ ë²½ì„ ëš«ê³  ë‚˜ê°€ì§€ ì•Šë„ë¡ ë°€ì–´ë‚´ê¸° ì·¨ì†Œ
                         continue;
                     }
                 }
 
-                // º®ÀÌ °¡·Î¸·°í ÀÖÁö ¾Ê´Ù¸é ¾ÈÀüÇÏ°Ô Ç¥¸é À§Ä¡·Î ÀÌµ¿
+                // ë²½ì´ ê°€ë¡œë§‰ê³  ìˆì§€ ì•Šë‹¤ë©´ ì•ˆì „í•˜ê²Œ í‘œë©´ ìœ„ì¹˜ë¡œ ì´ë™
                 col.transform.position = new Vector3(targetPos.x, col.transform.position.y, targetPos.z);
             }
         }
+    }
+
+    private void InitActiveSkillEvents(bool isAdd = true)
+    {
+        if (!ActiveSkillManager.HasInstance)
+        {
+            return;
+        }
+
+        ActiveSkillManager.Instance.OnActiveBuffStarted -= HandleActiveBuffStarted;
+        ActiveSkillManager.Instance.OnActiveBuffRefreshed -= HandleActiveBuffRefreshed;
+        ActiveSkillManager.Instance.OnActiveBuffEnded -= HandleActiveBuffEnded;
+
+        if (isAdd)
+        {
+
+            ActiveSkillManager.Instance.OnActiveBuffStarted += HandleActiveBuffStarted;
+            ActiveSkillManager.Instance.OnActiveBuffRefreshed += HandleActiveBuffRefreshed;
+            ActiveSkillManager.Instance.OnActiveBuffEnded += HandleActiveBuffEnded;
+        }        
+    }
+
+    private void SyncFrozenState()
+    {
+        if (!ActiveSkillManager.HasInstance)
+        {
+            _isFrozenByActiveSkill = false;
+            return;
+        }
+
+        _isFrozenByActiveSkill = ActiveSkillManager.Instance.IsBuffActive(CStopSkillUpgradeId);
+    }
+
+    private void ActionACT01(string upgradeId, bool isActive)
+    {
+        if (upgradeId != CStopSkillUpgradeId)
+        {
+            return;
+        }
+    
+        _isFrozenByActiveSkill = isActive;
+    }
+
+    private void HandleActiveBuffStarted(string upgradeId, float duration)
+    {
+        ActionACT01(upgradeId, true);
+    }
+
+    private void HandleActiveBuffRefreshed(string upgradeId, float duration)
+    {
+        ActionACT01(upgradeId, true);
+    }
+
+    private void HandleActiveBuffEnded(string upgradeId)
+    {
+        ActionACT01(upgradeId, false);
     }
 
     #endregion

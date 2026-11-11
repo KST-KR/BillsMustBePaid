@@ -114,6 +114,12 @@ public class PlayerCombat : MonoBehaviour
 
     private void OnEnable()
     {
+        if (_playerStats != null)
+        {
+            _playerStats.OnStateChanged -= HandlePlayerStatsChanged;
+            _playerStats.OnStateChanged += HandlePlayerStatsChanged;
+        }
+
         if (_playerStamina != null)
         {
             _playerStamina.OnExhausted += HandleStaminaExhausted;
@@ -130,6 +136,11 @@ public class PlayerCombat : MonoBehaviour
 
     private void OnDisable()
     {
+        if (_playerStats != null)
+        {
+            _playerStats.OnStateChanged -= HandlePlayerStatsChanged;
+        }
+
         if (_playerStamina != null)
         {
             _playerStamina.OnExhausted -= HandleStaminaExhausted;
@@ -288,6 +299,24 @@ public class PlayerCombat : MonoBehaviour
     {
         _cooldownDuration = Mathf.Max(0f, _playerStats.AttackInterval);
         _cooldownRemaining = _cooldownDuration;
+    }
+
+    private void HandlePlayerStatsChanged()
+    {
+        if (_playerStats == null || _isAttacking)
+        {
+            return;
+        }
+
+        float previousDuration = Mathf.Max(0f, _cooldownDuration);
+        float newDuration = Mathf.Max(0f, _playerStats.AttackInterval);
+
+        float progress = previousDuration > 0f
+            ? Mathf.Clamp01(1f - (_cooldownRemaining / previousDuration))
+            : 1f;
+
+        _cooldownDuration = newDuration;
+        _cooldownRemaining = Mathf.Max(0f, newDuration * (1f - progress));
     }
 
     /// <summary>

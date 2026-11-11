@@ -6,7 +6,7 @@ using UnityEngine;
 /// [PL-ASKILL-01] 엑티브 스킬 슬롯과 사용 상태 관리
 /// 쿨타임 진행과 사용 이벤트를 전달
 /// </summary>
-public sealed class ActiveSkillManager : MonoBehaviour
+public sealed class ActiveSkillManager : Singleton<ActiveSkillManager>
 {
     #region 상수
     private const int CMaxSlots = 5;
