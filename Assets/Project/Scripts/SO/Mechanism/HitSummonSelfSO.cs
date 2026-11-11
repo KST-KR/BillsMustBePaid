@@ -33,11 +33,9 @@ public class HitSummonSelfSO : MechanismSO
             Vector2 randomCircle = Random.insideUnitCircle.normalized * _spawnRadius;
             Vector3 spawnPos = target.transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
 
-            GameObject clone = Instantiate(_cloneDate.PigPrefab, spawnPos, target.transform.rotation);
-
-            if (clone.TryGetComponent(out PigBankHealth cloneHealth))
+           if(PigBankObjectPoolManager.Instance != null )
             {
-                cloneHealth.Initialize(_cloneDate);
+                PigBankObjectPoolManager.Instance.SpawnPigBank(_cloneDate.ID, spawnPos, target.transform.rotation);
             }
         }
     }
