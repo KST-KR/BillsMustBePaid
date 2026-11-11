@@ -23,9 +23,19 @@ public class HandAnimationEventRelay : MonoBehaviour
 
     /// <summary>
     /// Animation Event에서 호출
+    /// 타격 애니메이션 완료 신호 전달
     /// </summary>
     public void OnHitAnimationCompleted()
     {
         _playerCombat?.OnHitAnimationCompleted();
+    }
+
+    /// <summary>
+    /// Animation Event에서 호출
+    /// 스태미나 고갈 연출 완료 신호 전달
+    /// </summary>
+    public void OnTiredAnimationCompleted()
+    {
+        _playerCombat?.NotifyTiredAnimationCompleted();
     }
 }
