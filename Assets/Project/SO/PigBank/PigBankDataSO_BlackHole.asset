@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b002f124b9c1c747a1209100bf5ba4d, type: 3}
   m_Name: PigBankDataSO_BlackHole
   m_EditorClassIdentifier: 
-  _id: 
-  _pigBankName: 
-  _pigBankHP: 0
-  _moveSpeed: 0
-  _pigPrefab: {fileID: 0}
-  _crashLevel: 0
-  _rewardCoin: 0
+  _id: PigBank_BlackHole
+  _pigBankName: BlackHole
+  _pigBankHP: 230
+  _moveSpeed: 7
+  _pigPrefab: {fileID: 53642808880837476, guid: 37c410a4bb53e6e42b5da9c3fdcb045d, type: 3}
+  _crashLevel: 8
+  _rewardCoin: 400
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
-  _spawnProbability: 0
+  _spawnProbability: 20
   _hitMechanism: {fileID: 0}
