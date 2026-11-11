@@ -81,7 +81,7 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
         if (_currentHP <= 0)
         {
             // 사망 기믹 먼저 실행
-            _gameData.DieMechanism.Execute(gameObject);
+            _gameData.DieMechanism?.Execute(gameObject);
 
             // 파괴 및 보상 처리는 돼지 저금통 담당 로직과 연결
             RandomRewardManager rewardManager = GetComponent<RandomRewardManager>();
