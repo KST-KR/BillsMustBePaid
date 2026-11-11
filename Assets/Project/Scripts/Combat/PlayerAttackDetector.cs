@@ -64,6 +64,19 @@ public class PlayerAttackDetector : MonoBehaviour
 
         int hitCount = 0;
 
+        // 이번 공격의 크리티컬 판정
+        float criticalChance = _playerStats.CriticalChance;
+
+        bool isCritical = criticalChance >= 1f || (criticalChance > 0f && Random.value < criticalChance);
+
+        // 크리티컬 발생 시 최종 대미지 계산
+        if (isCritical)
+        {
+            float criticalMultiplier = Mathf.Max(0f, _playerStats.CriticalDamageMultiplier);
+
+            damage *= criticalMultiplier;
+        }
+
         // 공격 가능한 대상부터 탐색
         for (int i = 0; i < colliders.Length; i++)
         {
@@ -74,7 +87,7 @@ public class PlayerAttackDetector : MonoBehaviour
                 continue;
             }
 
-            target.TakePlayerAttack(damage);
+            target.TakePlayerAttack(damage, isCritical);
             hitCount++;
         }
 
@@ -90,8 +103,7 @@ public class PlayerAttackDetector : MonoBehaviour
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                TableCrackEffect crackEffect =
-                    colliders[i].GetComponentInParent<TableCrackEffect>();
+                TableCrackEffect crackEffect = colliders[i].GetComponentInParent<TableCrackEffect>();
 
                 if (crackEffect == null || !hitTables.Add(crackEffect))
                 {
@@ -170,9 +182,6 @@ public class PlayerAttackDetector : MonoBehaviour
         return attackCenter;
     }
 
-    #endregion
-
-    #region GUI
     /// <summary>
     ///  Scene뷰에서 공격 범위 확인
     /// </summary>
@@ -186,19 +195,6 @@ public class PlayerAttackDetector : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(center, range);
-    }
-
-    private string GetHierarchyPath(Transform target)
-    {
-        string path = target.name;
-
-        while (target.parent != null)
-        {
-            target = target.parent;
-            path = target.name + "/" + path;
-        }
-
-        return path;
     }
     #endregion
 }
