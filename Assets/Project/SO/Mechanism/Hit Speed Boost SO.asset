@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ca8726ba4ce1e2547a253eb638652267, type: 3}
-  m_Name: New Hit Speed Boost SO
+  m_Name: Hit Speed Boost SO
   m_EditorClassIdentifier: 
   _boostMultiplier: 5
   _duration: 10

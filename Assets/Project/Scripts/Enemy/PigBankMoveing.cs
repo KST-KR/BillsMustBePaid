@@ -11,7 +11,7 @@ public class PigBankMoveing : MonoBehaviour
     /// <summary>
     /// 경직 스킬 ID (스킬 사용시 돼지 저금통 움직임 멈춤)
     /// </summary>
-    private const string CStopSkillUpgradeId = "ACT_01"; 
+    private const string CStopSkillUpgradeId = "ACT_01";
     #endregion
 
     #region 인스펙터
@@ -32,6 +32,7 @@ public class PigBankMoveing : MonoBehaviour
     private bool _isFrozenByActiveSkill;
 
     public float SpeedMultiplier { get; set; } = 1f;
+    public bool IsStunned { get; set; } = false;
     private Coroutine _mechanismCoroutine;
     #endregion
 
@@ -70,6 +71,11 @@ public class PigBankMoveing : MonoBehaviour
             return;
         }
 
+        if (IsStunned)
+        {
+            return;
+        }
+
         Moveing();
         PushOut();
     }
@@ -101,7 +107,7 @@ public class PigBankMoveing : MonoBehaviour
     #region 커스텀 메서드 (public)
     public void RunMechanismCoroutine(IEnumerator routine)
     {
-        if(_mechanismCoroutine != null)
+        if (_mechanismCoroutine != null)
         {
             StopCoroutine(_mechanismCoroutine);
         }
@@ -113,7 +119,7 @@ public class PigBankMoveing : MonoBehaviour
     #region 커스텀 메서드 (private)
     private void Moveing()
     {
-        if(_pigData == null)
+        if (_pigData == null)
         {
             Debug.LogError("PigData가 없다 확인 필요");
             return;
@@ -127,7 +133,7 @@ public class PigBankMoveing : MonoBehaviour
         float castDistance = moveDiatance + 0.2f;
 
         // 진행 방향 앞에 보이지 않는 벽(Wall)이 있는지 레이캐스트로 검사
-        if (Physics.SphereCast(transform.position, castRadius,finalDir, out RaycastHit hit, 0.6f))
+        if (Physics.SphereCast(transform.position, castRadius, finalDir, out RaycastHit hit, 0.6f))
         {
             if (hit.collider.CompareTag("Wall"))
             {
@@ -225,7 +231,7 @@ public class PigBankMoveing : MonoBehaviour
             ActiveSkillManager.Instance.OnActiveBuffStarted += HandleActiveBuffStarted;
             ActiveSkillManager.Instance.OnActiveBuffRefreshed += HandleActiveBuffRefreshed;
             ActiveSkillManager.Instance.OnActiveBuffEnded += HandleActiveBuffEnded;
-        }        
+        }
     }
 
     private void SyncFrozenState()
@@ -245,7 +251,7 @@ public class PigBankMoveing : MonoBehaviour
         {
             return;
         }
-    
+
         _isFrozenByActiveSkill = isActive;
     }
 
