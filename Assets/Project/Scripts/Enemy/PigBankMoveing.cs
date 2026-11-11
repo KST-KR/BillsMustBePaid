@@ -24,6 +24,7 @@ public class PigBankMoveing : MonoBehaviour
     private Vector3 _moveDir;
 
     public float SpeedMultiplier { get; set; } = 1f;
+    public bool IsStunned { get; set; } = false;
     private Coroutine _mechanismCoroutine;
     #endregion
 
@@ -43,10 +44,14 @@ public class PigBankMoveing : MonoBehaviour
         _moveDir = new Vector3(Mathf.Sin(randomAngle * Mathf.Deg2Rad), 0, Mathf.Cos(randomAngle * Mathf.Deg2Rad)).normalized;
     }
 
-
     void Update()
     {
         if (GameManager.Instance != null && GameManager.Instance.State != EGameState.Playing)
+        {
+            return;
+        }
+
+        if (IsStunned)
         {
             return;
         }
@@ -63,6 +68,8 @@ public class PigBankMoveing : MonoBehaviour
             _mechanismCoroutine = null;
         }
         SpeedMultiplier = 1f;
+
+        IsStunned = false;
     }
 
     /// <summary>

@@ -24,6 +24,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
     public float SpawnProbability => _spawnProbability;
 
     public MechanismSO HitMechanism => _hitMechanism;
+
+    public MechanismSO DieMechanism => _dieMechanism;
     #endregion
 
     #region 인스펙터
@@ -56,6 +58,7 @@ public abstract class PigBankGameDataSO : ScriptableObject
 
     [Header("특수 기믹")]
     [SerializeField] protected MechanismSO _hitMechanism;
+    [SerializeField] protected MechanismSO _dieMechanism;
     #endregion
 
 
