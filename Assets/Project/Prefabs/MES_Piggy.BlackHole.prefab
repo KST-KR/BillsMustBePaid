@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 756408800726302787}
   - component: {fileID: 6027987037850144561}
   m_Layer: 7
-  m_Name: MES_Piggy.BlackHolePigBank
+  m_Name: MES_Piggy.BlackHole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
