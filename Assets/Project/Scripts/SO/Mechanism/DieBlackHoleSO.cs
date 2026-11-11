@@ -10,13 +10,23 @@ public class DieBlackHoleSO : MechanismSO
 	[SerializeField] private float _pullDuration = 0.5f;
 	[SerializeField] private float _gatherOffset = 1.5f;
 	[SerializeField] private int _explosionDamage = 10;
+
+	[Header("¿Ã∆Â∆Æ º≥¡§")]
+	[SerializeField] private GameObject _blackHoleEffectPrefab;
+	[SerializeField] private float _effectDuration = 1.5f;
     #endregion
 
     public override void Execute(GameObject target)
     {
         Vector3 centerPos = target.transform.position;
 
-		Collider[] colliders = Physics.OverlapSphere(centerPos, _pullRadius);
+        if (_blackHoleEffectPrefab != null)
+        {
+            GameObject effect = Instantiate(_blackHoleEffectPrefab, centerPos, Quaternion.identity);
+            Destroy(effect, _effectDuration);
+        }
+
+        Collider[] colliders = Physics.OverlapSphere(centerPos, _pullRadius);
 
 		foreach (Collider col in colliders)
 		{
