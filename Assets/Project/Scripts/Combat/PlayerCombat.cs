@@ -12,6 +12,7 @@ public class PlayerCombat : MonoBehaviour
     private HammerController _hammerController;
 
     private bool _isAttacking;
+    private bool _hasNotifiedTiredAnimation;
 
     // 공격 종료 후 다음 공격까지의 대기 시간곽 남은 시간
     // 에임의 진행도를 계산할 때 전체 대기 시간이 필요하므로 따로 보관
@@ -21,6 +22,7 @@ public class PlayerCombat : MonoBehaviour
     private Animator _handAnimator;
     private static readonly int IdleHash = Animator.StringToHash("Idle");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int TiredHash = Animator.StringToHash("ANI_Tired");
 
     private HandStateMachine _handStateMachine;
     private IdleState _idleState;
@@ -35,6 +37,12 @@ public class PlayerCombat : MonoBehaviour
     /// 에임의 타격 연출 등에서 구독
     /// </summary>
     public event Action<int> OnAttackPerformed;
+
+    /// <summary>
+    /// 스태미나 고갈 연출이 완료되었을 때 발생
+    /// StageManger에서 구독하여 스테이지 클리어 처리
+    /// </summary>
+    public event Action OnTiredAnimationCompleted;
     #endregion
 
     #region 프로퍼티
@@ -211,14 +219,16 @@ public class PlayerCombat : MonoBehaviour
     /// </summary>
     private void HandleStaminaExhausted()
     {
+        _hasNotifiedTiredAnimation = false;
+
         // 진행 중인 공격 상태 초기화
         ResetAttackState();
 
-        // 공격 애니메이션 즉시 중단하고 대기 자세로 전환
+        // 공격 애니메이션 중단하고 Tired 애니메이션 재생
         if (_handAnimator != null)
         {
             _handAnimator.ResetTrigger(AttackHash);
-            _handAnimator.Play(IdleHash, 0, 0f);
+            _handAnimator.Play(TiredHash, 0, 0f);
         }
 
         // 장착된 망치 분리 및 낙하
@@ -237,6 +247,12 @@ public class PlayerCombat : MonoBehaviour
 
         // 다음 공격까지의 대기 시간 초기화
         StartCooldown();
+
+        // Animator를 대기 상태로 복귀
+        if (_handAnimator != null)
+        {
+            _handAnimator.Play(IdleHash, 0, 0f);
+        }
 
         // 공격 대기 상태로 전환
         _handStateMachine.ChangeState(_idleState);
@@ -344,6 +360,7 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
+        // 피격 애니메이션 완료 후 SwingState로 복귀
         _hitState.Complete();
     }
 
@@ -355,6 +372,30 @@ public class PlayerCombat : MonoBehaviour
         _handStateMachine.ChangeState(_swingState);
 
         Debug.Log("타격 애니메이션 완료: 공격 상태 복귀");
+    }
+
+    /// <summary>
+    /// Animation Event를 통해 스태미나 고갈 연출 완료 신호 수신
+    /// </summary>
+    public void NotifyTiredAnimationCompleted()
+    {
+        // TiredState가 아닌 경우 무시
+        if (_handStateMachine.CurrentState != _tiredState)
+        {
+            return;
+        }
+
+        // 이미 완료 신호를 전달했다면 무시
+        if (_hasNotifiedTiredAnimation)
+        {
+            return;
+        }
+
+        _hasNotifiedTiredAnimation = true;
+
+        Debug.Log("스태미나 고갈 연출 완료");
+
+        OnTiredAnimationCompleted?.Invoke();
     }
     #endregion
 }
