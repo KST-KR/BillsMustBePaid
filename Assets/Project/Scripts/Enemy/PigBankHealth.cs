@@ -28,10 +28,10 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
         
     }
 
-    public void TakePlayerAttack(float damage)
+    public void TakePlayerAttack(float damage, bool isCritical)
     {
         Debug.Log(
-        $"[피격 함수 진입] damage={damage}, " +
+        $"[피격 함수 진입] damage={damage}, critical={isCritical}, " +
         $"gameDataNull={_gameData == null}, currentHP={_currentHP}",
         this);
 
@@ -52,11 +52,12 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 
         _currentHP = Mathf.Max(0, _currentHP - damageAmount);
 
-        // 데미지 텍스트 표시 추가
+        // 크리티컬 여부에 따라 데미지 텍스트 표시
         if (DamageTextManager.Instance != null)
         {
             Vector3 spawnPos = transform.position + Vector3.up;
-            DamageTextManager.Instance.ShowDamage(damageAmount, spawnPos);
+
+            DamageTextManager.Instance.ShowDamage(damageAmount, spawnPos, isCritical);
         }
 
         // 피격시 색 변화
@@ -75,7 +76,7 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
             _gameData.HitMechanism.Execute(gameObject);
         }
 
-        Debug.Log($"{_gameData.PigBankName} 피격: 피해량 {damageAmount}, 남은 HP {_currentHP}");
+        Debug.Log($"{_gameData.PigBankName} 피격: 피해량 {damageAmount}, 크리티컬 여부 {isCritical}, 남은 HP {_currentHP}");
 
         if (_currentHP <= 0)
         {

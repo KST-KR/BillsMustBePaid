@@ -29,11 +29,17 @@ public class DamageTextManager : Singleton<DamageTextManager>
     #region Ä¿½ºÅÒ ÇÔ¼ö(public)
     public void ShowDamage(int damage, Vector3 worldPos)
     {
+        ShowDamage(damage, worldPos, false);
+    }
+
+    public void ShowDamage(int damage, Vector3 worldPos, bool isCritical)
+    {
         DamageText text = _pool.Count > 0 ? _pool.Dequeue() : Instantiate(_prefab, _canvasTransform);
 
         Vector3 randomOffset = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(0f, 0.3f), 0f);
+
         text.transform.position = worldPos + randomOffset;
-        text.Init(damage);
+        text.Init(damage, isCritical);
     }
 
     public void ReturnToPool(DamageText text)
@@ -43,7 +49,7 @@ public class DamageTextManager : Singleton<DamageTextManager>
             return;
         }
 
-        text.gameObject.SetActive(true);
+        text.gameObject.SetActive(false);
         _pool.Enqueue(text);
     }
     #endregion

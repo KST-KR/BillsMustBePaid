@@ -25,7 +25,7 @@ public class StageManager : Singleton<StageManager>
     #endregion
 
     #region 내부 변수
-    private PlayerStamina _playerStamina;
+    private PlayerCombat _playerCombat;
     private GameManager _gameManager;
 
     private int _currentStage;
@@ -36,9 +36,9 @@ public class StageManager : Singleton<StageManager>
 
     protected override void OnSingletonAwake()
     {
-        if (_playerStamina == null)
+        if (_playerCombat == null)
         {
-            _playerStamina = FindAnyObjectByType<PlayerStamina>();
+            _playerCombat = FindAnyObjectByType<PlayerCombat>();
         }
     }
 
@@ -49,12 +49,14 @@ public class StageManager : Singleton<StageManager>
             return;
         }
 
-        /// <summary>
-        /// 스태미나에 따른 스테이지 실패 이벤트 구독과 해제
-        /// </summary>
-        if (_playerStamina != null)
+        // Tired 애니메이션 완료 이벤트 구독
+        if (_playerCombat != null)
         {
-            _playerStamina.OnExhausted += HandleStaminaDepleted;
+            _playerCombat.OnTiredAnimationCompleted += HandleTiredAnimationCompleted;
+        }
+        else
+        {
+            Debug.LogError("PlayerCombat이 없음.");
         }
 
         _gameManager = GameManager.Instance;
@@ -64,18 +66,13 @@ public class StageManager : Singleton<StageManager>
             _gameManager.OnRunStarted += HandleRunStarted;
             _gameManager.OnRunEnded += HandleRunEnded;
         }
-
-        if (_playerStamina == null)
-        {
-            Debug.LogError("PlayerStamina가 없음.");
-        }
     }
 
     protected override void OnSingletonDestroy()
     {
-        if (_playerStamina != null)
+        if (_playerCombat != null)
         {
-            _playerStamina.OnExhausted -= HandleStaminaDepleted;
+            _playerCombat.OnTiredAnimationCompleted -= HandleTiredAnimationCompleted;
         }
 
         if (_gameManager != null)
@@ -84,13 +81,13 @@ public class StageManager : Singleton<StageManager>
             _gameManager.OnRunEnded -= HandleRunEnded;
         }
 
-        _playerStamina = null;
+        _playerCombat = null;
         _gameManager = null;
     }
     #endregion
 
     #region 커스텀 메서드 (Private)
-    private void HandleStaminaDepleted()
+    private void HandleTiredAnimationCompleted()
     {
         ClearStage();
     }

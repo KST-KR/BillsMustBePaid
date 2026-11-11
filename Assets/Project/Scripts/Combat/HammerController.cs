@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 망치의 장착 및 분리, 낙하 처리
+/// 망치의 장착 및 분리, 낙하 처리 (물리)
 /// </summary>
 public class HammerController : MonoBehaviour
 {
