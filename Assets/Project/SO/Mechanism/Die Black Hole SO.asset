@@ -16,3 +16,5 @@ MonoBehaviour:
   _pullDuration: 0.5
   _gatherOffset: 1.5
   _explosionDamage: 10
+  _blackHoleEffectPrefab: {fileID: 7604593539100019802, guid: cbb0d4022d399e0479eb796fddca7276, type: 3}
+  _effectDuration: 1.5
