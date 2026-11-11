@@ -144,11 +144,16 @@ public class GameSaveController : Singleton<GameSaveController>
     /// <param name="stageNumber"></param>
     private void HandleStageStarted(int stageNumber)
     {
+        // 새로운 스테이지가 시작되었으므로 내부 상태 초기화
         _isSavedForCurrentResult = false;
-
-        // 실제 스테이지가 시작되었으므로 스킬트리 전용 모드 해제
         _isSkillTreeOnlyMode = false;
         _savedStageInProgress = false;
+
+        // 저장 데이터 복원 중에는 자동 저장하지 않음
+        if (_isRestoringSaveData)
+        {
+            return;
+        }
 
         CacheManagers();
 
@@ -169,6 +174,11 @@ public class GameSaveController : Singleton<GameSaveController>
     /// </summary>
     private void HandleStageRewardSettled(int rewardGold, int totalGold)
     {
+        if (_isRestoringSaveData)
+        {
+            return;
+        }
+
         if (_isSavedForCurrentResult)
         {
             return;
@@ -280,7 +290,7 @@ public class GameSaveController : Singleton<GameSaveController>
         {
             saveData = _saveManager.LoadGame(slotIndex);
 
-            if (saveData == null)
+            if (saveData == null ||saveData.playerData == null || saveData.runData == null)
             {
                 Debug.LogError($"슬롯 {slotIndex}의 기존 저장 데이터를 읽지 못해 저장 중단");
                 return false;
