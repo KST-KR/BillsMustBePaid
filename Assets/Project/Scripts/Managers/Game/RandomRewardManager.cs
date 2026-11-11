@@ -7,6 +7,10 @@ using UnityEngine;
 /// </summary>
 public class RandomRewardManager : MonoBehaviour
 {
+    #region 상수
+    private const string CJackpotActiveSkillId = "ACT_02"; 
+    #endregion
+
     #region 내부변수
     private PigBankGameDataSO _pigData;
     private bool _isDead;
@@ -88,6 +92,13 @@ public class RandomRewardManager : MonoBehaviour
         int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetCurrentLevelBonusReward() : 0;
         int coinCount = _pigData.RewardCoin + levelBonus;
 
+        float activeBonusRate = GetActiveRewardBonusRate();
+        if (activeBonusRate > 0.0f)
+        {
+            coinCount = Mathf.CeilToInt(coinCount * (1.0f + activeBonusRate));
+            Debug.Log($"[Reward] ACT_02 스킬 보너스: +{activeBonusRate * 100.0f:0.#}% (Total {coinCount})");
+        }
+
         if (isJacpot)
         {
             coinCount *= 3;
@@ -164,6 +175,33 @@ public class RandomRewardManager : MonoBehaviour
             // 오브젝트 풀에서 코인 가져오기
             GameObject coin = CoinObjectPoolManager.Instance.GetCoin(type, coinSpawnPos, Quaternion.identity);
         }
+    }
+
+    private float GetActiveRewardBonusRate()
+    {
+        if (!ActiveSkillManager.HasInstance || !ActiveSkillManager.Instance.IsBuffActive(CJackpotActiveSkillId))
+        {
+            return 0.0f;
+        }
+
+        if (GrowthManager.Instance == null)
+        {
+            return 0.0f;
+        }
+
+        UpgradeData jackpotUpgrade = GrowthManager.Instance.GetUpgrade(CJackpotActiveSkillId);
+        if (jackpotUpgrade == null)
+        {
+            return 0.0f;
+        }
+
+        int level = GrowthManager.Instance.GetLevel(CJackpotActiveSkillId);
+        if (level <= 0)
+        {
+            return 0.0f;
+        }
+
+        return Mathf.Max(0.0f, jackpotUpgrade.ValuePerLevel * level);
     }
     #endregion
 

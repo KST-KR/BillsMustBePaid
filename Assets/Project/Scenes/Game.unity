@@ -7371,6 +7371,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 70000000000000000000000000000008, type: 2}
   - {fileID: 11400000, guid: c2f1fa1ee392c224e979cd278bcb94a7, type: 2}
   - {fileID: 11400000, guid: 4080a2e8abc97a6458537337ef794a35, type: 2}
+  - {fileID: 11400000, guid: 10cbe010748898c48aec850517ed01e7, type: 2}
   _skillSets:
   - {fileID: 11400000, guid: 741ba91d478b04942b20c56349df6e9d, type: 2}
   - {fileID: 11400000, guid: 44a4a51c76c7fe547930766a78e50de5, type: 2}

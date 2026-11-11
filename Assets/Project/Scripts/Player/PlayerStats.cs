@@ -8,6 +8,10 @@ using UnityEngine;
 /// </summary>
 public class PlayerStats : MonoBehaviour
 {
+    #region 상수
+    private const string CAttackSpeedActiveSkillId = "ACT_03"; 
+    #endregion
+
     #region 인스펙터
     [Header("기본 능력치")]
     [SerializeField] private float _baseAttackPower = 10f;
@@ -44,6 +48,7 @@ public class PlayerStats : MonoBehaviour
     private float _hammerCriticalChance;
     private float _hammerCriticalDamageBonus;
     private float _hammerStaminaDrainMultiplier = 1f;
+    private float _activeAttackSpeedBonusRate;
 
     private GrowthManager _growthManager;
     private LegacyShopManager _legacyShopManager;
@@ -58,7 +63,21 @@ public class PlayerStats : MonoBehaviour
     /// <summary>
     /// 최종 공격 간격
     /// </summary>
-    public float AttackInterval => Mathf.Max(_minAttackInterval, _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
+    public float AttackInterval
+    {
+        get
+        {
+            float baseInterval = Mathf.Max(_minAttackInterval,
+                _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
+
+            if (_activeAttackSpeedBonusRate <= 0f)
+            {
+                return baseInterval;
+            }
+
+            return Mathf.Max(_minAttackInterval, baseInterval / (1.0f + _activeAttackSpeedBonusRate));
+        }
+    }
 
     /// <summary>
     /// 최종 타격 판정 범위
@@ -109,6 +128,12 @@ public class PlayerStats : MonoBehaviour
     /// 구독 전에 발생한 변경분(먼저 끝난 불러오기 등)은 놓치므로,
     /// 성장값을 0으로 만든 뒤 GrowthManager가 보유 스킬을 다시 전달 하도록 요청
     /// </summary>
+    private void OnEnable()
+    {
+        InitActiveSkillEvents();
+        SyncActiveAttackSpeedState();
+    }
+
     private void Start()
     {
         _growthManager = GrowthManager.Instance;
@@ -129,6 +154,13 @@ public class PlayerStats : MonoBehaviour
         _growthManager.OnResetRunGrowth += ResetGrowth;
 
         RebuildGrowth();
+        InitActiveSkillEvents();
+        SyncActiveAttackSpeedState();
+    }
+
+    private void OnDisable()
+    {
+        InitActiveSkillEvents(false);
     }
 
     private void OnDestroy()
@@ -321,6 +353,86 @@ public class PlayerStats : MonoBehaviour
         _criticalChanceGrowth = 0f;
         _luckGrowth = 0f;
         _maxStaminaGrowth = 0f;
+    }
+
+    private void InitActiveSkillEvents(bool isAdd = true)
+    {
+        if (!ActiveSkillManager.HasInstance)
+        {
+            return;
+        }
+
+        ActiveSkillManager.Instance.OnActiveBuffStarted -= HandleActiveBuffStarted;
+        ActiveSkillManager.Instance.OnActiveBuffRefreshed -= HandleActiveBuffRefreshed;
+        ActiveSkillManager.Instance.OnActiveBuffEnded -= HandleActiveBuffEnded;
+
+        if (isAdd)
+        {
+            ActiveSkillManager.Instance.OnActiveBuffStarted += HandleActiveBuffStarted;
+            ActiveSkillManager.Instance.OnActiveBuffRefreshed += HandleActiveBuffRefreshed;
+            ActiveSkillManager.Instance.OnActiveBuffEnded += HandleActiveBuffEnded;
+        }
+    }
+
+    private void SyncActiveAttackSpeedState()
+    {
+        if (!ActiveSkillManager.HasInstance)
+        {
+            _activeAttackSpeedBonusRate = 0f;
+            return;
+        }
+
+        bool isBuffActive = ActiveSkillManager.Instance.IsBuffActive(CAttackSpeedActiveSkillId);
+        ActionACT03(CAttackSpeedActiveSkillId, isBuffActive);
+    }
+
+    private void ActionACT03(string upgradeId, bool isActive)
+    {
+        if (upgradeId != CAttackSpeedActiveSkillId)
+        {
+            return;
+        }
+
+        float previous = _activeAttackSpeedBonusRate;
+        _activeAttackSpeedBonusRate = isActive ? GetACT03BonusRate() : 0f;
+
+        if (!Mathf.Approximately(previous, _activeAttackSpeedBonusRate))
+        {
+            OnStateChanged?.Invoke();
+        }
+    }
+
+    private float GetACT03BonusRate()
+    {
+        GrowthManager growthManager = GrowthManager.Instance;
+        if (growthManager == null)
+        {
+            return 0f;
+        }
+
+        UpgradeData upgrade = growthManager.GetUpgrade(CAttackSpeedActiveSkillId);
+        int level = growthManager.GetLevel(CAttackSpeedActiveSkillId);
+        if (upgrade == null || level <= 0)
+        {
+            return 0f;
+        }
+
+        return Mathf.Max(0f, upgrade.ValuePerLevel * level);
+    }
+
+    private void HandleActiveBuffStarted(string upgradeId, float duration)
+    {
+        ActionACT03(upgradeId, true);
+    }
+
+    private void HandleActiveBuffRefreshed(string upgradeId, float duration)
+    {
+        ActionACT03(upgradeId, true);
+    }
+
+    private void HandleActiveBuffEnded(string upgradeId)
+    {
+        ActionACT03(upgradeId, false);
     }
     #endregion
 }
