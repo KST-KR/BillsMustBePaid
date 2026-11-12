@@ -65,6 +65,11 @@ public class SaveManager : PersistentSingleton<SaveManager>
             saveDate.runData.runGrowth = new RunGrowthSaveData();
         }
 
+        if (saveDate.runData.runPerks == null)
+        {
+            saveDate.runData.runPerks = new RunPerkSaveData();
+        }
+
         // 장비 저장 데이터 확인
         if (saveDate.runData.equipmentData == null)
         {
@@ -222,6 +227,7 @@ public class SaveManager : PersistentSingleton<SaveManager>
         saveData.runData.currentGold = 0;
         saveData.runData.currentStamina = 0.0f;
         saveData.runData.runGrowth = new RunGrowthSaveData();
+        saveData.runData.runPerks = new RunPerkSaveData();
         saveData.runData.equipmentData = new EquipmentSaveData();
 
         if (!SaveGame(saveData))

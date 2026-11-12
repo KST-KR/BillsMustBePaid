@@ -15,7 +15,6 @@ public class SaveSlotData
     public PlayerSaveData playerData;
     // 게임을 종료했다가 다시 실행했을 때 이어할 진행 데이터 보관
     public RunSaveData runData;
-
     public SaveSlotData()
     {
         playerData = new PlayerSaveData();

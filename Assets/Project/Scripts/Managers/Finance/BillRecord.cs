@@ -37,8 +37,6 @@ public class BillRecord
     public EBillPenaltyType PenaltyType { get; private set; }
     public float PenaltyRate { get; private set; }
     public int PerkRewardCount { get; private set; }
-    public float LegacyPointRate { get; private set; }
-    public float EarlyPaymentBonus { get; private set; }
     public EBillStatus Status { get; private set; }
 
     /// <summary>
@@ -58,8 +56,6 @@ public class BillRecord
         PenaltyType = billData.PenaltyType;
         PenaltyRate = billData.GetPenaltyRate(cycle);
         PerkRewardCount = billData.PerkRewardCount;
-        LegacyPointRate = billData.LegacyPointRate;
-        EarlyPaymentBonus = billData.EarlyPaymentBonus;
         Status = EBillStatus.Unpaid;
     }
 
@@ -77,8 +73,6 @@ public class BillRecord
         PenaltyType = EBillPenaltyType.IncomeDeduction;
         PenaltyRate = penaltyRate;
         PerkRewardCount = 0;
-        LegacyPointRate = 0.0f;
-        EarlyPaymentBonus = 0.0f;
         Status = EBillStatus.Unpaid;
     }
 

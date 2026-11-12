@@ -16,6 +16,7 @@ public class RunSaveData
     public float currentStamina;
 
     public RunGrowthSaveData runGrowth;
+    public RunPerkSaveData runPerks;
 
     // 장비저장 데이터
     public EquipmentSaveData equipmentData;
@@ -23,6 +24,7 @@ public class RunSaveData
     public RunSaveData()
     {
         runGrowth = new RunGrowthSaveData();
+        runPerks = new RunPerkSaveData();
         equipmentData = new EquipmentSaveData();
     }
 }

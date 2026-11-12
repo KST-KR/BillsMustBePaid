@@ -304,7 +304,11 @@ public class GameSaveController : Singleton<GameSaveController>
 
         // 현재 플레이어의 영구 재화 정보
         saveData.playerData.legacyPoints = _currencyManager.LegacyPoints;
-
+        if (LegacyShopManager.Instance != null)
+        {
+            saveData.playerData.permanentGrowth = LegacyShopManager.Instance.ExportSaveData(
+                saveData.playerData.permanentGrowth);
+        }
         if (RoguelikeManager.Instance != null)
         {
             saveData.playerData.bankruptcyCycle = RoguelikeManager.Instance.CycleCount;
@@ -327,6 +331,7 @@ public class GameSaveController : Singleton<GameSaveController>
         saveData.runData.currentStamina = 0f;
 
         saveData.runData.runGrowth = _growthManager.ExportSaveData();
+        saveData.runData.runPerks = PerkManager.Instance != null ? PerkManager.Instance.ExportSaveData() : new RunPerkSaveData();
 
         // 장비 데이터 저장
         if (_equipmentManager == null || _playerEquipment == null)
