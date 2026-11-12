@@ -19,7 +19,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
     [SerializeField] private bool _isHammerOwned;
 
     [Header("HUD 계층")]
-    [SerializeField] private GameObject _hammerIconObject;
     [SerializeField] private GameObject _ringIconObject;
     [SerializeField] private GameObject _ringPopupObject;
     [SerializeField] private RectTransform _ringPopupRect;
@@ -48,7 +47,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
         RectTransform tooltip, TMP_Text tooltipTitle, TMP_Text tooltipDescription)
     {
         _legacyShopManager = manager;
-        _hammerIconObject = hammerIcon;
         _ringIconObject = ringIcon;
         _ringPopupObject = ringPopup;
         _ringPopupRect = popupRect;
@@ -227,10 +225,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
             (_billManager != null && _billManager.HasExpiredBills);
 
         bool hasRings = HasOwnedRing();
-        if (_hammerIconObject != null)
-        {
-            _hammerIconObject.SetActive(_isEventVisible && _isHammerOwned);
-        }
 
         if (_ringIconObject != null)
         {
