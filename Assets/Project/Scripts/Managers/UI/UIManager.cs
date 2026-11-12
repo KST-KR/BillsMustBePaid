@@ -59,6 +59,9 @@ public class UIManager : Singleton<UIManager>
     [Header("업그레이드 화면 재화 UI")]
     [SerializeField] private TMP_Text _upgradeGoldText;
     [SerializeField] private TMP_Text _upgradeLegacyPointText;
+
+    [Header("플레이어 스테이터스 HUD")]
+    [SerializeField] private PlayerStatsHud _playerStatsHud;
     #endregion
 
     #region 내부 변수
@@ -459,6 +462,13 @@ public class UIManager : Singleton<UIManager>
 
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_upgradePanel, true);
+
+        // 플레이어 스테이터스 아이콘 표시
+        if (_playerStatsHud != null)
+        {
+            _playerStatsHud.SetVisible(true);
+        }
+
         SetPanelActive(_growthSkillTreePanel, selectedSection == _growthSkillTreePanel);
         SetPanelActive(_billPanel, selectedSection == _billPanel);
         SetPanelActive(_shopPanel, selectedSection == _shopPanel);
@@ -633,9 +643,13 @@ public class UIManager : Singleton<UIManager>
 
         SetPanelActive(_stageClearPanel, true);
 
-        int lateFee = _stageRewardManager != null 
-            ? _stageRewardManager.StagePenaltyGold 
-            : 0;
+        // 플레이어 스테이터스 아이콘 표시
+        if (_playerStatsHud != null)
+        {
+            _playerStatsHud.SetVisible(true);
+        }
+
+        int lateFee = _stageRewardManager != null ? _stageRewardManager.StagePenaltyGold : 0;
 
         UpdateLateFeeUI(lateFee);
 
@@ -671,10 +685,18 @@ public class UIManager : Singleton<UIManager>
     public void HideAllPanels()
     {
         HidePauseUI();
+
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_gameOverPanel, false);
         SetPanelActive(_upgradePanel, false);
+
         SetStaminaUIVisible(false);
+
+        // 플레이어 스테이터스 아이콘 숨김
+        if (_playerStatsHud != null)
+        {
+            _playerStatsHud.SetVisible(false);
+        }
     }
 
     /// <summary>
