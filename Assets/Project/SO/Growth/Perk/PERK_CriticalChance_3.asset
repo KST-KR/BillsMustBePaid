@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa6f334f960bb8749b9a70afc5f5a45c, type: 3}
+  m_Name: PERK_CriticalChance_3
+  m_EditorClassIdentifier: 
+  _perkId: PERK_CriticalChance_3
+  _displayName: "\uCE58\uBA85 \uAC15\uD654 3\uB2E8\uACC4"
+  _targetStat: 5
+  _valueMode: 0
+  _value: 0.08
+  _tier: 3
+  _icon: {fileID: 21300000, guid: ad7762a3611c3db40b044e70155d0def, type: 3}

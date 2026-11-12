@@ -51,8 +51,6 @@ public class BillData : ScriptableObject
         : _billAmounts != null ? _billAmounts.Length : 0;
     public EBillPenaltyType PenaltyType => _penaltyType;
     public int PerkRewardCount => _perkRewardCount;
-    public float LegacyPointRate => _legacyPointRate;
-    public float EarlyPaymentBonus => _earlyPaymentBonus;
     public int MaxIssues => _maxIssues;
     #endregion
 
@@ -66,8 +64,6 @@ public class BillData : ScriptableObject
     // 구버전 에셋 호환용 기본 패널티율. 새 데이터는 회차별 BillIssueData에 저장.
     [SerializeField, HideInInspector, Min(0.0f)] private float _penaltyRate;
     [SerializeField, Min(0)] private int _perkRewardCount;
-    [SerializeField, Min(0.0f)] private float _legacyPointRate;
-    [SerializeField, Min(0.0f)] private float _earlyPaymentBonus;
     [SerializeField, Min(1)] private int _maxIssues = 1;
     // 구버전 에셋을 새 모델로 옮기기 위한 숨김 필드. 재저장 이후에는 비워짐.
     [SerializeField, HideInInspector] private int[] _billAmounts = new int[0];

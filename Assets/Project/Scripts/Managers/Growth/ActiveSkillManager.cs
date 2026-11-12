@@ -70,6 +70,11 @@ public sealed class ActiveSkillManager : Singleton<ActiveSkillManager>
         {
             _growthManager.OnGrowthChanged -= HandleGrowthChanged;
         }
+
+        if (_stageManager != null)
+        {
+            _stageManager.OnStageStarted -= ClearActiveSkill;
+        }
     }
 
     private void Update()
@@ -160,6 +165,29 @@ public sealed class ActiveSkillManager : Singleton<ActiveSkillManager>
         return true;
     }
 
+    public void InitSkillCooldown()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            SlotState slot = _slots[i];
+            if (slot.Skill == null)
+            {
+                continue;
+            }
+            float cooldown = _growthManager.GetActiveSkillCooldownSec(slot.Skill.UpgradeId);
+            slot.CooldownDuration = cooldown;
+            slot.CooldownRemaining = 0.0f;            
+        }
+
+        for (int i = 0; i < _activeBuffs.Count; i++)
+        {
+            NotifyBuffEnded(_activeBuffs[i].Skill);
+        }
+
+        _activeBuffs.Clear();
+        OnSlotDataChanged?.Invoke();
+    }
+
     public int GetActiveBuffCount()
     {
         return _activeBuffs.Count;
@@ -239,8 +267,16 @@ public sealed class ActiveSkillManager : Singleton<ActiveSkillManager>
 
         if (_stageManager == null)
         {
-            _stageManager = StageManager.Instance;
+            _stageManager = StageManager.Instance;            
         }
+
+        // 스테이지 시작시 쿨타임을 초기화 합니다
+        _stageManager.OnStageStarted += ClearActiveSkill;
+    }
+
+    private void ClearActiveSkill(int stageNumber)
+    {
+        InitSkillCooldown();
     }
 
     private void HandleGrowthChanged()

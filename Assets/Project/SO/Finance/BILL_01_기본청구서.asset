@@ -67,9 +67,7 @@ MonoBehaviour:
     _penaltyRate: 0.35
   _penaltyType: 1
   _penaltyRate: 0.1
-  _perkRewardCount: 1
-  _legacyPointRate: 0
-  _earlyPaymentBonus: 0
+  _perkRewardCount: 3
   _maxIssues: 12
   _billAmounts: 
   _billCategories: []
