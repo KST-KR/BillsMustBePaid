@@ -66,6 +66,10 @@ MonoBehaviour:
   _torqueMin: 1
   _torqueMax: 3
   _removeTime: 2
+  _pickUpTime: 0.35
+  _absorbViewportPos: {x: 0.5, y: -0.3}
+  _absorbDepthFromCam: 2
+  _absorbArcHeight: 0.35
 --- !u!1 &8023213249282533124
 GameObject:
   m_ObjectHideFlags: 0

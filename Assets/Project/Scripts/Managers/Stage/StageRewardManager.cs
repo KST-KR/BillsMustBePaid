@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using static CoinObjectPoolManager;
 
 [Serializable]
 public struct CrashLevelInfo
@@ -60,6 +61,9 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     private bool _isSettled;
     private bool _isSubscribed;
+
+    public int EarnedSilverCoinCount { get; private set; }
+    public int EarnedGoldCoinCount { get; private set; }
     #endregion
 
     #region 이벤트 함수
@@ -212,6 +216,32 @@ public class StageRewardManager : Singleton<StageRewardManager>
     #endregion
 
     #region 커스텀 메서드 (Public)
+
+    /// <summary>
+    /// 스테이지 시작 시 획득 코인 개수 초기화
+    /// </summary>
+    public void ResetEarnedCoinCounts()
+    {
+        EarnedSilverCoinCount = 0;
+        EarnedGoldCoinCount = 0;
+    }
+
+    /// <summary>
+    /// 코인이 카메라로 흡수될 때 타입별 획득 개수 증가
+    /// </summary>
+    public void AddEarnedCoinCount(CoinObjectPoolManager.CoinType coinType, int amount = 1)
+    {
+        switch (coinType)
+        {
+            case CoinObjectPoolManager.CoinType.SILVER:
+                EarnedSilverCoinCount += amount;
+                break;
+
+            case CoinObjectPoolManager.CoinType.GOLD:
+                EarnedGoldCoinCount += amount;
+                break;
+        }
+    }
 
     /// <summary>
     /// 돼지 저금통이 파괴될 때 호출되어 누적 횟수와 레벨업을 관리

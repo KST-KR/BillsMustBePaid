@@ -18,6 +18,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
     #region 내부 변수
     private Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDistionary = new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
     private Dictionary<PigBankGameDataSO, Transform> _rootDistionary = new Dictionary<PigBankGameDataSO, Transform>();
+    private List<GameObject> _activePigs = new List<GameObject>();
     #endregion
 
     #region 이벤트
@@ -53,6 +54,11 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         pig.transform.SetParent(null);
         pig.SetActive(true);
 
+        if (!_activePigs.Contains(pig))
+        {
+            _activePigs.Add(pig);
+        }
+
         // 돼지 저금통 체력 초기화
         PigBankHealth health = pig.GetComponent<PigBankHealth>();
 
@@ -82,7 +88,9 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 
     public void ReturnPigBank(PigBankGameDataSO pigData, GameObject pig)
     {
-        if(!_poolDistionary.ContainsKey(pigData))
+        _activePigs.Remove(pig);
+
+        if (!_poolDistionary.ContainsKey(pigData))
         {
             return;
         }

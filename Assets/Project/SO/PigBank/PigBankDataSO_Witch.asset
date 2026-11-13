@@ -24,3 +24,4 @@ MonoBehaviour:
   _specialCoinChance: 0.02
   _spawnProbability: 20
   _hitMechanism: {fileID: 11400000, guid: 584d0defec4c96a4e948a8f41a1f75f1, type: 2}
+  _dieMechanism: {fileID: 0}

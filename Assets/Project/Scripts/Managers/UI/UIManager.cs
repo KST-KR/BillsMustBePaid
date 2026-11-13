@@ -51,6 +51,8 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TMP_Text _resultNetIncomeText;
     [SerializeField] private GameObject _lateFeePanel;
     [SerializeField] private TMP_Text _lateFeeText;
+    [SerializeField] private TMP_Text _resultSilverCoinText;
+    [SerializeField] private TMP_Text _resultGoldCoinText;
 
     [Header("결과 화면 정확도 UI")]
     [SerializeField] private PlayerAccuracy _playerAccuracy;
@@ -666,6 +668,11 @@ public class UIManager : Singleton<UIManager>
         {
             UpdateResultTotalGoldUI(_currencyManager.Gold);
         }
+
+        if (_stageRewardManager != null)
+        {
+            UpdateResultCoinCountUI(_stageRewardManager.EarnedSilverCoinCount, _stageRewardManager.EarnedGoldCoinCount);
+        }
     }
 
     /// <summary>
@@ -756,6 +763,22 @@ public class UIManager : Singleton<UIManager>
         if (_resultTotalGoldText != null)
         {
             _resultTotalGoldText.text = "$ " + NumberFormatter.FormatCompact(amount);
+        }
+    }
+
+    /// <summary>
+    /// 몇개의 코인을 얻었는지 UI 표시
+    /// </summary>
+    public void UpdateResultCoinCountUI(int silverCount, int goldCount)
+    {
+        if (_resultSilverCoinText != null)
+        {
+            _resultSilverCoinText.text = silverCount.ToString("D3");
+        }
+
+        if (_resultGoldCoinText != null)
+        {
+            _resultGoldCoinText.text = goldCount.ToString("D3");
         }
     }
 
