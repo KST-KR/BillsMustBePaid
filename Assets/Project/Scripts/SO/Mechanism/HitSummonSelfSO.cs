@@ -35,7 +35,12 @@ public class HitSummonSelfSO : MechanismSO
 
            if(PigBankObjectPoolManager.Instance != null )
             {
-                PigBankObjectPoolManager.Instance.SpawnPigBank(_cloneDate.ID, spawnPos, target.transform.rotation);
+                GameObject clone = PigBankObjectPoolManager.Instance.SpawnPigBank(_cloneDate.ID, spawnPos, target.transform.rotation);
+
+                if (clone != null && SpawnPigBankManager.Instance != null)
+                {
+                    SpawnPigBankManager.Instance.RegisterPigBank(clone);
+                }
             }
         }
     }
