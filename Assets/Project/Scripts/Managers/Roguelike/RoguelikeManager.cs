@@ -80,6 +80,10 @@ public class RoguelikeManager : Singleton<RoguelikeManager>
         {
             GrowthManager.Instance.ResetRunGrowth();
         }
+        if (PerkManager.Instance != null)
+        {
+            PerkManager.Instance.ResetRunPerks();
+        }
         BillManager.Instance.ResetRunBills();
 
         if (!SceneTransitionManager.Instance.LoadLegacyShopScene())

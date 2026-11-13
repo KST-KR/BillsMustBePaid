@@ -141,6 +141,11 @@ public class GameSceneBootstrap : MonoBehaviour
                 GrowthManager.Instance.ResetRunGrowth();
             }
 
+            if (PerkManager.Instance != null)
+            {
+                PerkManager.Instance.ResetRunPerks();
+            }
+
             if (BillManager.Instance != null)
             {
                 BillManager.Instance.ResetRunBills();

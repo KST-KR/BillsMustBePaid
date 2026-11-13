@@ -50,6 +50,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     private StageManager _stageManager;
     private CurrencyManager _currencyManager;
+    private PerkManager _perkManager;
 
     private int _stageRewardGold;
     private int _stagePenaltyGold;
@@ -91,6 +92,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
         _stageManager = StageManager.Instance;
         _currencyManager = CurrencyManager.Instance;
+        _perkManager = PerkManager.Instance;
 
         if (_stageManager != null)
         {
@@ -168,6 +170,16 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
         // 1. 기본 스테이지 보상
         int baseRewardGold = _stageRewardGold;
+        if (_perkManager == null)
+        {
+            _perkManager = PerkManager.Instance;
+        }
+        if (_perkManager != null)
+        {
+            float rewardRate = Mathf.Max(0.0f, _perkManager.GetTotalPercent(EPerkTargetStat.Reward));
+            float rewardFlat = Mathf.Max(0.0f, _perkManager.GetTotalFlat(EPerkTargetStat.Reward));
+            baseRewardGold = Mathf.Max(0, Mathf.RoundToInt((baseRewardGold + rewardFlat) * (1.0f + rewardRate)));
+        }
 
         // 2. 정확도에 비례해 기본 보상의 최대 10%까지 보너스 지급
         float accuracy = _playerAccuracy != null ? _playerAccuracy.Accuracy : 100f;
