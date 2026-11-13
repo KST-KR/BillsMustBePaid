@@ -17,10 +17,11 @@ MonoBehaviour:
   _pigBankHP: 340
   _moveSpeed: 7
   _pigPrefab: {fileID: 591498668345207895, guid: 1071b2888afd5644995117073d8ddf5e, type: 3}
-  _crashLevel: 9
+  _crashLevel: 0
   _rewardCoin: 300
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
-  _spawnProbability: 20
+  _spawnProbability: 90
   _hitMechanism: {fileID: 11400000, guid: 584d0defec4c96a4e948a8f41a1f75f1, type: 2}
+  _dieMechanism: {fileID: 0}

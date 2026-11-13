@@ -5,9 +5,9 @@ using UnityEngine;
 /// <summary>
 /// 필드위 돼지 저금통 스폰 관리
 /// </summary>
-public class SpawnPigBankManager : MonoBehaviour
-{
-    #region 인스펙터
+public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
+{ 
+#region 인스펙터
     [Header("데이터 베이스 참조")]
     [SerializeField] private PigBankDataBaseSO _pigDatabase;
 
@@ -69,6 +69,16 @@ public class SpawnPigBankManager : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(_spawnPoint.position, _spawnRadius);
+    }
+    #endregion
+
+    #region 커스텀 메소드 (public)
+    public void RegisterPigBank(GameObject pig)
+    {
+        if (pig != null && !_spawnedPigBanks.Contains(pig))
+        {
+            _spawnedPigBanks.Add(pig);
+        }
     }
     #endregion
 

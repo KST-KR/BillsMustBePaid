@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b002f124b9c1c747a1209100bf5ba4d, type: 3}
   m_Name: PigBankDataSO_Witch_Clone
   m_EditorClassIdentifier: 
-  _id: PigBank_Witch
-  _pigBankName: Witch
+  _id: PigBank_Witch_Clone
+  _pigBankName: Witch_Clone
   _pigBankHP: 340
   _moveSpeed: 7
   _pigPrefab: {fileID: 591498668345207895, guid: 1071b2888afd5644995117073d8ddf5e, type: 3}
-  _crashLevel: 9
+  _crashLevel: 0
   _rewardCoin: 300
   _jackpotChance: 0.05
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
-  _spawnProbability: 20
+  _spawnProbability: 0
   _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}
