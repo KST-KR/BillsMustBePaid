@@ -97,7 +97,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         int calculatedCount = _baseSpawnCount + ((stageNumber - 1) / step) * _addCountPerStep;
 
-        return Mathf.Min(_baseSpawnCount + calculatedCount, _maxSpawnCount);
+        return Mathf.Min(calculatedCount, _maxSpawnCount);
     }
 
     /// <summary>

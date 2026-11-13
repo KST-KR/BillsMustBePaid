@@ -31294,8 +31294,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
   _spawnPoint: {fileID: 1958309167}
-  _baseSpawnCount: 3
-  _addCountPerStage: 1
+  _baseSpawnCount: 5
+  _stageStep: 2
+  _addCountPerStep: 1
   _maxSpawnCount: 15
   _respawnTime: 0.5
   _spawnAreaSize: {x: 45, y: 20}
