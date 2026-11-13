@@ -50,15 +50,34 @@ public class PlayerStats : MonoBehaviour
     private float _hammerStaminaDrainMultiplier = 1f;
     private float _activeAttackSpeedBonusRate;
 
+    private float _perkAttackFlat;
+    private float _perkAttackRate;
+    private float _perkAttackSpeedFlat;
+    private float _perkAttackSpeedRate;
+    private float _perkAttackRangeFlat;
+    private float _perkAttackRangeRate;
+    private float _perkCriticalFlat;
+    private float _perkCriticalRate;
+    private float _perkStaminaFlat;
+    private float _perkStaminaRate;
+
     private GrowthManager _growthManager;
     private LegacyShopManager _legacyShopManager;
+    private PerkManager _perkManager;
     #endregion
 
     #region 프로퍼티
     /// <summary>
     /// 최종 공격력
     /// </summary>
-    public float AttackPower => _baseAttackPower + _attackPowerGrowth + _hammerAttackPower + GetLegacyShopBonus(EUpgradeStat.Attack);
+    public float AttackPower
+    {
+        get
+        {
+            float baseValue = _baseAttackPower + _attackPowerGrowth + _hammerAttackPower + GetLegacyShopBonus(EUpgradeStat.Attack);
+            return (baseValue + _perkAttackFlat) * (1.0f + Mathf.Max(0.0f, _perkAttackRate));
+        }
+    }
 
     /// <summary>
     /// 최종 공격 간격
@@ -69,6 +88,8 @@ public class PlayerStats : MonoBehaviour
         {
             float baseInterval = Mathf.Max(_minAttackInterval,
                 _baseAttackInterval + _attackIntervalGrowth + _hammerAttackInterval + GetLegacyShopBonus(EUpgradeStat.AttackSpeed));
+            baseInterval = Mathf.Max(_minAttackInterval, baseInterval - Mathf.Max(0.0f, _perkAttackSpeedFlat));
+            baseInterval = Mathf.Max(_minAttackInterval, baseInterval / (1.0f + Mathf.Max(0.0f, _perkAttackSpeedRate)));
 
             if (_activeAttackSpeedBonusRate <= 0f)
             {
@@ -82,12 +103,26 @@ public class PlayerStats : MonoBehaviour
     /// <summary>
     /// 최종 타격 판정 범위
     /// </summary>
-    public float AttackRange => Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + _hammerAttackRange + GetLegacyShopBonus(EUpgradeStat.AttackRange));
+    public float AttackRange
+    {
+        get
+        {
+            float baseValue = Mathf.Max(_minAttackRange, _baseAttackRange + _attackRangeGrowth + _hammerAttackRange + GetLegacyShopBonus(EUpgradeStat.AttackRange));
+            return Mathf.Max(_minAttackRange, (baseValue + _perkAttackRangeFlat) * (1.0f + Mathf.Max(0.0f, _perkAttackRangeRate)));
+        }
+    }
 
     /// <summary>
     /// 최종 치명타 확률
     /// </summary>
-    public float CriticalChance => Mathf.Clamp01(_baseCriticalChance + _criticalChanceGrowth + _hammerCriticalChance + GetLegacyShopBonus(EUpgradeStat.CriticalChance));
+    public float CriticalChance
+    {
+        get
+        {
+            float baseValue = _baseCriticalChance + _criticalChanceGrowth + _hammerCriticalChance + GetLegacyShopBonus(EUpgradeStat.CriticalChance);
+            return Mathf.Clamp01((baseValue + _perkCriticalFlat) * (1.0f + Mathf.Max(0.0f, _perkCriticalRate)));
+        }
+    }
 
     /// <summary>
     /// 최종 치명타 피해 배율
@@ -97,7 +132,7 @@ public class PlayerStats : MonoBehaviour
     public float Luck => _baseLuck + _luckGrowth + GetLegacyShopBonus(EUpgradeStat.Luck);
 
     public float MaxStamina => Mathf.Max(_minMaxStamina,
-        _baseMaxStamina + _maxStaminaGrowth + GetLegacyShopBonus(EUpgradeStat.Stamina));
+        (_baseMaxStamina + _maxStaminaGrowth + GetLegacyShopBonus(EUpgradeStat.Stamina) + _perkStaminaFlat) * (1.0f + Mathf.Max(0.0f, _perkStaminaRate)));
 
     /// <summary>
     /// 장착한 망치의 스태미나 소모 배율
@@ -138,6 +173,7 @@ public class PlayerStats : MonoBehaviour
     {
         _growthManager = GrowthManager.Instance;
         _legacyShopManager = LegacyShopManager.Instance;
+        _perkManager = PerkManager.Instance;
 
         if (_legacyShopManager != null)
         {
@@ -153,7 +189,13 @@ public class PlayerStats : MonoBehaviour
         _growthManager.OnApplyStatGrowth += HandleApplyStatGrowth;
         _growthManager.OnResetRunGrowth += ResetGrowth;
 
+        if (_perkManager != null)
+        {
+            _perkManager.OnPerkStateChanged += HandlePerkStateChanged;
+        }
+
         RebuildGrowth();
+        RebuildPerkEffects();
         InitActiveSkillEvents();
         SyncActiveAttackSpeedState();
     }
@@ -172,6 +214,12 @@ public class PlayerStats : MonoBehaviour
             _growthManager = null;
         }
 
+        if (_perkManager != null)
+        {
+            _perkManager.OnPerkStateChanged -= HandlePerkStateChanged;
+            _perkManager = null;
+        }
+
         if (_legacyShopManager != null)
         {
             _legacyShopManager.OnOwnershipDataChanged -= HandleLegacyShopDataChanged;
@@ -188,6 +236,7 @@ public class PlayerStats : MonoBehaviour
     public void ResetGrowth()
     {
         ClearGrowthValues();
+        ClearPerkValues();
         OnStateChanged?.Invoke();
     }
 
@@ -353,6 +402,51 @@ public class PlayerStats : MonoBehaviour
         _criticalChanceGrowth = 0f;
         _luckGrowth = 0f;
         _maxStaminaGrowth = 0f;
+    }
+
+    private void HandlePerkStateChanged()
+    {
+        RebuildPerkEffects();
+        OnStateChanged?.Invoke();
+    }
+
+    private void RebuildPerkEffects()
+    {
+        if (_perkManager == null)
+        {
+            _perkManager = PerkManager.Instance;
+        }
+
+        ClearPerkValues();
+        if (_perkManager == null)
+        {
+            return;
+        }
+
+        _perkAttackFlat = _perkManager.GetTotalFlat(EPerkTargetStat.Attack);
+        _perkAttackRate = _perkManager.GetTotalPercent(EPerkTargetStat.Attack);
+        _perkAttackSpeedFlat = _perkManager.GetTotalFlat(EPerkTargetStat.AttackSpeed);
+        _perkAttackSpeedRate = _perkManager.GetTotalPercent(EPerkTargetStat.AttackSpeed);
+        _perkAttackRangeFlat = _perkManager.GetTotalFlat(EPerkTargetStat.AttackRange);
+        _perkAttackRangeRate = _perkManager.GetTotalPercent(EPerkTargetStat.AttackRange);
+        _perkCriticalFlat = _perkManager.GetTotalFlat(EPerkTargetStat.CriticalChance);
+        _perkCriticalRate = _perkManager.GetTotalPercent(EPerkTargetStat.CriticalChance);
+        _perkStaminaFlat = _perkManager.GetTotalFlat(EPerkTargetStat.Stamina);
+        _perkStaminaRate = _perkManager.GetTotalPercent(EPerkTargetStat.Stamina);
+    }
+
+    private void ClearPerkValues()
+    {
+        _perkAttackFlat = 0.0f;
+        _perkAttackRate = 0.0f;
+        _perkAttackSpeedFlat = 0.0f;
+        _perkAttackSpeedRate = 0.0f;
+        _perkAttackRangeFlat = 0.0f;
+        _perkAttackRangeRate = 0.0f;
+        _perkCriticalFlat = 0.0f;
+        _perkCriticalRate = 0.0f;
+        _perkStaminaFlat = 0.0f;
+        _perkStaminaRate = 0.0f;
     }
 
     private void InitActiveSkillEvents(bool isAdd = true)
