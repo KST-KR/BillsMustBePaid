@@ -14,21 +14,40 @@ public class CoinBounce : MonoBehaviour
 
     [Header("테이블 위에 있다가 정리 되는 시간")]
     [SerializeField] private float _removeTime = 2.0f;
+
+    [Header("코인 흡수 연출 설정")]
+    [SerializeField] private float _pickUpTime = 0.25f;
+    [SerializeField] private Vector2 _absorbViewportPos = new Vector2(0.1f, -0.3f);
+    [SerializeField] private float _absorbDepthFromCam = 2.0f;
+    [SerializeField] private float _absorbArcHeight = 0.35f;
     #endregion
 
     #region 내부 변수
     private Coroutine _bounceCoroutine;
     private CoinItem _coinItem;
+    private Vector3 _scale;
+    private Vector3 _cachedAbsorbTarget;
     #endregion
 
     #region 이벤트 함수
     private void Awake()
     {
         _coinItem = GetComponent<CoinItem>();
+        _scale = transform.localScale;
+    }
+
+    private void Start()
+    {
+        if (Camera.main != null)
+        {
+            Vector3 viewportPoint = new Vector3(_absorbViewportPos.x, _absorbViewportPos.y, _absorbDepthFromCam);
+            _cachedAbsorbTarget = Camera.main.ViewportToWorldPoint(viewportPoint);
+        }
     }
 
     private void OnEnable()
     {
+        transform.localScale = _scale;
         _bounceCoroutine = StartCoroutine(BounceRoutine());
     }
     #endregion
@@ -40,7 +59,7 @@ public class CoinBounce : MonoBehaviour
 
         // 랜덤 방향과 거리를 이용해 최종 안착할 목표 지점 계산
         Vector2 randomDir = UnityEngine.Random.insideUnitCircle.normalized;
-        float randomDistance = UnityEngine.Random.Range(_maxDistance, _maxDistance);
+        float randomDistance = UnityEngine.Random.Range(_minDistance, _maxDistance);
         Vector3 targetPos = startPos + new Vector3(randomDir.x, 0, randomDir.y) * randomDistance;
 
         targetPos.y = 1.6f;
@@ -97,6 +116,32 @@ public class CoinBounce : MonoBehaviour
         {
             waitElapsedTime += Time.deltaTime;
             yield return null;
+        }
+          
+        float absorbElapsed = 0f;
+        Vector3 absorbStartPos = transform.position;
+
+        while(absorbElapsed < _pickUpTime)
+        {
+            absorbElapsed += Time.deltaTime;
+            float rawT = Mathf.Clamp01(absorbElapsed / _pickUpTime);
+
+            // Ease-In 적용: 처음엔 살짝 끌려오다가 후반에 빠르게 빨려 들어감
+            float easeT = rawT * rawT;
+
+            Vector3 currentPos = Vector3.Lerp(absorbStartPos, _cachedAbsorbTarget, easeT);
+            currentPos.y += Mathf.Sin(rawT * Mathf.PI) * _absorbArcHeight;
+
+            transform.position = currentPos;
+            transform.Rotate(Vector3.up * 720f * Time.deltaTime);
+            transform.localScale = Vector3.Lerp(_scale, _scale * 0.25f, easeT);
+
+            yield return null;
+        }
+
+        if (StageRewardManager.Instance != null && _coinItem != null)
+        {
+            StageRewardManager.Instance.AddEarnedCoinCount(_coinItem._coinType, 1);
         }
 
         ReturnToPool();
