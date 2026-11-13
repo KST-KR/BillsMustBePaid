@@ -7,15 +7,19 @@ using UnityEngine;
 /// </summary>
 public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 { 
-#region 인스펙터
+    #region 인스펙터
     [Header("데이터 베이스 참조")]
     [SerializeField] private PigBankDataBaseSO _pigDatabase;
 
     [Header("돼지 저금통 스폰 설정")]
     [SerializeField] private Transform _spawnPoint;
-    [SerializeField] private int _spawnCount = 3;
+    [SerializeField] private int _baseSpawnCount = 5;
+    [SerializeField] private int _stageStep = 2;
+    [SerializeField] private int _addCountPerStep = 1;
+    [Tooltip("필드에 스폰될 최대 갯수 설정")]
+    [SerializeField] private int _maxSpawnCount = 15;
     [SerializeField] private float _respawnTime = 3.0f;
-    [SerializeField] private float _spawnRadius = 2.0f;
+    [SerializeField] private Vector2 _spawnAreaSize = new Vector2(4.0f, 3.0f);
     #endregion
 
     #region 내부 변수
@@ -68,7 +72,8 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(_spawnPoint.position, _spawnRadius);
+        Vector3 boxSize = new Vector3(_spawnAreaSize.x, 0.1f, _spawnAreaSize.y);
+        Gizmos.DrawCube(_spawnPoint.position, boxSize);
     }
     #endregion
 
@@ -83,6 +88,18 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     #endregion
 
     #region 커스텀 메소드 (Private)
+    /// <summary>
+    /// 스테이지 넘버를 받고 스테이지에서 스폰할 총 마리 수를 반환
+    /// </summary>
+    private int GetTargetSpawnCount(int stageNumber)
+    {
+        int step = Mathf.Max(1, _stageStep);
+
+        int calculatedCount = _baseSpawnCount + ((stageNumber - 1) / step) * _addCountPerStep;
+
+        return Mathf.Min(_baseSpawnCount + calculatedCount, _maxSpawnCount);
+    }
+
     /// <summary>
     /// 이벤트와 타입을 맞춰주기 위해 int stageNumber를 인자로 받습니다.
     /// </summary>
@@ -113,10 +130,12 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private void SpawnPigForStage(int stageNumber)
     {
         ReturnToPool();       
+        
+        int targetCount = GetTargetSpawnCount(stageNumber);
 
         if (PigBankObjectPoolManager.Instance != null)
         {
-            for (int i = 0; i < _spawnCount; i++)
+            for (int i = 0; i < targetCount; i++)
             {
                 string pigID = GetRandomPigID();
 
@@ -133,7 +152,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
                     _spawnedPigBanks.Add(pig);
                 }
             }
-            Debug.Log($"성공적으로 돼지를 {_spawnCount}마리 스폰했습니다.");
+            Debug.Log($"성공적으로 돼지를 {targetCount}마리 스폰했습니다.");
         }
         else
         {
@@ -208,10 +227,14 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private Vector3 RandomSpawnPoint()
     {
         Vector3 basePosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
-        Vector2 randomCircle = Random.insideUnitCircle * _spawnRadius;
-        Vector3 spawnPos = new Vector3(basePosition.x + randomCircle.x, basePosition.y, basePosition.z + randomCircle.y);
 
-        return spawnPos;
+        float halfWidth = _spawnAreaSize.x * 0.5f;
+        float halfDepth = _spawnAreaSize.y * 0.5f;
+
+        float randomX = Random.Range(-halfWidth,halfWidth);
+        float randomZ = Random.Range(-halfDepth,halfDepth);
+
+        return new Vector3(basePosition.x + randomX, basePosition.y, basePosition.z + randomZ);
     }
 
     /// <summary>
