@@ -245,6 +245,10 @@ public class GameSceneBootstrap : MonoBehaviour
                 Debug.Log($"스테이지 클리어 데이터 복원: {saveData.runData.currentStage}");
             }
 
+            if (saveData.runData.hasBillSaveData && BillManager.Instance != null)
+            {
+                BillManager.Instance.ImportSaveData(saveData.runData.billData);
+            }
             isRestoreSucceeded = true;
         }
         finally
@@ -329,6 +333,11 @@ public class GameSceneBootstrap : MonoBehaviour
 
             // 스테이지 번호와 진행 여부 복원
             stageManager.RestoreStageProgress(saveData.runData.currentStage);
+
+            if (saveData.runData.hasBillSaveData && BillManager.Instance != null)
+            {
+                BillManager.Instance.ImportSaveData(saveData.runData.billData);
+            }
 
             // 스킬트리 전용 모드 설정
             saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);

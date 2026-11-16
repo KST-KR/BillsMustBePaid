@@ -76,6 +76,23 @@ public class BillRecord
         Status = EBillStatus.Unpaid;
     }
 
+    public BillRecord(BillRecordSaveData saveData)
+    {
+        BillId = saveData.billId;
+        BillTypeId = saveData.billTypeId;
+        Category = saveData.category;
+        BillName = saveData.billName;
+        IssueDay = saveData.issueDay;
+        DueDay = saveData.dueDay;
+        DueDays = saveData.dueDays;
+        Amount = saveData.amount;
+        Cycle = saveData.cycle;
+        PenaltyType = saveData.penaltyType;
+        PenaltyRate = saveData.penaltyRate;
+        PerkRewardCount = saveData.perkRewardCount;
+        Status = saveData.status;
+    }
+
     /// <summary>
     /// [BILL-01-02] 청구서 납부 상태 변경
     /// </summary>

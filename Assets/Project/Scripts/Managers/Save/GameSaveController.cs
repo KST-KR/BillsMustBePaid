@@ -13,6 +13,7 @@ public class GameSaveController : Singleton<GameSaveController>
     private CurrencyManager _currencyManager;
     private GrowthManager _growthManager;
     private GameManager _gameManager;
+    private BillManager _billManager;
     private EquipmentManager _equipmentManager;
     private PlayerEquipment _playerEquipment;
 
@@ -67,6 +68,7 @@ public class GameSaveController : Singleton<GameSaveController>
         _currencyManager = CurrencyManager.Instance;
         _growthManager = GrowthManager.Instance;
         _gameManager = GameManager.Instance;
+        _billManager = BillManager.Instance;
         _equipmentManager = EquipmentManager.Instance;
 
         if (_playerEquipment == null)
@@ -102,6 +104,11 @@ public class GameSaveController : Singleton<GameSaveController>
             _equipmentManager.OnEquipmentEquipped += HandleEquipmentEquipped;
         }
 
+        if (_billManager != null)
+        {
+            _billManager.OnBillChanged += HandleBillsChanged;
+        }
+
         _isSubscribed = true;
     }
 
@@ -133,6 +140,11 @@ public class GameSaveController : Singleton<GameSaveController>
         if (_equipmentManager != null)
         {
             _equipmentManager.OnEquipmentEquipped -= HandleEquipmentEquipped;
+        }
+
+        if (_billManager != null)
+        {
+            _billManager.OnBillChanged -= HandleBillsChanged;
         }
 
         _isSubscribed = false;
@@ -252,6 +264,22 @@ public class GameSaveController : Singleton<GameSaveController>
 
         SaveCurrentProgress(_currencyManager.Gold, equipment);
     }
+
+    private void HandleBillsChanged(BillRecord bill)
+    {
+        if (_isRestoringSaveData)
+        {
+            return;
+        }
+
+        CacheManagers();
+        if (_gameManager == null || !_gameManager.IsRunActive || _currencyManager == null)
+        {
+            return;
+        }
+
+        SaveCurrentProgress(_currencyManager.Gold);
+    }
     #endregion
 
     #region 커스텀 (public)
@@ -329,6 +357,11 @@ public class GameSaveController : Singleton<GameSaveController>
 
         saveData.runData.currentGold = settledGold;
         saveData.runData.currentStamina = 0f;
+        if (BillManager.Instance != null)
+        {
+            saveData.runData.hasBillSaveData = true;
+            saveData.runData.billData = BillManager.Instance.ExportSaveData();
+        }
 
         saveData.runData.runGrowth = _growthManager.ExportSaveData();
         saveData.runData.runPerks = PerkManager.Instance != null ? PerkManager.Instance.ExportSaveData() : new RunPerkSaveData();

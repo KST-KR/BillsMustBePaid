@@ -320,6 +320,85 @@ public class BillManager : Singleton<BillManager>
         return null;
     }
 
+    public BillRunSaveData ExportSaveData()
+    {
+        BillRunSaveData saveData = new BillRunSaveData
+        {
+            currentDay = _currentDay,
+            hasTakenTonyLoan = _hasTakenTonyLoan
+        };
+
+        for (int i = 0; i < _bills.Count; i++)
+        {
+            saveData.bills.Add(new BillRecordSaveData(_bills[i]));
+        }
+
+        foreach (string billId in _dueSoonNotifiedIds)
+        {
+            saveData.dueSoonNotifiedBillIds.Add(billId);
+        }
+
+        return saveData;
+    }
+
+    public void ImportSaveData(BillRunSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            return;
+        }
+
+        _bills.Clear();
+        _issuedCounts.Clear();
+        _issuedKeys.Clear();
+        _dueSoonNotifiedIds.Clear();
+        _currentDay = Mathf.Max(0, saveData.currentDay);
+        _hasTakenTonyLoan = saveData.hasTakenTonyLoan;
+
+        if (saveData.bills != null)
+        {
+            for (int i = 0; i < saveData.bills.Count; i++)
+            {
+                BillRecordSaveData savedBill = saveData.bills[i];
+                if (savedBill == null || string.IsNullOrWhiteSpace(savedBill.billId))
+                {
+                    continue;
+                }
+
+                BillRecord bill = new BillRecord(savedBill);
+                _bills.Add(bill);
+
+                for (int ruleIndex = 0; ruleIndex < _billRules.Length; ruleIndex++)
+                {
+                    BillData rule = _billRules[ruleIndex];
+                    if (rule == null || rule.BillId != bill.BillTypeId)
+                    {
+                        continue;
+                    }
+
+                    _issuedKeys.Add(rule.BillId + ":" + bill.Cycle);
+                    SetIssuedCount(rule, Mathf.Max(GetIssuedCount(rule), bill.Cycle));
+                    break;
+                }
+            }
+        }
+
+        if (saveData.dueSoonNotifiedBillIds != null)
+        {
+            for (int i = 0; i < saveData.dueSoonNotifiedBillIds.Count; i++)
+            {
+                string billId = saveData.dueSoonNotifiedBillIds[i];
+                if (!string.IsNullOrWhiteSpace(billId))
+                {
+                    _dueSoonNotifiedIds.Add(billId);
+                }
+            }
+        }
+
+        OnBillChanged?.Invoke(CurrentBill);
+        RefreshPayButtonImage();
+    }
+
     /// <summary>
     /// [BILL-01-04] 런 시작 시 청구 대기열과 중복 기록 초기화
     /// 다음 런의 일차 및 기한 알림 기록 재설정
