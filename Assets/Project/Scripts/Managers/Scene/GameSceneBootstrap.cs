@@ -176,9 +176,10 @@ public class GameSceneBootstrap : MonoBehaviour
         GameManager gameManager = GameManager.Instance;
         StageManager stageManager = StageManager.Instance;
         GameSaveController saveController = GameSaveController.Instance;
+        UIManager uiManager = UIManager.Instance;
 
         // 1. 필요한 매니저 검증
-        if (saveManager == null || currencyManager == null || growthManager == null || gameManager == null || stageManager == null || saveController == null)
+        if (saveManager == null || currencyManager == null || growthManager == null || gameManager == null || stageManager == null || saveController == null || uiManager == null)
         {
             Debug.LogError("게임 데이터 복원에 필요한 매니저가 없음.");
             return;
@@ -199,6 +200,8 @@ public class GameSceneBootstrap : MonoBehaviour
             Debug.LogError("이어하기에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
             return;
         }
+
+        bool isRestoreSucceeded = false;
 
         // 4. 모든 검증이 끝난 뒤 복원 시작
         saveController.SetRestoringSaveData(true);
@@ -239,14 +242,21 @@ public class GameSceneBootstrap : MonoBehaviour
                 // 클리어 후 결과 화면 상태 복원
                 stageManager.RestoreStageClear(saveData.runData.currentStage);
 
-                Debug.Log(
-                    $"스테이지 결과 화면 복원: {saveData.runData.currentStage}");
+                Debug.Log($"스테이지 클리어 데이터 복원: {saveData.runData.currentStage}");
             }
+
+            isRestoreSucceeded = true;
         }
         finally
         {
             // 복원 성공 여부와 관계없이 플래그 해제
             saveController.SetRestoringSaveData(false);
+        }
+
+        // 복원이 성공한 경우에만 UI 변경
+        if (isRestoreSucceeded && !saveData.runData.isStageInProgress)
+        {
+            uiManager.ShowSkillTreeFromMainMenu();
         }
 
         Debug.Log($"이어하기 데이터 복원 완료: " +
