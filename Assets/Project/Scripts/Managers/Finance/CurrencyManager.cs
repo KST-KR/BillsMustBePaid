@@ -53,7 +53,7 @@ public class CurrencyManager : PersistentSingleton<CurrencyManager>
     {
         if (Input.GetKeyDown(KeyCode.G))
         {
-            TryAdd(ECurrencyType.Gold, 10000);
+            TryAdd(ECurrencyType.Gold, 100000);
             Debug.Log($"골드 추가 후 잔고: {Gold}");
         }
     }

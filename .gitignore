@@ -32,3 +32,4 @@
 .DS_Store
 Thumbs.db
 /ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json
+/BuildPublish

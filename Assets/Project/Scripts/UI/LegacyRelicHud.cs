@@ -36,11 +36,13 @@ public sealed class LegacyRelicHud : MonoBehaviour
     [SerializeField] private RectTransform _tooltipRect;
     [SerializeField] private TMP_Text _tooltipTitle;
     [SerializeField] private TMP_Text _tooltipDescription;
+    [SerializeField] private RectTransform _perkTooltipRect;
+    [SerializeField] private TMP_Text _perkTooltipTitle;
+    [SerializeField] private TMP_Text _perkTooltipDescription;
     #endregion
 
     #region 내부 변수
     private GameManager _gameManager;
-    private BillManager _billManager;
     private PerkManager _perkManager;
     private Canvas _canvas;
     private Coroutine _hidePopupCoroutine;
@@ -74,18 +76,21 @@ public sealed class LegacyRelicHud : MonoBehaviour
         _perkIconObject = perkIconObject;
         _perkPopupObject = perkPopupObject;
         _perkPopupRect = perkPopupRect;
-        _perkGridRect = perkPopupRect;
+        _perkGridRect = _perkPopupRect != null ? _perkPopupRect.Find("PerkGrid") as RectTransform : null;
         _perkTiles = perkTiles;
         _perkDefaultIcon = perkDefaultIcon;
+        EnsurePerkPointerBindings();
+        EnsurePerkTooltipBindings();
     }
 
     #region 이벤트 함수
     private void Start()
     {
         _canvas = GetComponentInParent<Canvas>();
+        EnsurePerkPointerBindings();
+        EnsurePerkTooltipBindings();
         SubscribeEvents();
         RefreshOwnedItems();
-        SyncPerkPopupLayoutFromRing();
         RefreshOwnedPerks();
         RefreshVisibility();
     }
@@ -98,11 +103,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
             _perkManager.OnPerkStateChanged -= HandlePerkStateChanged;
         if (_gameManager != null)
             _gameManager.OnGameStateChanged -= HandleVisibilityChanged;
-        if (_billManager != null)
-        {
-            _billManager.OnBillExpired -= HandleBillChanged;
-            _billManager.OnBillPaid -= HandleBillChanged;
-        }
     }
     #endregion
 
@@ -118,30 +118,34 @@ public sealed class LegacyRelicHud : MonoBehaviour
 
     public void ShowItemTooltip(LegacyShopItemData item, RectTransform iconRect)
     {
-        if (!_isEventVisible || item == null || _tooltipRect == null)
+        RectTransform tooltipRect = _tooltipRect;
+        TMP_Text tooltipTitle = _tooltipTitle;
+        TMP_Text tooltipDescription = _tooltipDescription;
+
+        if (!_isEventVisible || item == null || tooltipRect == null || tooltipTitle == null || tooltipDescription == null)
         {
             return;
         }
 
-        EnsureTooltipParent(_ringPopupRect);
+        EnsureTooltipParent(tooltipRect, _ringPopupRect);
 
         CancelHidePopup();
         CancelHideTooltip();
 
-        _tooltipTitle.text = item.DisplayName;
-        _tooltipDescription.text = item.Description + "\n\n" + item.StatEffectText;
+        tooltipTitle.text = item.DisplayName;
+        tooltipDescription.text = item.Description + "\n\n" + item.StatEffectText;
 
         float scale = _canvas != null ? Mathf.Max(0.01f, _canvas.scaleFactor) : 1.0f;
         float width = Mathf.Min(CTooltipWidth, (Screen.width - CScreenEdgePadding * 2.0f) / scale);
 
-        _tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+        tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
 
-        _tooltipDescription.ForceMeshUpdate();
-        float contentHeight = _tooltipDescription.GetPreferredValues(_tooltipDescription.text, _tooltipDescription.rectTransform.rect.width, 0.0f).y;
+        tooltipDescription.ForceMeshUpdate();
+        float contentHeight = tooltipDescription.GetPreferredValues(tooltipDescription.text, tooltipDescription.rectTransform.rect.width, 0.0f).y;
 
-        _tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Clamp(contentHeight + 82.0f, 170.0f, 420.0f));
-        PositionTooltip(iconRect, _ringPopupRect);
-        _tooltipRect.gameObject.SetActive(true);
+        tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Clamp(contentHeight + 82.0f, 170.0f, 420.0f));
+        PositionTooltip(tooltipRect, iconRect, _ringPopupRect);
+        tooltipRect.gameObject.SetActive(true);
     }
 
     public void ScheduleTooltipHide()
@@ -176,7 +180,11 @@ public sealed class LegacyRelicHud : MonoBehaviour
 
     public void ShowPerkTooltip(PerkData perk, RectTransform iconRect)
     {
-        if (perk == null || _tooltipRect == null)
+        RectTransform tooltipRect = _perkTooltipRect != null ? _perkTooltipRect : _tooltipRect;
+        TMP_Text tooltipTitle = _perkTooltipTitle != null ? _perkTooltipTitle : _tooltipTitle;
+        TMP_Text tooltipDescription = _perkTooltipDescription != null ? _perkTooltipDescription : _tooltipDescription;
+
+        if (perk == null || tooltipRect == null || tooltipTitle == null || tooltipDescription == null)
         {
             return;
         }
@@ -186,24 +194,24 @@ public sealed class LegacyRelicHud : MonoBehaviour
             return;
         }
 
-        EnsureTooltipParent(_perkPopupRect != null ? _perkPopupRect : _ringPopupRect);
+        EnsureTooltipParent(tooltipRect, _perkPopupRect != null ? _perkPopupRect : _ringPopupRect);
 
         CancelHidePerkPopup();
         CancelHideTooltip();
 
-        _tooltipTitle.text = perk.DisplayName;
-        _tooltipDescription.text = perk.EffectText + "\n" + "TIER " + perk.Tier;
+        tooltipTitle.text = perk.DisplayName;
+        tooltipDescription.text = perk.EffectText + "\n" + "TIER " + perk.Tier;
 
         float scale = _canvas != null ? Mathf.Max(0.01f, _canvas.scaleFactor) : 1.0f;
         float width = Mathf.Min(CTooltipWidth, (Screen.width - CScreenEdgePadding * 2.0f) / scale);
-        _tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+        tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
 
-        _tooltipDescription.ForceMeshUpdate();
-        float contentHeight = _tooltipDescription.GetPreferredValues(_tooltipDescription.text, _tooltipDescription.rectTransform.rect.width, 0.0f).y;
+        tooltipDescription.ForceMeshUpdate();
+        float contentHeight = tooltipDescription.GetPreferredValues(tooltipDescription.text, tooltipDescription.rectTransform.rect.width, 0.0f).y;
 
-        _tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Clamp(contentHeight + 82.0f, 170.0f, 420.0f));
-        PositionTooltip(iconRect, _perkPopupRect != null ? _perkPopupRect : _ringPopupRect);
-        _tooltipRect.gameObject.SetActive(true);
+        tooltipRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Clamp(contentHeight + 82.0f, 170.0f, 420.0f));
+        PositionTooltip(tooltipRect, iconRect, _perkPopupRect != null ? _perkPopupRect : _ringPopupRect);
+        tooltipRect.gameObject.SetActive(true);
     }
 
     public void OnPerkIconPointerEnter()
@@ -214,7 +222,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
             return;
         }
 
-        SyncPerkPopupLayoutFromRing();
         RefreshOwnedPerks();
         _perkPopupObject.SetActive(true);
     }
@@ -241,7 +248,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
     {
         _legacyShopManager = LegacyShopManager.Instance != null ? LegacyShopManager.Instance : _legacyShopManager;
         _gameManager = GameManager.Instance;
-        _billManager = BillManager.Instance;
         _perkManager = PerkManager.Instance;
 
         if (_legacyShopManager != null)
@@ -262,13 +268,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
             _gameManager.OnGameStateChanged += HandleVisibilityChanged;
         }
 
-        if (_billManager != null)
-        {
-            _billManager.OnBillExpired -= HandleBillChanged;
-            _billManager.OnBillPaid -= HandleBillChanged;
-            _billManager.OnBillExpired += HandleBillChanged;
-            _billManager.OnBillPaid += HandleBillChanged;
-        }
     }
 
     private void HandleOwnershipChanged()
@@ -283,11 +282,6 @@ public sealed class LegacyRelicHud : MonoBehaviour
     }
 
     private void HandleVisibilityChanged(EGameState state)
-    {
-        RefreshVisibility();
-    }
-
-    private void HandleBillChanged(BillRecord bill)
     {
         RefreshVisibility();
     }
@@ -322,10 +316,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
     private void RefreshVisibility()
     {
         if (_gameManager == null) _gameManager = GameManager.Instance;
-        if (_billManager == null) _billManager = BillManager.Instance;
-
-        _isEventVisible = (_gameManager != null && _gameManager.State == EGameState.StageClear) ||
-            (_billManager != null && _billManager.HasExpiredBills);
+        _isEventVisible = _gameManager != null && _gameManager.State == EGameState.StageClear;
 
         bool hasRings = HasOwnedRing();
         bool hasPerks = HasOwnedPerk();
@@ -347,19 +338,13 @@ public sealed class LegacyRelicHud : MonoBehaviour
         if (!_isEventVisible && _ringPopupObject != null)
         {
             _ringPopupObject.SetActive(false);
-            if (_tooltipRect != null)
-            {
-                _tooltipRect.gameObject.SetActive(false);
-            }
+            HideAllTooltips();
         }
 
         if (!_isEventVisible && _perkPopupObject != null)
         {
             _perkPopupObject.SetActive(false);
-            if (_tooltipRect != null)
-            {
-                _tooltipRect.gameObject.SetActive(false);
-            }
+            HideAllTooltips();
         }
     }
 
@@ -383,9 +368,9 @@ public sealed class LegacyRelicHud : MonoBehaviour
         return _perkManager != null && _perkManager.OwnedPerks != null && _perkManager.OwnedPerks.Count > 0;
     }
 
-    private void PositionTooltip(RectTransform iconRect, RectTransform popupRoot)
+    private void PositionTooltip(RectTransform tooltipRect, RectTransform iconRect, RectTransform popupRoot)
     {
-        if (iconRect == null || _canvas == null || _tooltipRect == null) return;
+        if (iconRect == null || _canvas == null || tooltipRect == null) return;
         Camera eventCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
 
         //Vector2 trialPosition = iconRect.anchoredPosition + new Vector2(100.0f, -20.0f);
@@ -406,8 +391,8 @@ public sealed class LegacyRelicHud : MonoBehaviour
         Vector2 topRight = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[2]);
 
         float scale = _canvas.scaleFactor;
-        float width = _tooltipRect.rect.width * scale;
-        float height = _tooltipRect.rect.height * scale;
+        float width = tooltipRect.rect.width * scale;
+        float height = tooltipRect.rect.height * scale;
         float left = topRight.x + CScreenEdgePadding;
 
         if (left + width > Screen.width - CScreenEdgePadding)
@@ -425,7 +410,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
 
         top = Mathf.Clamp(top, height + CScreenEdgePadding, Screen.height - CScreenEdgePadding);
 
-        RectTransform tooltipParent = _tooltipRect.parent as RectTransform;
+        RectTransform tooltipParent = tooltipRect.parent as RectTransform;
         if (tooltipParent == null)
         {
             tooltipParent = popupRoot;
@@ -433,7 +418,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
 
         if (tooltipParent != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(tooltipParent, new Vector2(left, top), eventCamera, out Vector2 localPoint))
         {
-            _tooltipRect.anchoredPosition = localPoint;
+            tooltipRect.anchoredPosition = localPoint;
         }
     }
 
@@ -452,10 +437,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
             _ringPopupObject.SetActive(false);
         }
 
-        if (_tooltipRect != null)
-        {
-            _tooltipRect.gameObject.SetActive(false);
-        }
+        HideAllTooltips();
 
         _hidePopupCoroutine = null;
     }
@@ -475,10 +457,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
             _perkPopupObject.SetActive(false);
         }
 
-        if (_tooltipRect != null)
-        {
-            _tooltipRect.gameObject.SetActive(false);
-        }
+        HideAllTooltips();
 
         _hidePerkPopupCoroutine = null;
     }
@@ -487,10 +466,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(0.12f);
 
-        if (_tooltipRect != null)
-        {
-            _tooltipRect.gameObject.SetActive(false);
-        }
+        HideAllTooltips();
 
         _hideTooltipCoroutine = null;
     }
@@ -544,7 +520,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
         EnsurePerkGridLayout(gridRoot);
 
         IReadOnlyList<PerkData> ownedPerks = _perkManager.OwnedPerks;
-        UpdatePerkPopupHeight(ownedPerks.Count, gridRoot);
+        UpdatePerkPopupSize(ownedPerks.Count, gridRoot);
         EnsurePerkTileCount(ownedPerks.Count, gridRoot);
         for (int i = 0; i < _dynamicPerkTiles.Count; i++)
         {
@@ -569,7 +545,7 @@ public sealed class LegacyRelicHud : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(_perkPopupRect);
     }
 
-    private void UpdatePerkPopupHeight(int perkCount, RectTransform gridRoot)
+    private void UpdatePerkPopupSize(int perkCount, RectTransform gridRoot)
     {
         if (_perkPopupRect == null || gridRoot == null)
         {
@@ -582,16 +558,20 @@ public sealed class LegacyRelicHud : MonoBehaviour
             return;
         }
 
-        int columns = Mathf.Max(1, grid.constraintCount);
-        int rows = Mathf.Max(1, Mathf.CeilToInt(perkCount / (float)columns));
+        int maxColumns = Mathf.Max(1, grid.constraintCount);
+        int columns = Mathf.Clamp(perkCount, 1, maxColumns);
+        int rows = Mathf.Max(1, Mathf.CeilToInt(perkCount / (float)maxColumns));
+
+        float requiredWidth = grid.padding.left + grid.padding.right +
+                              (grid.cellSize.x * columns) +
+                              (grid.spacing.x * Mathf.Max(0, columns - 1));
 
         float requiredHeight = grid.padding.top + grid.padding.bottom +
                                (grid.cellSize.y * rows) +
                                (grid.spacing.y * Mathf.Max(0, rows - 1));
 
-        float minHeight = 220.0f;
-        float targetHeight = Mathf.Max(minHeight, requiredHeight);
-        _perkPopupRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, targetHeight);
+        _perkPopupRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, requiredWidth);
+        _perkPopupRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, requiredHeight);
     }
 
     private void EnsurePerkTileCount(int count, RectTransform gridRoot)
@@ -706,28 +686,108 @@ public sealed class LegacyRelicHud : MonoBehaviour
         }
     }
 
-    private void SyncPerkPopupLayoutFromRing()
+    private void EnsureTooltipParent(RectTransform tooltipRect, RectTransform popupRoot)
     {
-        if (_perkPopupRect == null || _ringPopupRect == null)
+        if (tooltipRect == null || popupRoot == null)
         {
             return;
         }
 
-        _perkPopupRect.anchorMin = _ringPopupRect.anchorMin;
-        _perkPopupRect.anchorMax = _ringPopupRect.anchorMax;
-        _perkPopupRect.pivot = _ringPopupRect.pivot;
-
-        float iconDeltaX = 0.0f;
-        RectTransform ringIconRect = _ringIconObject != null ? _ringIconObject.transform as RectTransform : null;
-        RectTransform perkIconRect = _perkIconObject != null ? _perkIconObject.transform as RectTransform : null;
-        if (ringIconRect != null && perkIconRect != null)
+        if (tooltipRect.parent != popupRoot)
         {
-            iconDeltaX = perkIconRect.anchoredPosition.x - ringIconRect.anchoredPosition.x;
+            tooltipRect.SetParent(popupRoot, false);
+            tooltipRect.SetAsLastSibling();
+        }
+    }
+
+    private void HideAllTooltips()
+    {
+        if (_tooltipRect != null)
+        {
+            _tooltipRect.gameObject.SetActive(false);
         }
 
-        Vector2 position = _ringPopupRect.anchoredPosition;
-        position.x += iconDeltaX;
-        _perkPopupRect.anchoredPosition = position;
+        if (_perkTooltipRect != null)
+        {
+            _perkTooltipRect.gameObject.SetActive(false);
+        }
+    }
+
+    private void EnsurePerkPointerBindings()
+    {
+        if (_perkIconObject != null)
+        {
+            PerkHudPointer iconPointer = _perkIconObject.GetComponent<PerkHudPointer>();
+            if (iconPointer == null)
+            {
+                iconPointer = _perkIconObject.AddComponent<PerkHudPointer>();
+            }
+
+            iconPointer.Configure(this, false);
+
+            Image iconImage = _perkIconObject.GetComponent<Image>();
+            if (iconImage != null)
+            {
+                iconImage.raycastTarget = true;
+            }
+        }
+
+        if (_perkPopupObject != null)
+        {
+            PerkHudPointer popupPointer = _perkPopupObject.GetComponent<PerkHudPointer>();
+            if (popupPointer == null)
+            {
+                popupPointer = _perkPopupObject.AddComponent<PerkHudPointer>();
+            }
+
+            popupPointer.Configure(this, true);
+
+            Image popupImage = _perkPopupObject.GetComponent<Image>();
+            if (popupImage != null)
+            {
+                popupImage.raycastTarget = true;
+            }
+        }
+    }
+
+    private void EnsurePerkTooltipBindings()
+    {
+        if (_perkPopupRect == null)
+        {
+            return;
+        }
+
+        if (_perkTooltipRect == null)
+        {
+            Transform tooltipTransform = _perkPopupRect.Find("PerkStatTooltip");
+            if (tooltipTransform != null)
+            {
+                _perkTooltipRect = tooltipTransform as RectTransform;
+            }
+        }
+
+        if (_perkTooltipRect == null)
+        {
+            return;
+        }
+
+        if (_perkTooltipTitle == null)
+        {
+            Transform titleTransform = _perkTooltipRect.Find("Title");
+            if (titleTransform != null)
+            {
+                _perkTooltipTitle = titleTransform.GetComponent<TMP_Text>();
+            }
+        }
+
+        if (_perkTooltipDescription == null)
+        {
+            Transform descriptionTransform = _perkTooltipRect.Find("Description");
+            if (descriptionTransform != null)
+            {
+                _perkTooltipDescription = descriptionTransform.GetComponent<TMP_Text>();
+            }
+        }
     }
     #endregion
 }
