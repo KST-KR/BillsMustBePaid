@@ -17,6 +17,8 @@ public class RunSaveData
 
     public RunGrowthSaveData runGrowth;
     public RunPerkSaveData runPerks;
+    public bool hasBillSaveData;
+    public BillRunSaveData billData;
 
     // 장비저장 데이터
     public EquipmentSaveData equipmentData;
@@ -25,6 +27,7 @@ public class RunSaveData
     {
         runGrowth = new RunGrowthSaveData();
         runPerks = new RunPerkSaveData();
+        billData = new BillRunSaveData();
         equipmentData = new EquipmentSaveData();
     }
 }

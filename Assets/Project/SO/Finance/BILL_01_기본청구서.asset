@@ -65,10 +65,22 @@ MonoBehaviour:
     _category: "\uC804\uC790\uC81C\uD488 - \uC7A5\uBC14\uAD6C\uB2C8 \uBCC0\uBA85\uACFC"
     _title: "\uC774\uBC88\uC5D4 \uC9C4\uC9DC \uD544\uC694\uD55C \uD0DC\uBE14\uB9BF"
     _penaltyRate: 0.35
+  - _amount: 75000
+    _category: "\uC778\uC0DD\uC740 \uD50C\uB809\uC2A4"
+    _title: "\uC6B0\uB7EC\uB7EC\uBCF4\uB294 \uBA85\uD488\uC2DC\uACC4"
+    _penaltyRate: 0.4
+  - _amount: 275000
+    _category: "\uAC12\uC544\uC8FC\uACE0 \uC190\uC808\uD558\uC790"
+    _title: "\uCE5C\uAD6C\uC758 \uBCF4\uC99D\uAE08"
+    _penaltyRate: 0.45
+  - _amount: 570000
+    _category: "\uC721\uC544\uB294 \uC7A5\uBE44\uBE68"
+    _title: "\uC544\uAE30\uAC00 \uC0DD\uACBC\uC5B4\uC694"
+    _penaltyRate: 0.5
   _penaltyType: 1
   _penaltyRate: 0.1
   _perkRewardCount: 3
-  _maxIssues: 12
+  _maxIssues: 15
   _billAmounts: 
   _billCategories: []
   _billTitles: []
