@@ -16,6 +16,7 @@ public class SwingState : IHandState
     private readonly Action<int> _onAttackPerformed;
 
     private float _attackElapsed;
+    private float _attackSpeedMultiplier = 1f;
 
     private bool _hasHit;
     private bool _isCompleted;
@@ -58,7 +59,7 @@ public class SwingState : IHandState
             return;
         }
 
-        _attackElapsed += Time.deltaTime;
+        _attackElapsed += Time.deltaTime * _attackSpeedMultiplier;
 
         float hitTime = _getHitTime();
         float attackDuration = _getAttackDuration();
@@ -98,11 +99,13 @@ public class SwingState : IHandState
     /// 새로운 공격을 시작
     /// 기존 공격 재개와 구분하기 위해서만 초기화
     /// </summary>
-    public void StartAttack()
+    public void StartAttack(float speedMultiplier = 1f)
     {
         _attackElapsed = 0f;
         _hasHit = false;
         _isCompleted = false;
+
+        _attackSpeedMultiplier = Mathf.Max(1f, speedMultiplier);
 
         _onAttackStarted?.Invoke();
     }
