@@ -90,7 +90,31 @@ public class PigBankUnlock : MonoBehaviour
         _totalCrash = 0;
         Debug.Log("StageReward : 파산/게임 오버로 인해 해금 레벨이 초기화되었습니다.");
     }
+
+    /// <summary>
+    /// 해금 데이터 내보내기, 복원하기
+    /// </summary>
+    public void ExportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            return;
+        }
+
+        data.unlockLevel = _unlockLevel;
+        data.unlockTotalCrash = _totalCrash;
+    }
+
+    public void ImportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            ResetUnlockSystem();
+            return;
+        }
+
+        _unlockLevel = Mathf.Max(1, data.unlockLevel);
+        _totalCrash = Mathf.Max(0, data.unlockTotalCrash);
+    }
     #endregion
-
-
 }

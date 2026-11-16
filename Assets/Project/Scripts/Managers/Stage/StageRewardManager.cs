@@ -326,5 +326,30 @@ public class StageRewardManager : Singleton<StageRewardManager>
         return true;
     }
 
+    /// <summary>
+    /// 파괴 레벨 데이터 내보내기, 복원하기
+    /// </summary>
+    public void ExportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            return;
+        }
+
+        data.crashLevel = _currentCrashLevel;
+        data.crashTotalNumber = _totalCrashNumber;
+    }
+
+    public void ImportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            ResetCrashLevelSystem();
+            return;
+        }
+
+        _currentCrashLevel = Mathf.Max(1, data.crashLevel);
+        _totalCrashNumber = Mathf.Max(0, data.crashTotalNumber);
+    }
     #endregion
 }
