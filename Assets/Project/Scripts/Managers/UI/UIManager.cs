@@ -40,6 +40,19 @@ public class UIManager : Singleton<UIManager>
     [Header("플레이어 스태미나")]
     [SerializeField] private PlayerStamina _playerStamina;
 
+    [Header("플레이어 콤보")]
+    [SerializeField] private PlayerComboManager _playerComboManager;
+
+    [Header("콤보 UI")]
+    [SerializeField] private GameObject _comboPanel;
+    [SerializeField] private TMP_Text _comboText;
+
+    [Header("추가 공격 UI")]
+    [SerializeField] private Canvas _canvas;
+    [SerializeField] private TMP_Text _extraAttackText;
+    [SerializeField] private float _extraAttackTextDuration = 0.6f;
+    [SerializeField] private Vector2 _extraAttackTextOffset = new Vector2(0f, 60f);
+
     [Header("스태미나 UI")]
     [SerializeField] private GameObject _staminaPanel;
     [SerializeField] private TMP_Text _staminaText;
@@ -76,12 +89,21 @@ public class UIManager : Singleton<UIManager>
     private StageRewardManager _stageRewardManager;
 
     private bool _isSubscribed;
+
+    // 추가 공격 텍스트 표시 관리
+    private Transform _extraAttackTarget;
+    private float _extraAttackTextTimer;
     #endregion
 
     #region 이벤트 함수
     protected override void OnSingletonAwake()
     {
         SetSelectedUpgradeTab(null);
+
+        if (_extraAttackTarget != null)
+        {
+            _extraAttackTarget.gameObject.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -112,6 +134,8 @@ public class UIManager : Singleton<UIManager>
         {
             return;
         }
+
+        UpdateExtraAttackText();
 
         if (!Input.GetKeyDown(KeyCode.Escape))
         {
@@ -204,6 +228,14 @@ public class UIManager : Singleton<UIManager>
             UpdateAccuracyPercentUI(_playerAccuracy.Accuracy);
         }
 
+        if (_playerComboManager != null)
+        {
+            _playerComboManager.OnComboChanged += HandleComboChanged;
+
+            // 구독 전에 변경된 콤보도 초기 UI에 반영
+            UpdateComboUI(_playerComboManager.ComboCount);
+        }
+
         _isSubscribed = true;
     }
 
@@ -247,6 +279,11 @@ public class UIManager : Singleton<UIManager>
         if (_playerAccuracy != null)
         {
             _playerAccuracy.OnAccuracyChanged -= HandleAccuracyChanged;
+        }
+
+        if (_playerComboManager != null)
+        {
+            _playerComboManager.OnComboChanged -= HandleComboChanged;
         }
 
         _gameManager = null;
@@ -567,6 +604,25 @@ public class UIManager : Singleton<UIManager>
 
         _accuracyPercentText.text = NumberFormatter.FormatFixed(accuracy, 1) + "%";
     }
+
+    /// <summary>
+    /// 플레이어 콤보 변경 이벤트 처리
+    /// </summary>
+    private void HandleComboChanged(int comboCount)
+    {
+        UpdateComboUI(comboCount);
+    }
+
+    /// <summary>
+    /// 현재 콤보 수를 UI에 반영
+    /// </summary>
+    private void UpdateComboUI(int comboCount)
+    {
+        if (_comboText != null)
+        {
+            _comboText.text = $"{comboCount} COMBO";
+        }
+    }
     #endregion
 
     #region 커스텀 메서드 (Public)
@@ -601,7 +657,10 @@ public class UIManager : Singleton<UIManager>
     {
         HideAllPanels();
 
+        bool isStageActive = IsStageActive();
+
         SetStaminaUIVisible(IsStageActive());
+        SetPanelActive(_comboPanel, isStageActive);
     }
 
     /// <summary>
@@ -696,6 +755,7 @@ public class UIManager : Singleton<UIManager>
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_gameOverPanel, false);
         SetPanelActive(_upgradePanel, false);
+        SetPanelActive(_comboPanel, false);
 
         SetStaminaUIVisible(false);
 
@@ -1067,6 +1127,103 @@ public class UIManager : Singleton<UIManager>
 
         ShowUpgradeSection(_growthSkillTreePanel);
         SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
+    }
+
+    /// <summary>
+    /// 추가 공격 텍스트
+    /// </summary>
+    /// <param name="target"></param>
+    public void ShowExtraAttackText(Transform target)
+    {
+        if (target == null || _canvas == null || _extraAttackText == null)
+        {
+            Debug.LogWarning("추가 공격 텍스트 또는 Canvas 참조가 연결되지 않음.");
+            return;
+        }
+
+        _extraAttackTarget = target;
+        _extraAttackTextTimer = _extraAttackTextDuration;
+
+        _extraAttackText.gameObject.SetActive(true);
+
+        UpdateExtraAttackTextPosition();
+    }
+
+    /// <summary>
+    /// 추가 공격 텍스트 위치 및 표시 시간 갱신
+    /// </summary>
+    private void UpdateExtraAttackText()
+    {
+        if (_extraAttackTextTimer <= 0f)
+        {
+            return;
+        }
+
+        if (_extraAttackTarget == null)
+        {
+            HideExtraAttackText();
+            return;
+        }
+
+        UpdateExtraAttackTextPosition();
+
+        _extraAttackTextTimer -= Time.unscaledDeltaTime;
+
+        if (_extraAttackTextTimer <= 0f)
+        {
+            HideExtraAttackText();
+        }
+    }
+
+    /// <summary>
+    /// 손 위치를 기준으로 추가 공격 텍스트 위치 설정
+    /// </summary>
+    private void UpdateExtraAttackTextPosition()
+    {
+        Camera mainCamera = Camera.main;
+        Camera canvasCamera = _canvas.worldCamera;
+
+        if (mainCamera == null || canvasCamera == null)
+        {
+            return;
+        }
+
+        Vector3 screenPosition = mainCamera.WorldToScreenPoint(_extraAttackTarget.position);
+
+        if (screenPosition.z <= 0f)
+        {
+            return;
+        }
+
+        RectTransform canvasRect = _canvas.transform as RectTransform;
+
+        if (canvasRect == null)
+        {
+            return;
+        }
+
+        bool isConverted = RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, canvasCamera, out Vector2 localPosition);
+
+        if (!isConverted)
+        {
+            return;
+        }
+
+        _extraAttackText.rectTransform.anchoredPosition = localPosition + _extraAttackTextOffset;
+    }
+
+    /// <summary>
+    /// 추가 공격 텍스트 숨김
+    /// </summary>
+    private void HideExtraAttackText()
+    {
+        if (_extraAttackText != null)
+        {
+            _extraAttackText.gameObject.SetActive(false);
+        }
+
+        _extraAttackTarget = null;
+        _extraAttackTextTimer = 0f;
     }
     #endregion
 }

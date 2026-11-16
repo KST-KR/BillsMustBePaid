@@ -1,18 +1,29 @@
 ﻿using System;
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerStats))]
+[RequireComponent(typeof(PlayerStats), typeof(PlayerComboManager))]
 public class PlayerCombat : MonoBehaviour
 {
+    #region 인스펙터
+    [SerializeField] private Transform _handTransform;
+    #endregion
+
     #region 내부 변수
     private PlayerStats _playerStats;
     private PlayerStamina _playerStamina;
     private PlayerAttackDetector _attackDetector;
     private PlayerStageActivator _activator;
     private HammerController _hammerController;
+    private PlayerComboManager _playerComboManager;
+    private GameManager _gameManager;
+    private StageManager _stageManager;
 
     private bool _isAttacking;
     private bool _hasNotifiedTiredAnimation;
+    // 추가 공격 대기 여부
+    private bool _isExtraAttackPending;
+    // 현재 진행 중인 공격이 추가 공격인지 여부
+    private bool _isExtraAttack;
 
     // 공격 종료 후 다음 공격까지의 대기 시간곽 남은 시간
     // 에임의 진행도를 계산할 때 전체 대기 시간이 필요하므로 따로 보관
@@ -85,6 +96,7 @@ public class PlayerCombat : MonoBehaviour
         _playerStamina = GetComponent<PlayerStamina>();
         _attackDetector = GetComponent<PlayerAttackDetector>();
         _activator = GetComponent<PlayerStageActivator>();
+        _playerComboManager = GetComponent<PlayerComboManager>();
 
         _handAnimator = GetComponentInChildren<Animator>(true);
         _hammerController = GetComponentInChildren<HammerController>(true);
@@ -110,6 +122,23 @@ public class PlayerCombat : MonoBehaviour
         }
 
         InitializeHandStates();
+    }
+
+    private void Start()
+    {
+        _gameManager = GameManager.Instance;
+
+        if (_gameManager != null)
+        {
+            _gameManager.OnRunStarted += HandleRunStarted;
+        }
+
+        _stageManager = StageManager.Instance;
+
+        if (_stageManager != null)
+        {
+            _stageManager.OnStageStarted += HandleStageStarted;
+        }
     }
 
     private void OnEnable()
@@ -149,6 +178,19 @@ public class PlayerCombat : MonoBehaviour
         ResetAttackState();
 
         _handStateMachine?.ChangeState(_idleState);
+    }
+
+    private void OnDestroy()
+    {
+        if (_gameManager != null)
+        {
+            _gameManager.OnRunStarted -= HandleRunStarted;
+        }
+
+        if (_stageManager != null)
+        {
+            _stageManager.OnStageStarted -= HandleStageStarted;
+        }
     }
 
     /// <summary>
@@ -275,10 +317,18 @@ public class PlayerCombat : MonoBehaviour
     {
         _isAttacking = false;
 
+        _isExtraAttackPending = false;
+        _isExtraAttack = false;
+
         _swingState?.CancelAttack();
 
         _cooldownDuration = 0f;
         _cooldownRemaining = 0f;
+
+        if (_handAnimator != null)
+        {
+            _handAnimator.speed = 1f;
+        }
     }
 
     /// <summary>
@@ -287,6 +337,12 @@ public class PlayerCombat : MonoBehaviour
     private void EndAttack()
     {
         _isAttacking = false;
+
+        // Animator 재생 속도 초기화
+        if (_handAnimator != null)
+        {
+            _handAnimator.speed = 1f;
+        }
 
         StartCooldown();
 
@@ -357,6 +413,9 @@ public class PlayerCombat : MonoBehaviour
 
         if (_handAnimator != null)
         {
+            // 추가 공격은 애니메이션 속도도 빠르게 재생
+            _handAnimator.speed = _isExtraAttack ? 2f : 1f;
+
             _handAnimator.SetTrigger(AttackHash);
         }
 
@@ -369,11 +428,82 @@ public class PlayerCombat : MonoBehaviour
 
         Debug.Log($"망치 공격 판정 완료: {hitCount}개 대상 타격");
 
+        // 현재 공격이 추가 공격인지 확인
+        bool isExtraAttack = _isExtraAttack;
+
+        // 공격 결과를 콤보 매니저에 전달
+        bool shouldExtraAttack = _playerComboManager != null && _playerComboManager.RecordAttackResult(hitCount > 0, !isExtraAttack);
+
+        // 추가 공격은 한번만 실행
+        _isExtraAttack = false;
+
+        // 일반 공격에서 추가 공격이 발동했다면 예약
+        if (!isExtraAttack)
+        {
+            _isExtraAttackPending = shouldExtraAttack;
+        }
+
         // 실제 대상을 타격한 경우에만 HitState로 전환
         if (hitCount > 0)
         {
             _handStateMachine.ChangeState(_hitState);
         }
+    }
+
+    private void HandleRunStarted()
+    {
+        _playerComboManager?.ResetCombo();
+
+        _isExtraAttackPending = false;
+        _isExtraAttack = false;
+    }
+
+
+    /// <summary>
+    /// HitState 종료 후 SwingState로 복귀
+    /// </summary>
+    private void HandleHitCompleted()
+    {
+        // 추가 공격이 예약되어 있는 경우
+        if (_isExtraAttackPending)
+        {
+            _isExtraAttackPending = false;
+            _isExtraAttack = true;
+
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowExtraAttackText(_handTransform);
+            }
+
+            // 추가 공격은 기존보다 빠르게 진행
+            _swingState.StartAttack(2f);
+
+            // SwingState로 복귀
+            _handStateMachine.ChangeState(_swingState);
+
+            Debug.Log("콤보 추가 공격 실행");
+
+            return;
+
+        }
+
+        // 추가 공격이 없다면 기존 공격 흐름 유지
+        _handStateMachine.ChangeState(_swingState);
+
+        Debug.Log("타격 애니메이션 완료: 공격 상태 복귀");
+    }
+
+    /// <summary>
+    /// 스테이지 시작 시 콤보 초기화
+    /// </summary>
+    private void HandleStageStarted(int stageNumber)
+    {
+        _playerComboManager?.ResetCombo();
+
+        _isExtraAttackPending = false;
+        _isExtraAttack = false;
+
+        Debug.Log($"스테이지 {stageNumber} 시작: 콤보 초기화");
     }
     #endregion
 
@@ -391,16 +521,6 @@ public class PlayerCombat : MonoBehaviour
 
         // 피격 애니메이션 완료 후 SwingState로 복귀
         _hitState.Complete();
-    }
-
-    /// <summary>
-    /// HitState 종료 후 SwingState로 복귀
-    /// </summary>
-    private void HandleHitCompleted()
-    {
-        _handStateMachine.ChangeState(_swingState);
-
-        Debug.Log("타격 애니메이션 완료: 공격 상태 복귀");
     }
 
     /// <summary>

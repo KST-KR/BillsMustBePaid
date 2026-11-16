@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerComboManager : MonoBehaviour
 {
     #region 상수
-    private const int CComboThreshold = 10;
+    private const int CComboThreshold = 3;
     private const float CLuckChancePerPoint = 0.01f;
     private const float CMaxDoubleAttackChance = 0.5f;
     #endregion
@@ -30,6 +30,11 @@ public class PlayerComboManager : MonoBehaviour
     {
         get
         {
+            if (_playerStats == null)
+            {
+                return 0f;
+            }
+
             return Mathf.Clamp(_playerStats.Luck * CLuckChancePerPoint, 0f, CMaxDoubleAttackChance);
         }
     }
@@ -60,7 +65,7 @@ public class PlayerComboManager : MonoBehaviour
     /// </summary>
     /// <param name="isHit">공격 대상 적중 여부</param>
     /// <returns>추가 공격 발동 여부</returns>
-    public bool RecordAttackResult(bool isHit)
+    public bool RecordAttackResult(bool isHit, bool allowExtraAttackCheck = true)
     {
         // 미적중 시 콤보 초기화
         if (!isHit)
@@ -71,6 +76,12 @@ public class PlayerComboManager : MonoBehaviour
 
         _comboCount++;
         OnComboChanged?.Invoke(_comboCount);
+
+        // 추가 공격 자체에서는 확률을 다시 판정하지 않음.
+        if (!allowExtraAttackCheck)
+        {
+            return false;
+        }
 
         // 새로운 10회 단위에 도달했는지 확인
         int currentMilestone = _comboCount / CComboThreshold;
