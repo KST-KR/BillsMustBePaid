@@ -65,7 +65,7 @@ MonoBehaviour:
   _upModifier: 1
   _torqueMin: 1
   _torqueMax: 3
-  _removeTime: 2
+  _removeTime: 0.85
   _pickUpTime: 0.35
   _absorbViewportPos: {x: 0.5, y: -0.3}
   _absorbDepthFromCam: 2

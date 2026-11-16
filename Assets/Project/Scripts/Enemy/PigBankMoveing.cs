@@ -24,6 +24,9 @@ public class PigBankMoveing : MonoBehaviour
 
     [Header("겹침 설정")]
     [SerializeField] private float _radius = 3.5f;
+
+    [Header("테이블 이동 영역 제한")]
+    [SerializeField] private Vector2 _moveBounds = new Vector2(2.0f, 1.5f);
     #endregion
 
     #region 내부 변수
@@ -78,6 +81,7 @@ public class PigBankMoveing : MonoBehaviour
 
         Moveing();
         PushOut();
+        ConstrainToTableBounds();
     }
 
     private void OnDisable()
@@ -102,6 +106,18 @@ public class PigBankMoveing : MonoBehaviour
     //    Gizmos.color = Color.yellow;
     //    Gizmos.DrawSphere(transform.position, _radius);
     //}
+
+    /// <summary>
+    /// 에디터에서 테이블 범위를 그리기 위한 기즈모
+    /// </summary>
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.cyan;
+        Vector3 boxSize = new Vector3(_moveBounds.x * 2f, 0.1f, _moveBounds.y * 2f);
+        Vector3 centerPos = new Vector3(0f, transform.position.y, 0f);
+
+        Gizmos.DrawWireCube(centerPos, boxSize);
+    }
     #endregion
 
     #region 커스텀 메서드 (public)
@@ -117,6 +133,48 @@ public class PigBankMoveing : MonoBehaviour
     #endregion
 
     #region 커스텀 메서드 (private)
+
+    private void ConstrainToTableBounds()
+    {
+        Vector3 pos = transform.position;
+        bool hitWall = false;
+
+        // X축(좌우) 경계 체크
+        if (pos.x > _moveBounds.x)
+        {
+            pos.x = _moveBounds.x;
+            _moveDir.x = -Mathf.Abs(_moveDir.x); // 왼쪽으로 방향 전환
+            hitWall = true;
+        }
+        else if (pos.x < -_moveBounds.x)
+        {
+            pos.x = -_moveBounds.x;
+            _moveDir.x = Mathf.Abs(_moveDir.x);  // 오른쪽으로 방향 전환
+            hitWall = true;
+        }
+
+        // Z축(상하) 경계 체크
+        if (pos.z > _moveBounds.y)
+        {
+            pos.z = _moveBounds.y;
+            _moveDir.z = -Mathf.Abs(_moveDir.z); // 아래쪽으로 방향 전환
+            hitWall = true;
+        }
+        else if (pos.z < -_moveBounds.y)
+        {
+            pos.z = -_moveBounds.y;
+            _moveDir.z = Mathf.Abs(_moveDir.z);  // 위쪽으로 방향 전환
+            hitWall = true;
+        }
+
+        if (hitWall)
+        {
+            _moveDir.y = 0;
+            _moveDir.Normalize();
+            transform.position = pos;
+        }
+    }
+
     private void Moveing()
     {
         if (_pigData == null)
@@ -129,22 +187,7 @@ public class PigBankMoveing : MonoBehaviour
         Vector3 finalDir = _moveDir.normalized;
 
         float moveDiatance = currentSpeed * Time.deltaTime;
-        float castRadius = 1f;
         float castDistance = moveDiatance + 0.2f;
-
-        // 진행 방향 앞에 보이지 않는 벽(Wall)이 있는지 레이캐스트로 검사
-        if (Physics.SphereCast(transform.position, castRadius, finalDir, out RaycastHit hit, 0.6f))
-        {
-            if (hit.collider.CompareTag("Wall"))
-            {
-                // 벽에 부딪히면 반사각(Reflect)으로 자연스럽게 방향 전환
-                _moveDir = Vector3.Reflect(_moveDir, hit.normal);
-                _moveDir.y = 0;
-                _moveDir.Normalize();
-
-                finalDir = _moveDir;
-            }
-        }
 
         // 전진
         transform.Translate(finalDir * currentSpeed * Time.deltaTime, Space.World);
@@ -181,35 +224,22 @@ public class PigBankMoveing : MonoBehaviour
                 continue;
             }
 
-            // 반구 형태이므로 중심보다 아래에 있는 오브젝트는 제외 
-            if (col.transform.position.y < transform.position.y)
-            {
-                continue;
-            }
+            // 돼지 저금통이 아니면 밀어내지 않음 (바닥, 손, 무기 등 제외)
+            if (!col.TryGetComponent<PigBankMoveing>(out var otherPig)) continue;
 
-            // 중심에서 오브젝트까지의 방향과 거리 계산
             Vector3 direction = col.transform.position - transform.position;
             direction.y = 0;
             float distance = direction.magnitude;
 
-            // 거리가 반지름보다 작다면 (반구 내부에 있다면)
-            if (distance < _radius && distance > 0)
+            if (distance < _radius && distance > 0.001f)
             {
                 Vector3 normalizedDir = direction / distance;
                 Vector3 targetPos = transform.position + normalizedDir * _radius;
 
-                // 내 위치에서 밀어내려는 목표 위치 사이에 벽이 있는지 레이캐스트로 검사
-                if (Physics.Raycast(transform.position, normalizedDir, out RaycastHit wallHit, _radius))
-                {
-                    if (wallHit.collider.CompareTag("Wall"))
-                    {
-                        // 미는 경로(반경 내)에 벽이 있다면 벽을 뚫고 나가지 않도록 밀어내기 취소
-                        continue;
-                    }
-                }
-
-                // 벽이 가로막고 있지 않다면 안전하게 표면 위치로 이동
                 col.transform.position = new Vector3(targetPos.x, col.transform.position.y, targetPos.z);
+
+                // 밀려난 상대방 돼지도 테이블 밖으로 나가지 않도록 즉시 경계 체크
+                otherPig.ConstrainToTableBounds();
             }
         }
     }

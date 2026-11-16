@@ -134,6 +134,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
         _accuracyBonusGold = 0;
         _isSettled = false;
 
+        ResetEarnedCoinCounts();
+
         OnStageRewardChanged?.Invoke(_stageRewardGold);
     }
 
@@ -149,6 +151,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
         _stagePenaltyGold = 0;
         _accuracyBonusGold = 0;
         _isSettled = true;
+
+        ResetEarnedCoinCounts();
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
     }
@@ -322,5 +326,30 @@ public class StageRewardManager : Singleton<StageRewardManager>
         return true;
     }
 
+    /// <summary>
+    /// 파괴 레벨 데이터 내보내기, 복원하기
+    /// </summary>
+    public void ExportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            return;
+        }
+
+        data.crashLevel = _currentCrashLevel;
+        data.crashTotalNumber = _totalCrashNumber;
+    }
+
+    public void ImportSaveData(RunPiggyBankSaveData data)
+    {
+        if(data == null)
+        {
+            ResetCrashLevelSystem();
+            return;
+        }
+
+        _currentCrashLevel = Mathf.Max(1, data.crashLevel);
+        _totalCrashNumber = Mathf.Max(0, data.crashTotalNumber);
+    }
     #endregion
 }
