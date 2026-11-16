@@ -134,6 +134,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
         _accuracyBonusGold = 0;
         _isSettled = false;
 
+        ResetEarnedCoinCounts();
+
         OnStageRewardChanged?.Invoke(_stageRewardGold);
     }
 
@@ -149,6 +151,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
         _stagePenaltyGold = 0;
         _accuracyBonusGold = 0;
         _isSettled = true;
+
+        ResetEarnedCoinCounts();
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
     }
