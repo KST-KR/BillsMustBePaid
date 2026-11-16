@@ -222,7 +222,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     }
 
     /// <summary>
-    /// 기준 위치를 중심으로 원형 범위 내의 무작위 3D 좌표를 반환
+    /// 기준 위치를 중심으로 스폰 범위 내의 무작위 3D 좌표를 반환
     /// </summary>
     private Vector3 RandomSpawnPoint()
     {
@@ -267,6 +267,9 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         _spawnedPigBanks.Clear();
     }
 
+    /// <summary>
+    /// 스테이지를 진행함에 따라 돼지 저금통 스폰 증가
+    /// </summary>
     private string GetRandomPigID()
     {
         List<PigBankGameDataSO> availablePigs = new List<PigBankGameDataSO>();

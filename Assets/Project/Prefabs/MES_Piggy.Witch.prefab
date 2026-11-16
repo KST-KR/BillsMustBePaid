@@ -79,6 +79,7 @@ MonoBehaviour:
   _jumpHeight: 0.6
   _jumpSpeed: 8
   _radius: 2.399
+  _moveBounds: {x: 24, y: 11}
 --- !u!114 &1697838567424047095
 MonoBehaviour:
   m_ObjectHideFlags: 0
