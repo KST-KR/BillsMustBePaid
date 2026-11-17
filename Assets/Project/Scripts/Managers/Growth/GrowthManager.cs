@@ -130,6 +130,11 @@ public class GrowthManager : Singleton<GrowthManager>
         }
 
         RefreshSkillSetEffects();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.Upgrade);
+        }
+
         OnUpgradePurchased?.Invoke(upgradeId, level, upgrade.ValuePerLevel);
         OnGrowthChanged?.Invoke();
         return true;

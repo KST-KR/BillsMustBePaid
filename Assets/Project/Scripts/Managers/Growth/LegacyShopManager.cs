@@ -117,6 +117,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
         _purchasedItemIds.Add(item.ItemId);
         SaveCurrentSlotData();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.LegacyShopPurchase);
+        }
+
         OnOwnershipChanged?.Invoke(item.ItemId);
         OnOwnershipDataChanged?.Invoke();
         return true;
@@ -158,6 +163,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         _purchasedItemIds.Clear();
         SaveCurrentSlotData();
         OnOwnershipDataChanged?.Invoke();
+        if (refundAmount > 0 && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.LegacyPointsReset);
+        }
+
         Debug.Log("구매한 레거시 아이템 " + purchasedItemIds.Count + "개 초기화, " + refundAmount + " 포인트 환불");
         return refundAmount;
     }
@@ -186,6 +196,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         }
 
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.StartNextCycle, _saveManager.CurrentSlotIndex);
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.NextCycleStarted);
+        }
+
         SceneTransitionManager.Instance.LoadGameScene();
     }
 

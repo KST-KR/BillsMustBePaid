@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 /// <summary>
 /// 게임 데이터의 저장 및 불러오기를 관리
@@ -15,6 +16,7 @@ public class SaveManager : PersistentSingleton<SaveManager>
 
     #region 경로
     private const string SaveFileNameFormat = "save_slot_{0}.json";
+    private const string SettingsFileName = "settings.json";
     #endregion
 
     #region 프로퍼티
@@ -26,7 +28,104 @@ public class SaveManager : PersistentSingleton<SaveManager>
     public event Action<SaveSlotData> OnGameLoaded;
     #endregion
 
+    #region 내부 변수
+    private SettingsManager _settingsManager;
+    private Coroutine _settingsSaveRoutine;
+    #endregion
+
+    #region 이벤트 함수
+    protected override void OnSingletonAwake()
+    {
+        _settingsManager = SettingsManager.GetOrCreate();
+        LoadSettings();
+        _settingsManager.OnSettingsChanged += HandleSettingsChanged;
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        FlushSettingsSave();
+        if (_settingsManager != null)
+        {
+            _settingsManager.OnSettingsChanged -= HandleSettingsChanged;
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        FlushSettingsSave();
+    }
+    #endregion
+
     #region 커스텀 (Private)
+    private void LoadSettings()
+    {
+        string path = Path.Combine(Application.persistentDataPath, SettingsFileName);
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            SaveSettingData settings = JsonUtility.FromJson<SaveSettingData>(File.ReadAllText(path));
+            if (settings != null)
+            {
+                _settingsManager.ImportSettings(settings);
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"설정 불러오기 실패: {exception.Message}");
+        }
+    }
+
+    private void HandleSettingsChanged()
+    {
+        if (_settingsSaveRoutine != null)
+        {
+            StopCoroutine(_settingsSaveRoutine);
+        }
+        _settingsSaveRoutine = StartCoroutine(SaveSettingsAfterDelay());
+    }
+
+    private IEnumerator SaveSettingsAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(0.35f);
+        _settingsSaveRoutine = null;
+        SaveSettings();
+    }
+
+    private void FlushSettingsSave()
+    {
+        if (_settingsSaveRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(_settingsSaveRoutine);
+        _settingsSaveRoutine = null;
+        SaveSettings();
+    }
+
+    private void SaveSettings()
+    {
+        if (_settingsManager == null)
+        {
+            return;
+        }
+
+        try
+        {
+            SaveSettingData settings = _settingsManager.ExportSettings();
+            Directory.CreateDirectory(Application.persistentDataPath);
+            File.WriteAllText(Path.Combine(Application.persistentDataPath, SettingsFileName), JsonUtility.ToJson(settings, true));
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"설정 저장 실패: {exception.Message}");
+        }
+    }
+
     private string GetSavePath(int slotIndex)
     {
         string fileName = string.Format(SaveFileNameFormat, slotIndex);
@@ -364,6 +463,7 @@ public class SaveManager : PersistentSingleton<SaveManager>
         // 검색이 끝난 뒤 최종 선택된 데이터만 알림.
         if (latestData != null)
         {
+            SetCurrentSlotIndex(latestData.slotIndex);
             OnGameLoaded?.Invoke(latestData);
         }
 
@@ -381,6 +481,11 @@ public class SaveManager : PersistentSingleton<SaveManager>
         {
             Debug.LogError($"잘못된 저장 슬롯 번호: {slotIndex}");
             return false;
+        }
+
+        if (CurrentSlotIndex == slotIndex)
+        {
+            return true;
         }
 
         CurrentSlotIndex = slotIndex;

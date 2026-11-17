@@ -928,6 +928,11 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnBillButtonClicked()
     {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.BillPaymentButton);
+        }
+
         HideAllPanels();
         ShowUpgradeSection(_billPanel);
         SetSelectedUpgradeTab(_billTabSelectedImage);
@@ -951,6 +956,11 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnBillTabButtonClicked()
     {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.BillPaymentButton);
+        }
+
         ShowUpgradeSection(_billPanel);
         SetSelectedUpgradeTab(_billTabSelectedImage);
     }

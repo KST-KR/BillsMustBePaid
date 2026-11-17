@@ -554,6 +554,10 @@ public class GrowthTreeUI : MonoBehaviour
         _hasUserSelectedUpgrade = true;
         _growthManager.SelectUpgrade(upgradeId);
         RefreshDetails(upgradeId);
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.SkillTreeItemSelected);
+        }
     }
 
     private void HandleSelectionChanged(string upgradeId)

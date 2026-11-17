@@ -156,6 +156,11 @@ public class BillManager : Singleton<BillManager>
             return false;
         }
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.BillPaid);
+        }
+
         bill.SetStatus(EBillStatus.Paid);
         OnBillPaid?.Invoke(bill);
         OnBillChanged?.Invoke(bill);

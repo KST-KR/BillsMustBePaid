@@ -21,6 +21,24 @@ public enum EAudioType
     GameOver,
 
     // UI
-    ButtonClick
+    ButtonClick,
+
+    // 기능별 효과음
+    BillPaid,
+    TonyCallStarted,
+    TonyLoanAccepted,
+    ActiveSkillUsed,
+    LegacyShopPurchase,
+    PerkOfferOpened,
+    PerkSelected,
+    TonyCallConnected,
+    TonyLoanAcceptedVoice,
+    TonyLoanRejectedVoice,
+    BankruptcyRestart,
+    LegacyPointsReset,
+    NextCycleStarted,
+    BillPaymentButton,
+    SkillTreeItemSelected,
+    LegacyRelicSelected
 }
 

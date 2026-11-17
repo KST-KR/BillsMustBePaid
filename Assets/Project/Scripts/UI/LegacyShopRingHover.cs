@@ -144,6 +144,11 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
             return;
         }
         if (!EnsureInitialized()) return;
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.LegacyRelicSelected);
+        }
+
         if (_isOwned)
         {
             if (_priceText != null) _priceText.text = "보유 중 · 장착됨";

@@ -143,7 +143,10 @@ public class BillPanelController : MonoBehaviour
             return;
         }
 
-        _billManager.TryPayBill(_displayedBill.BillId);
+        if (_billManager.TryPayBill(_displayedBill.BillId) && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.BillPaymentButton);
+        }
     }
 
     private void HandleBankruptcyClicked()
@@ -153,7 +156,10 @@ public class BillPanelController : MonoBehaviour
             return;
         }
 
-        RoguelikeManager.Instance.RestartAfterBankruptcy();
+        if (RoguelikeManager.Instance.RestartAfterBankruptcy() && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.BankruptcyRestart);
+        }
     }
 
     private void Refresh()
