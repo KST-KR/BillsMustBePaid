@@ -226,6 +226,20 @@ public class GameSceneBootstrap : MonoBehaviour
             // 성장 및 장비 데이터 복원
             saveManager.NotifyGameLoaded(saveData);
 
+            // 저금통 해금 및 파괴 레벨 데이터 복원
+            if (saveData.runData.piggyBankData != null)
+            {
+                if (PigBankUnlock.Instance != null)
+                {
+                    PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+
+                if (StageRewardManager.Instance != null)
+                {
+                    StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+            }
+
             // 런 활성 상태 복원
             gameManager.RestoreRunState();
 

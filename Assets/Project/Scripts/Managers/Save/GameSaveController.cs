@@ -16,6 +16,7 @@ public class GameSaveController : Singleton<GameSaveController>
     private BillManager _billManager;
     private EquipmentManager _equipmentManager;
     private PlayerEquipment _playerEquipment;
+    private PigBankUnlock _pigBankUnlock;
 
     private bool _isSubscribed;
     private bool _isSavedForCurrentResult;
@@ -53,6 +54,7 @@ public class GameSaveController : Singleton<GameSaveController>
         _gameManager = null;
         _equipmentManager = null;
         _playerEquipment = null;
+        _pigBankUnlock = null;
     }
     #endregion
 
@@ -70,6 +72,7 @@ public class GameSaveController : Singleton<GameSaveController>
         _gameManager = GameManager.Instance;
         _billManager = BillManager.Instance;
         _equipmentManager = EquipmentManager.Instance;
+        _pigBankUnlock = PigBankUnlock.Instance;
 
         if (_playerEquipment == null)
         {
@@ -365,6 +368,22 @@ public class GameSaveController : Singleton<GameSaveController>
 
         saveData.runData.runGrowth = _growthManager.ExportSaveData();
         saveData.runData.runPerks = PerkManager.Instance != null ? PerkManager.Instance.ExportSaveData() : new RunPerkSaveData();
+
+        // 저금통 해금 및 파괴 레벨 데이터 저장
+        if (saveData.runData.piggyBankData == null)
+        {
+            saveData.runData.piggyBankData = new RunPiggyBankSaveData();
+        }
+        
+        if (_pigBankUnlock != null)
+        {
+            _pigBankUnlock.ExportSaveData(saveData.runData.piggyBankData);
+        }
+
+        if (_stageRewardManager != null)
+        {
+            _stageRewardManager.ExportSaveData(saveData.runData.piggyBankData);
+        }
 
         // 장비 데이터 저장
         if (_equipmentManager == null || _playerEquipment == null)
