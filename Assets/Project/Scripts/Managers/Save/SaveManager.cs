@@ -65,6 +65,11 @@ public class SaveManager : PersistentSingleton<SaveManager>
             saveDate.runData.runGrowth = new RunGrowthSaveData();
         }
 
+        if (saveDate.runData.piggyBankData == null)
+        {
+            saveDate.runData.piggyBankData = new RunPiggyBankSaveData();
+        }
+
         if (saveDate.runData.runPerks == null)
         {
             saveDate.runData.runPerks = new RunPerkSaveData();

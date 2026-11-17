@@ -11,12 +11,8 @@ public struct UnlockInfo
     public PigBankDataBaseSO _pigData;
 }
 
-public class PigBankUnlock : MonoBehaviour
+public class PigBankUnlock : Singleton<PigBankUnlock>
 {
-    #region 싱글톤
-    public static PigBankUnlock Instance { get; private set; }
-    #endregion
-
     #region 속성
     public int UnlockLevel => _unlockLevel;
     #endregion
@@ -29,20 +25,6 @@ public class PigBankUnlock : MonoBehaviour
     #region 내부 변수
     private int _unlockLevel = 1;
     private int _totalCrash = 0;
-    #endregion
-
-    #region 이벤트 함수
-    private void Awake()
-    {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
     #endregion
 
     #region 커스텀 함수(public)
