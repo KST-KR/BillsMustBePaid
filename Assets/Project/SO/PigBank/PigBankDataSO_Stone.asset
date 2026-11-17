@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Stone
   _pigBankHP: 200
   _moveSpeed: 7
+  PigIndex: 5
   _pigPrefab: {fileID: 4924951498414643570, guid: 06752822e65cf2e4c86bea240a2e32c9, type: 3}
   _crashLevel: 6
   _rewardCoin: 350
@@ -24,3 +25,4 @@ MonoBehaviour:
   _specialCoinChance: 0.02
   _spawnProbability: 20
   _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}

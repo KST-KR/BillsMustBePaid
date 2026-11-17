@@ -58,7 +58,8 @@ public class RandomRewardManager : MonoBehaviour
 
         if (StageRewardManager.Instance != null)
         {
-            StageRewardManager.Instance.NotifyPigBankDestroyed();
+            int pigIndex = (_pigData != null) ? _pigData.PigIndex : 0;
+            StageRewardManager.Instance.NotifyPigBankDestroyed(pigIndex);
         }
 
         PigBankUnlock.Instance.UnlockPigBank();
@@ -89,7 +90,7 @@ public class RandomRewardManager : MonoBehaviour
         bool isJacpot = Random.value <= _pigData.JackpotChance; 
 
         // StageRewardManager를 통해 현재 레벨의 보너스 보상을 안전하게 가져옴
-        int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetCurrentLevelBonusReward() : 0;
+        int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetPigBonusReward(_pigData.PigIndex) : 0;
         int coinCount = _pigData.RewardCoin + levelBonus;
 
         float activeBonusRate = GetActiveRewardBonusRate();

@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using static CoinObjectPoolManager;
 
 [Serializable]
 public struct CrashLevelInfo
@@ -10,6 +9,15 @@ public struct CrashLevelInfo
 
     [Tooltip("레벨에서 추가로 지급 되는 골드")]
     public int bonusReward;
+}
+
+[Serializable]
+public class PigCrashProgress
+{
+    [Tooltip("인스펙터 구분용 이름 (예: 0번 일반 돼지 저금통, 1번 여행객 돼지 저금통)")]
+    public string pigName;
+    public int currentLevel = 1;
+    public int totalCrashCount = 0;
 }
 
 /// <summary>
@@ -26,23 +34,26 @@ public class StageRewardManager : Singleton<StageRewardManager>
     public int AccuracyBonusGold => _accuracyBonusGold;
     public int StageRewardBeforePenaltyGold => _stageRewardGold + _accuracyBonusGold;
 
-    public int CurrentCrashLevel => _currentCrashLevel;
+    public int StageDestroyedPigCount => _stageDestroyedPigCount;
     #endregion
 
     #region 이벤트
 
     public event Action<int> OnStageRewardChanged;
     public event Action<int, int> OnStageRewardSettled;
-    public event Action<int> OnCrashLevelChanged;
-
+    public event Action<int, int> OnPigCrashLevelChanged;
+    public event Action<int> OnStagePigCountChanged;
     #endregion
 
     #region 인스펙터
     [Header("파괴 레벨 시스템")]
     [SerializeField] private int _maxLevel = 5;
 
-    [Header("레벨별 데이터 설정 (인스펙터에서 수정 가능)")]
+    [Header("레벨별 데이터 설정")]
     [SerializeField] private CrashLevelInfo[] _levelTable;
+
+    [Header("돼지 10종 개별 파괴 진행도")]
+    [SerializeField] private PigCrashProgress[] _pigCrashList = new PigCrashProgress[10];
 
     [Header("플레이어 정확도")]
     [SerializeField] private PlayerAccuracy _playerAccuracy;
@@ -56,8 +67,6 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     private int _stageRewardGold;
     private int _stagePenaltyGold;
-    private int _currentCrashLevel = 1;
-    private int _totalCrashNumber = 0;
     private int _accuracyBonusGold;
 
     private bool _isSettled;
@@ -65,6 +74,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     public int EarnedSilverCoinCount { get; private set; }
     public int EarnedGoldCoinCount { get; private set; }
+
+    private int _stageDestroyedPigCount = 0;
     #endregion
 
     #region 이벤트 함수
@@ -133,11 +144,13 @@ public class StageRewardManager : Singleton<StageRewardManager>
         _stageRewardGold = 0;
         _stagePenaltyGold = 0;
         _accuracyBonusGold = 0;
+        _stageDestroyedPigCount = 0;
         _isSettled = false;
 
         ResetEarnedCoinCounts();
 
         OnStageRewardChanged?.Invoke(_stageRewardGold);
+        OnStagePigCountChanged?.Invoke(_stageDestroyedPigCount);
     }
 
     private void HandleStageCleared(int stageNumber)
@@ -251,42 +264,63 @@ public class StageRewardManager : Singleton<StageRewardManager>
     /// <summary>
     /// 돼지 저금통이 파괴될 때 호출되어 누적 횟수와 레벨업을 관리
     /// </summary>
-    public void NotifyPigBankDestroyed()
+    public void NotifyPigBankDestroyed(int pigIndex)
     {
-        _totalCrashNumber++;
-        Debug.Log($"StageReward : 돼지 파괴 누적 횟수: {_totalCrashNumber}");
+        _stageDestroyedPigCount++;
+        OnStagePigCountChanged?.Invoke(_stageDestroyedPigCount);
 
-        int currentIndex = _currentCrashLevel - 1;
+        if (pigIndex < 0 || pigIndex >= _pigCrashList.Length)
+        {
+            Debug.LogWarning($"잘못된 돼지 인덱스: {pigIndex}");
+            return;
+        }
 
-        // 배열 범위를 벗어나지 않는지 확인
+        PigCrashProgress targetPig = _pigCrashList[pigIndex];
+        targetPig.totalCrashCount++;
+
+        int currentIndex = targetPig.currentLevel - 1;
+
         if (currentIndex < _levelTable.Length)
         {
-            // 현재 레벨에 설정된 목표 횟수에 도달했는지 확인
-            if (_totalCrashNumber >= _levelTable[currentIndex].destroyCount)
+            if (targetPig.totalCrashCount >= _levelTable[currentIndex].destroyCount)
             {
-                _totalCrashNumber = 0;
+                targetPig.totalCrashCount = 0;
 
-                if (_currentCrashLevel < _maxLevel)
+                if (targetPig.currentLevel < _maxLevel)
                 {
-                    _currentCrashLevel++;
-                    OnCrashLevelChanged?.Invoke( _currentCrashLevel );
-                    Debug.Log($"★★ LevelUp  ★★ : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
+                    targetPig.currentLevel++;
+                    OnPigCrashLevelChanged?.Invoke(pigIndex, targetPig.currentLevel); // <-- 해당 돼지만 레벨업 알림
+                    Debug.Log($"★★ [{targetPig.pigName}] 레벨 상승! 현재 Lv.{targetPig.currentLevel}");
                 }
             }
         }
     }
 
     /// <summary>
-    /// 현재 레벨에 해당하는 추가 보상을 반환
+    /// 특정 돼지의 현재 파괴 레벨 반환 (UI 초기 세팅용)
     /// </summary>
-    public int GetCurrentLevelBonusReward()
+    public int GetPigCrashLevel(int pigIndex)
     {
-        int currentIndex = _currentCrashLevel - 1;
-        if (currentIndex >= 0 && currentIndex < _levelTable.Length)
+        if (pigIndex >= 0 && pigIndex < _pigCrashList.Length)
         {
-            return _levelTable[currentIndex].bonusReward;
+            return _pigCrashList[pigIndex].currentLevel;
         }
-        return 0; // 예외 처리
+        return 1;
+    }
+
+    /// <summary>
+    /// 특정 돼지의 현재 레벨 추가 보상 반환
+    /// </summary>
+    public int GetPigBonusReward(int pigIndex)
+    {
+        int level = GetPigCrashLevel(pigIndex);
+        int tableIndex = level - 1;
+
+        if (tableIndex >= 0 && tableIndex < _levelTable.Length)
+        {
+            return _levelTable[tableIndex].bonusReward;
+        }
+        return 0;
     }
 
     /// <summary>
@@ -294,9 +328,14 @@ public class StageRewardManager : Singleton<StageRewardManager>
     /// </summary>
     public void ResetCrashLevelSystem()
     {
-        _currentCrashLevel = 1;
-        _totalCrashNumber = 0;
-        OnCrashLevelChanged?.Invoke(_currentCrashLevel);
+        _stageDestroyedPigCount = 0;
+
+        for (int i = 0; i < _pigCrashList.Length; i++)
+        {
+            _pigCrashList[i].currentLevel = 1;
+            _pigCrashList[i].totalCrashCount = 0;
+            OnPigCrashLevelChanged?.Invoke(i, 1);
+        }
         Debug.Log("StageReward : 파산/게임 오버로 인해 파괴 레벨이 초기화되었습니다.");
     }
 
@@ -334,26 +373,54 @@ public class StageRewardManager : Singleton<StageRewardManager>
     /// </summary>
     public void ExportSaveData(RunPiggyBankSaveData data)
     {
-        if(data == null)
+        if (data == null)
         {
             return;
         }
 
-        data.crashLevel = _currentCrashLevel;
-        data.crashTotalNumber = _totalCrashNumber;
+        int count = _pigCrashList.Length;
+
+        // 저장 객체의 배열이 null이거나 길이가 다르면 새로 할당
+        if (data.crashLevel == null || data.crashLevel.Length != count)
+        {
+            data.crashLevel = new int[count];
+        }
+
+        if (data.crashTotalNumber == null || data.crashTotalNumber.Length != count)
+        {
+            data.crashTotalNumber = new int[count];
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            data.crashLevel[i] = _pigCrashList[i].currentLevel;
+            data.crashTotalNumber[i] = _pigCrashList[i].totalCrashCount;
+        }
     }
 
     public void ImportSaveData(RunPiggyBankSaveData data)
     {
-        if(data == null)
+        // 세이브 데이터가 없으면 전체 초기화
+        if (data == null || data.crashLevel == null || data.crashTotalNumber == null)
         {
             ResetCrashLevelSystem();
             return;
         }
 
-        _currentCrashLevel = Mathf.Max(1, data.crashLevel);
-        _totalCrashNumber = Mathf.Max(0, data.crashTotalNumber);
-        OnCrashLevelChanged?.Invoke(_currentCrashLevel);
+        int count = _pigCrashList.Length;
+
+        for (int i = 0; i < count; i++)
+        {
+            // 세이브 배열 범위 내의 데이터만 안전하게 복원
+            int savedLevel = (i < data.crashLevel.Length) ? data.crashLevel[i] : 1;
+            int savedCount = (i < data.crashTotalNumber.Length) ? data.crashTotalNumber[i] : 0;
+
+            _pigCrashList[i].currentLevel = Mathf.Max(1, savedLevel);
+            _pigCrashList[i].totalCrashCount = Mathf.Max(0, savedCount);
+
+            // 불러온 레벨을 각 슬롯 UI에 즉시 반영
+            OnPigCrashLevelChanged?.Invoke(i, _pigCrashList[i].currentLevel);
+        }
     }
     #endregion
 }

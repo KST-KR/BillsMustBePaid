@@ -79,9 +79,8 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private PlayerStatsHud _playerStatsHud;
 
     [Header("돼지 저금통 레벨 UI")]
-    [SerializeField] private TMP_Text _crashLevelText;
+    [SerializeField] private TMP_Text _stagePigCountText;
     [SerializeField] private TMP_Text _unlockLevelText;
-    [SerializeField] private TMP_Text _crashCountText;
     #endregion
 
     #region 내부 변수
@@ -218,9 +217,9 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled += HandleStageRewardSettled;
-            _stageRewardManager.OnCrashLevelChanged += UpdateLevelUI;
+            _stageRewardManager.OnStagePigCountChanged += UpdateStagePigCountUI;
 
-            UpdateLevelUI(_stageRewardManager.CurrentCrashLevel);
+            UpdateStagePigCountUI(_stageRewardManager.StageDestroyedPigCount);
         }
 
         if(_pigBankUnlock != null)
@@ -287,7 +286,7 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled -= HandleStageRewardSettled;
-            _stageRewardManager.OnCrashLevelChanged -= UpdateLevelUI;       
+            _stageRewardManager.OnStagePigCountChanged -= UpdateStagePigCountUI;
         }
 
         if (_pigBankUnlock != null)
@@ -587,6 +586,17 @@ public class UIManager : Singleton<UIManager>
     }
 
     /// <summary>
+    /// 이번 스테이지에서 파괴한 돼지 저금통 마릿수 갱신
+    /// </summary>
+    private void UpdateStagePigCountUI(int count)
+    {
+        if (_stagePigCountText != null)
+        {
+            _stagePigCountText.text = $"{count} 마리";
+        }
+    }
+
+    /// <summary>
     /// 돼지 저금통 해금 레벨, 파괴 개수 갱신
     /// </summary>
     private void UpdateUnlockUI(int totalCrash, int unlockLevel)
@@ -594,11 +604,6 @@ public class UIManager : Singleton<UIManager>
         if(_unlockLevelText != null)
         {
             _unlockLevelText.text = $"해금 Lv. {unlockLevel}";
-        }
-
-        if(_crashCountText != null)
-        {
-            _crashCountText.text = $"{totalCrash}개 파괴";
         }
     }
 
@@ -895,17 +900,6 @@ public class UIManager : Singleton<UIManager>
         }
 
         _currentStage = stageNumber;
-    }
-
-    /// <summary>
-    /// 저금통 파괴에 따른 레벨 수치를 갱신
-    /// </summary>
-    public void UpdateLevelUI(int level)
-    {
-        if(_crashLevelText != null)
-        {
-            _crashLevelText.text = $"Lv. {level}";
-        }
     }
 
     /// <summary>
