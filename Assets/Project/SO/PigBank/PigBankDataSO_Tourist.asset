@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Tourist
   _pigBankHP: 30
   _moveSpeed: 7
+  PigIndex: 1
   _pigPrefab: {fileID: 2085024267059949473, guid: 96c9569073c57e34fb0594b33000c0b6, type: 3}
   _crashLevel: 2
   _rewardCoin: 150
@@ -23,3 +24,5 @@ MonoBehaviour:
   _shinePigBankChance: 0.01
   _specialCoinChance: 0.02
   _spawnProbability: 20
+  _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}

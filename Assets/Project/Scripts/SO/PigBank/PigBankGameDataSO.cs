@@ -37,6 +37,9 @@ public abstract class PigBankGameDataSO : ScriptableObject
     [SerializeField] protected int _pigBankHP;
     [SerializeField] protected float _moveSpeed;
 
+    [Header("돼지 식별 번호 (0 ~ 9)")]
+    public int PigIndex;
+
     [Header("돼지 저금통 프리팹")]
     [SerializeField] protected GameObject _pigPrefab;
 

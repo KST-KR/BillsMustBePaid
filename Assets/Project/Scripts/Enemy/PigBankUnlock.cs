@@ -15,6 +15,11 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
 {
     #region 속성
     public int UnlockLevel => _unlockLevel;
+    public int TotalCrash => _totalCrash;
+    #endregion
+
+    #region 이벤트
+    public event Action<int, int> OnUnlockProgressChanged;
     #endregion
 
     #region 인스펙터
@@ -48,6 +53,8 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
                 Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");              
             }
         }
+
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
     }
 
     /// <summary>
@@ -70,6 +77,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     {
         _unlockLevel = 1;
         _totalCrash = 0;
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
         Debug.Log("StageReward : 파산/게임 오버로 인해 해금 레벨이 초기화되었습니다.");
     }
 
@@ -97,6 +105,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
 
         _unlockLevel = Mathf.Max(1, data.unlockLevel);
         _totalCrash = Mathf.Max(0, data.unlockTotalCrash);
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
     }
     #endregion
 }

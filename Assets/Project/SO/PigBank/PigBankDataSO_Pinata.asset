@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Pinata
   _pigBankHP: 95
   _moveSpeed: 7
+  PigIndex: 4
   _pigPrefab: {fileID: 3796336627844551131, guid: 5e12c08a8be6596428cd8387529b68d9, type: 3}
   _crashLevel: 5
   _rewardCoin: 100
@@ -24,3 +25,4 @@ MonoBehaviour:
   _specialCoinChance: 0.02
   _spawnProbability: 15
   _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}

@@ -11,6 +11,6 @@ public class RunPiggyBankSaveData
     public int unlockTotalCrash = 0;
 
     // 파괴 레벨
-    public int crashLevel = 1;
-    public int crashTotalNumber = 0;
+    public int[] crashLevel = new int[10];
+    public int[] crashTotalNumber = new int[10];
 }
