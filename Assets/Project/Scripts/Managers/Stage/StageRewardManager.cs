@@ -33,6 +33,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     public event Action<int> OnStageRewardChanged;
     public event Action<int, int> OnStageRewardSettled;
+    public event Action<int> OnCrashLevelChanged;
 
     #endregion
 
@@ -268,6 +269,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
                 if (_currentCrashLevel < _maxLevel)
                 {
                     _currentCrashLevel++;
+                    OnCrashLevelChanged?.Invoke( _currentCrashLevel );
                     Debug.Log($"★★ LevelUp  ★★ : 파괴 레벨 상승! 현재 레벨: {_currentCrashLevel}");
                 }
             }
@@ -294,6 +296,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
     {
         _currentCrashLevel = 1;
         _totalCrashNumber = 0;
+        OnCrashLevelChanged?.Invoke(_currentCrashLevel);
         Debug.Log("StageReward : 파산/게임 오버로 인해 파괴 레벨이 초기화되었습니다.");
     }
 
@@ -350,6 +353,7 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
         _currentCrashLevel = Mathf.Max(1, data.crashLevel);
         _totalCrashNumber = Mathf.Max(0, data.crashTotalNumber);
+        OnCrashLevelChanged?.Invoke(_currentCrashLevel);
     }
     #endregion
 }

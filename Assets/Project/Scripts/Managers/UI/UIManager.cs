@@ -77,6 +77,11 @@ public class UIManager : Singleton<UIManager>
 
     [Header("플레이어 스테이터스 HUD")]
     [SerializeField] private PlayerStatsHud _playerStatsHud;
+
+    [Header("돼지 저금통 레벨 UI")]
+    [SerializeField] private TMP_Text _crashLevelText;
+    [SerializeField] private TMP_Text _unlockLevelText;
+    [SerializeField] private TMP_Text _crashCountText;
     #endregion
 
     #region 내부 변수
@@ -93,6 +98,8 @@ public class UIManager : Singleton<UIManager>
     // 추가 공격 텍스트 표시 관리
     private Transform _extraAttackTarget;
     private float _extraAttackTextTimer;
+
+    private PigBankUnlock _pigBankUnlock;
     #endregion
 
     #region 이벤트 함수
@@ -189,6 +196,7 @@ public class UIManager : Singleton<UIManager>
         _stageManager = StageManager.Instance;
         _currencyManager = CurrencyManager.Instance;
         _stageRewardManager = StageRewardManager.Instance;
+        _pigBankUnlock = PigBankUnlock.Instance;
 
         if (_gameManager != null)
         {
@@ -210,6 +218,16 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled += HandleStageRewardSettled;
+            _stageRewardManager.OnCrashLevelChanged += UpdateLevelUI;
+
+            UpdateLevelUI(_stageRewardManager.CurrentCrashLevel);
+        }
+
+        if(_pigBankUnlock != null)
+        {
+            _pigBankUnlock.OnUnlockProgressChanged += UpdateUnlockUI;
+
+            UpdateUnlockUI(_pigBankUnlock.TotalCrash, _pigBankUnlock.UnlockLevel);
         }
 
         if (_playerStamina != null)
@@ -269,6 +287,12 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled -= HandleStageRewardSettled;
+            _stageRewardManager.OnCrashLevelChanged -= UpdateLevelUI;       
+        }
+
+        if (_pigBankUnlock != null)
+        {
+            _pigBankUnlock.OnUnlockProgressChanged -= UpdateUnlockUI;
         }
 
         if (_playerStamina != null)
@@ -290,7 +314,7 @@ public class UIManager : Singleton<UIManager>
         _stageManager = null;
         _currencyManager = null;
         _stageRewardManager = null;
-
+        _pigBankUnlock = null; 
         _isSubscribed = false;
     }
 
@@ -560,6 +584,22 @@ public class UIManager : Singleton<UIManager>
         }
 
         return saveController.SaveCurrentProgress(_currencyManager.Gold);
+    }
+
+    /// <summary>
+    /// 돼지 저금통 해금 레벨, 파괴 개수 갱신
+    /// </summary>
+    private void UpdateUnlockUI(int totalCrash, int unlockLevel)
+    {
+        if(_unlockLevelText != null)
+        {
+            _unlockLevelText.text = $"해금 Lv. {unlockLevel}";
+        }
+
+        if(_crashCountText != null)
+        {
+            _crashCountText.text = $"{totalCrash}개 파괴";
+        }
     }
 
     /// <summary>
@@ -862,8 +902,10 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void UpdateLevelUI(int level)
     {
-        // TODO: 레벨 UI 갱신
-        // 레벨 UI 구현 단계에서 연결
+        if(_crashLevelText != null)
+        {
+            _crashLevelText.text = $"Lv. {level}";
+        }
     }
 
     /// <summary>
