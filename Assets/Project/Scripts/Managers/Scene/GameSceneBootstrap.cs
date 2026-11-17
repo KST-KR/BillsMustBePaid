@@ -11,6 +11,11 @@ public class GameSceneBootstrap : MonoBehaviour
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
         yield return null;
 
+        //TODO: 1. 필수 매니저 확인
+        // 2. GameDataLoader를 통한 기본 데이터 로딩
+        // 3. 로딩 성공 여부 확인
+        // 4. 실행 모드에 따라 기존 초기화 진행
+
         try
         {
             if (GameManager.Instance == null)
