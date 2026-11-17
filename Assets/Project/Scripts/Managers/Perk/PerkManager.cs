@@ -115,6 +115,11 @@ public sealed class PerkManager : Singleton<PerkManager>
             return false;
         }
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.PerkOfferOpened);
+        }
+
         OnPerkOfferStarted?.Invoke(_offeredPerks, bill);
         OnPerkStateChanged?.Invoke();
         return true;
@@ -387,6 +392,11 @@ public sealed class PerkManager : Singleton<PerkManager>
 
         _offeredPerks.Clear();
         _currentOfferBill = null;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.PerkSelected);
+        }
 
         OnPerkSelected?.Invoke(perk);
         OnPerkStateChanged?.Invoke();

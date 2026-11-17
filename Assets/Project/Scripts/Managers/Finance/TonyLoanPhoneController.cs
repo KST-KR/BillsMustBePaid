@@ -166,6 +166,11 @@ public class TonyLoanPhoneController : MonoBehaviour
         }
 
         _isConnected = false;
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.TonyCallStarted);
+        }
+
         _callPanel.SetActive(true);
         _callCanvasGroup.alpha = 0.0f;
         _callTitleText.text = "빅 토니에게 전화 연결 중";
@@ -204,6 +209,11 @@ public class TonyLoanPhoneController : MonoBehaviour
         }
 
         _isConnected = true;
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.TonyCallConnected);
+        }
+
         int repaymentAmount = CalculateRepayment(_offeredPrincipal);
         _callTitleText.text = "빅 토니";
         _dialogueText.text = "이번 청구서가 급하다고? 필요한 돈을 빌려주지\n대신 " + _repaymentDays + "일 안에 원금의 " + Mathf.Max(0, _repaymentPercent - 100) + "%를 더해 갚아";
@@ -217,9 +227,20 @@ public class TonyLoanPhoneController : MonoBehaviour
     {
         if (!_isConnected || _billManager == null || !_billManager.TryCreateTonyLoan(_offeredPrincipal, _repaymentDays))
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(EAudioType.TonyLoanRejectedVoice);
+            }
+
             _dialogueText.text = "지금은 대출을 진행할 수 없음\n청구서와 잔고를 다시 확인해";
             _acceptButton.gameObject.SetActive(false);
             return;
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.TonyLoanAccepted);
+            AudioManager.Instance.PlaySFX(EAudioType.TonyLoanAcceptedVoice);
         }
 
         _isConnected = false;

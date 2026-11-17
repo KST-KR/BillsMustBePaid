@@ -160,6 +160,11 @@ public sealed class ActiveSkillManager : Singleton<ActiveSkillManager>
         float cooldown = slot.CooldownDuration;
         slot.CooldownRemaining = cooldown;
         RegisterDurationBuff(slot.Skill);
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.ActiveSkillUsed);
+        }
+
         OnActiveSkillUsed?.Invoke(slotIndex, slot.Skill);
         OnSlotDataChanged?.Invoke();
         return true;

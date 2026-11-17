@@ -51,10 +51,33 @@ public class CurrencyManager : PersistentSingleton<CurrencyManager>
 
     private void Update()
     {
+        int gold = 100000;
         if (Input.GetKeyDown(KeyCode.G))
         {
-            TryAdd(ECurrencyType.Gold, 100000);
-            Debug.Log($"골드 추가 후 잔고: {Gold}");
+            if (Gold > int.MaxValue - gold)
+            {
+                SetBalance(ECurrencyType.Gold, int.MaxValue);
+            }
+            else
+            {
+                TryAdd(ECurrencyType.Gold, gold);
+            }            
+
+            Debug.Log($"{gold} 골드 증가 후 잔고: {Gold}");
+        }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            if (Gold < gold)
+            {
+                SetBalance(ECurrencyType.Gold, 0);
+            }
+            else
+            {
+                TrySpend(ECurrencyType.Gold, gold);
+            }            
+
+            Debug.Log($"{gold} 골드 감소 후 잔고: {Gold}");
         }
     }
     #endregion
