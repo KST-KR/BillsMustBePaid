@@ -21164,7 +21164,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!20 &1124395592
 Camera:
   m_ObjectHideFlags: 0
@@ -22085,6 +22085,8 @@ MonoBehaviour:
   _upgradeGoldText: {fileID: 1759934040}
   _upgradeLegacyPointText: {fileID: 600359669}
   _playerStatsHud: {fileID: 1439325676}
+  _shopCameraRoot: {fileID: 1124395590}
+  _shopItemRoot: {fileID: 1287026245}
 --- !u!4 &1179052709
 Transform:
   m_ObjectHideFlags: 0
@@ -24498,7 +24500,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1287026246
 Transform:
   m_ObjectHideFlags: 0

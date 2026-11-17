@@ -11,6 +11,11 @@ public class GameSceneBootstrap : MonoBehaviour
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
         yield return null;
 
+        //TODO: 1. 필수 매니저 확인
+        // 2. GameDataLoader를 통한 기본 데이터 로딩
+        // 3. 로딩 성공 여부 확인
+        // 4. 실행 모드에 따라 기존 초기화 진행
+
         try
         {
             if (GameManager.Instance == null)
@@ -225,6 +230,20 @@ public class GameSceneBootstrap : MonoBehaviour
 
             // 성장 및 장비 데이터 복원
             saveManager.NotifyGameLoaded(saveData);
+
+            // 저금통 해금 및 파괴 레벨 데이터 복원
+            if (saveData.runData.piggyBankData != null)
+            {
+                if (PigBankUnlock.Instance != null)
+                {
+                    PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+
+                if (StageRewardManager.Instance != null)
+                {
+                    StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+            }
 
             // 런 활성 상태 복원
             gameManager.RestoreRunState();
