@@ -11,14 +11,15 @@ public struct UnlockInfo
     public PigBankDataBaseSO _pigData;
 }
 
-public class PigBankUnlock : MonoBehaviour
+public class PigBankUnlock : Singleton<PigBankUnlock>
 {
-    #region 싱글톤
-    public static PigBankUnlock Instance { get; private set; }
-    #endregion
-
     #region 속성
     public int UnlockLevel => _unlockLevel;
+    public int TotalCrash => _totalCrash;
+    #endregion
+
+    #region 이벤트
+    public event Action<int, int> OnUnlockProgressChanged;
     #endregion
 
     #region 인스펙터
@@ -29,20 +30,6 @@ public class PigBankUnlock : MonoBehaviour
     #region 내부 변수
     private int _unlockLevel = 1;
     private int _totalCrash = 0;
-    #endregion
-
-    #region 이벤트 함수
-    private void Awake()
-    {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
     #endregion
 
     #region 커스텀 함수(public)
@@ -66,6 +53,8 @@ public class PigBankUnlock : MonoBehaviour
                 Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");              
             }
         }
+
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
     }
 
     /// <summary>
@@ -88,6 +77,7 @@ public class PigBankUnlock : MonoBehaviour
     {
         _unlockLevel = 1;
         _totalCrash = 0;
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
         Debug.Log("StageReward : 파산/게임 오버로 인해 해금 레벨이 초기화되었습니다.");
     }
 
@@ -115,6 +105,7 @@ public class PigBankUnlock : MonoBehaviour
 
         _unlockLevel = Mathf.Max(1, data.unlockLevel);
         _totalCrash = Mathf.Max(0, data.unlockTotalCrash);
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
     }
     #endregion
 }

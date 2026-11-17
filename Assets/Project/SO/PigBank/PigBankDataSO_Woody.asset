@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Woody
   _pigBankHP: 90
   _moveSpeed: 7
+  PigIndex: 3
   _pigPrefab: {fileID: 9022015776915262669, guid: bf60bd9aa80fa2a4389c69a7c93d65d6, type: 3}
   _crashLevel: 4
   _rewardCoin: 300
@@ -24,3 +25,4 @@ MonoBehaviour:
   _specialCoinChance: 0.02
   _spawnProbability: 20
   _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}

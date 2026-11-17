@@ -1,16 +1,16 @@
-using System;
+ï»¿using System;
 
 /// <summary>
-/// µÅÁö Àú±İÅë ÆÄ±«, ÇØ±İ ·¹º§ ÀúÀå µ¥ÀÌÅÍ 
+/// ë¼ì§€ ì €ê¸ˆí†µ íŒŒê´´, í•´ê¸ˆ ë ˆë²¨ ì €ì¥ ë°ì´í„° 
 /// </summary>
 [Serializable]
 public class RunPiggyBankSaveData 
 {
-    // ÇØ±İ ·¹º§
+    // í•´ê¸ˆ ë ˆë²¨
     public int unlockLevel = 1;
     public int unlockTotalCrash = 0;
 
-    // ÆÄ±« ·¹º§
-    public int crashLevel = 1;
-    public int crashTotalNumber = 0;
+    // íŒŒê´´ ë ˆë²¨
+    public int[] crashLevel = new int[10];
+    public int[] crashTotalNumber = new int[10];
 }

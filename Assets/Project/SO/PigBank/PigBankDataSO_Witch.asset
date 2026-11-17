@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Witch
   _pigBankHP: 340
   _moveSpeed: 7
+  PigIndex: 8
   _pigPrefab: {fileID: 591498668345207895, guid: 1071b2888afd5644995117073d8ddf5e, type: 3}
   _crashLevel: 9
   _rewardCoin: 300

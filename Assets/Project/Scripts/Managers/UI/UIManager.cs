@@ -77,6 +77,14 @@ public class UIManager : Singleton<UIManager>
 
     [Header("플레이어 스테이터스 HUD")]
     [SerializeField] private PlayerStatsHud _playerStatsHud;
+
+    [Header("상점 오브젝트")]
+    [SerializeField] private GameObject _shopCameraRoot;
+    [SerializeField] private GameObject _shopItemRoot;
+
+    [Header("돼지 저금통 레벨 UI")]
+    [SerializeField] private TMP_Text _stagePigCountText;
+    [SerializeField] private TMP_Text _unlockLevelText;
     #endregion
 
     #region 내부 변수
@@ -93,6 +101,8 @@ public class UIManager : Singleton<UIManager>
     // 추가 공격 텍스트 표시 관리
     private Transform _extraAttackTarget;
     private float _extraAttackTextTimer;
+
+    private PigBankUnlock _pigBankUnlock;
     #endregion
 
     #region 이벤트 함수
@@ -189,6 +199,7 @@ public class UIManager : Singleton<UIManager>
         _stageManager = StageManager.Instance;
         _currencyManager = CurrencyManager.Instance;
         _stageRewardManager = StageRewardManager.Instance;
+        _pigBankUnlock = PigBankUnlock.Instance;
 
         if (_gameManager != null)
         {
@@ -210,6 +221,16 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled += HandleStageRewardSettled;
+            _stageRewardManager.OnStagePigCountChanged += UpdateStagePigCountUI;
+
+            UpdateStagePigCountUI(_stageRewardManager.StageDestroyedPigCount);
+        }
+
+        if(_pigBankUnlock != null)
+        {
+            _pigBankUnlock.OnUnlockProgressChanged += UpdateUnlockUI;
+
+            UpdateUnlockUI(_pigBankUnlock.TotalCrash, _pigBankUnlock.UnlockLevel);
         }
 
         if (_playerStamina != null)
@@ -269,6 +290,12 @@ public class UIManager : Singleton<UIManager>
         if (_stageRewardManager != null)
         {
             _stageRewardManager.OnStageRewardSettled -= HandleStageRewardSettled;
+            _stageRewardManager.OnStagePigCountChanged -= UpdateStagePigCountUI;
+        }
+
+        if (_pigBankUnlock != null)
+        {
+            _pigBankUnlock.OnUnlockProgressChanged -= UpdateUnlockUI;
         }
 
         if (_playerStamina != null)
@@ -290,7 +317,7 @@ public class UIManager : Singleton<UIManager>
         _stageManager = null;
         _currencyManager = null;
         _stageRewardManager = null;
-
+        _pigBankUnlock = null; 
         _isSubscribed = false;
     }
 
@@ -502,6 +529,9 @@ public class UIManager : Singleton<UIManager>
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_upgradePanel, true);
 
+        // 상점 탭을 선택했을 때만 상점 카메라와 오브젝트 활성화
+        SetShopDisplayActive(selectedSection == _shopPanel);
+
         // 플레이어 스테이터스 아이콘 표시
         if (_playerStatsHud != null)
         {
@@ -560,6 +590,28 @@ public class UIManager : Singleton<UIManager>
         }
 
         return saveController.SaveCurrentProgress(_currencyManager.Gold);
+    }
+
+    /// <summary>
+    /// 이번 스테이지에서 파괴한 돼지 저금통 마릿수 갱신
+    /// </summary>
+    private void UpdateStagePigCountUI(int count)
+    {
+        if (_stagePigCountText != null)
+        {
+            _stagePigCountText.text = $"{count} 마리";
+        }
+    }
+
+    /// <summary>
+    /// 돼지 저금통 해금 레벨, 파괴 개수 갱신
+    /// </summary>
+    private void UpdateUnlockUI(int totalCrash, int unlockLevel)
+    {
+        if(_unlockLevelText != null)
+        {
+            _unlockLevelText.text = $"해금 Lv. {unlockLevel}";
+        }
     }
 
     /// <summary>
@@ -622,6 +674,94 @@ public class UIManager : Singleton<UIManager>
         {
             _comboText.text = $"{comboCount} COMBO";
         }
+    }
+
+
+    /// <summary>
+    /// 추가 공격 텍스트 위치 및 표시 시간 갱신
+    /// </summary>
+    private void UpdateExtraAttackText()
+    {
+        if (_extraAttackTextTimer <= 0f)
+        {
+            return;
+        }
+
+        if (_extraAttackTarget == null)
+        {
+            HideExtraAttackText();
+            return;
+        }
+
+        UpdateExtraAttackTextPosition();
+
+        _extraAttackTextTimer -= Time.unscaledDeltaTime;
+
+        if (_extraAttackTextTimer <= 0f)
+        {
+            HideExtraAttackText();
+        }
+    }
+
+    /// <summary>
+    /// 손 위치를 기준으로 추가 공격 텍스트 위치 설정
+    /// </summary>
+    private void UpdateExtraAttackTextPosition()
+    {
+        Camera mainCamera = Camera.main;
+        Camera canvasCamera = _canvas.worldCamera;
+
+        if (mainCamera == null || canvasCamera == null)
+        {
+            return;
+        }
+
+        Vector3 screenPosition = mainCamera.WorldToScreenPoint(_extraAttackTarget.position);
+
+        if (screenPosition.z <= 0f)
+        {
+            return;
+        }
+
+        RectTransform canvasRect = _canvas.transform as RectTransform;
+
+        if (canvasRect == null)
+        {
+            return;
+        }
+
+        bool isConverted = RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, canvasCamera, out Vector2 localPosition);
+
+        if (!isConverted)
+        {
+            return;
+        }
+
+        _extraAttackText.rectTransform.anchoredPosition = localPosition + _extraAttackTextOffset;
+    }
+
+    /// <summary>
+    /// 추가 공격 텍스트 숨김
+    /// </summary>
+    private void HideExtraAttackText()
+    {
+        if (_extraAttackText != null)
+        {
+            _extraAttackText.gameObject.SetActive(false);
+        }
+
+        _extraAttackTarget = null;
+        _extraAttackTextTimer = 0f;
+    }
+
+    /// <summary>
+    /// 상점 전용 카메라와 3D 장비 오브젝트 활성화 관리
+    /// </summary>
+    /// <param name="isActive"></param>
+    private void SetShopDisplayActive(bool isActive)
+    {
+        SetPanelActive(_shopCameraRoot, isActive);
+        SetPanelActive(_shopItemRoot, isActive);
     }
     #endregion
 
@@ -759,6 +899,9 @@ public class UIManager : Singleton<UIManager>
 
         SetStaminaUIVisible(false);
 
+        // 상점 카메라와 3D 오브젝트 비활성화
+        SetShopDisplayActive(false);
+
         // 플레이어 스테이터스 아이콘 숨김
         if (_playerStatsHud != null)
         {
@@ -855,15 +998,6 @@ public class UIManager : Singleton<UIManager>
         }
 
         _currentStage = stageNumber;
-    }
-
-    /// <summary>
-    /// 저금통 파괴에 따른 레벨 수치를 갱신
-    /// </summary>
-    public void UpdateLevelUI(int level)
-    {
-        // TODO: 레벨 UI 갱신
-        // 레벨 UI 구현 단계에서 연결
     }
 
     /// <summary>
@@ -1159,81 +1293,5 @@ public class UIManager : Singleton<UIManager>
         UpdateExtraAttackTextPosition();
     }
 
-    /// <summary>
-    /// 추가 공격 텍스트 위치 및 표시 시간 갱신
-    /// </summary>
-    private void UpdateExtraAttackText()
-    {
-        if (_extraAttackTextTimer <= 0f)
-        {
-            return;
-        }
-
-        if (_extraAttackTarget == null)
-        {
-            HideExtraAttackText();
-            return;
-        }
-
-        UpdateExtraAttackTextPosition();
-
-        _extraAttackTextTimer -= Time.unscaledDeltaTime;
-
-        if (_extraAttackTextTimer <= 0f)
-        {
-            HideExtraAttackText();
-        }
-    }
-
-    /// <summary>
-    /// 손 위치를 기준으로 추가 공격 텍스트 위치 설정
-    /// </summary>
-    private void UpdateExtraAttackTextPosition()
-    {
-        Camera mainCamera = Camera.main;
-        Camera canvasCamera = _canvas.worldCamera;
-
-        if (mainCamera == null || canvasCamera == null)
-        {
-            return;
-        }
-
-        Vector3 screenPosition = mainCamera.WorldToScreenPoint(_extraAttackTarget.position);
-
-        if (screenPosition.z <= 0f)
-        {
-            return;
-        }
-
-        RectTransform canvasRect = _canvas.transform as RectTransform;
-
-        if (canvasRect == null)
-        {
-            return;
-        }
-
-        bool isConverted = RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, canvasCamera, out Vector2 localPosition);
-
-        if (!isConverted)
-        {
-            return;
-        }
-
-        _extraAttackText.rectTransform.anchoredPosition = localPosition + _extraAttackTextOffset;
-    }
-
-    /// <summary>
-    /// 추가 공격 텍스트 숨김
-    /// </summary>
-    private void HideExtraAttackText()
-    {
-        if (_extraAttackText != null)
-        {
-            _extraAttackText.gameObject.SetActive(false);
-        }
-
-        _extraAttackTarget = null;
-        _extraAttackTextTimer = 0f;
-    }
     #endregion
 }

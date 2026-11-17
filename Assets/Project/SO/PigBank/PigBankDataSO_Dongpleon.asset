@@ -16,6 +16,7 @@ MonoBehaviour:
   _pigBankName: Dongpleon
   _pigBankHP: 300
   _moveSpeed: 7
+  PigIndex: 6
   _pigPrefab: {fileID: 4521562087708496930, guid: 124333d1b8c6341418dd9b9ff0fe16cc, type: 3}
   _crashLevel: 7
   _rewardCoin: 500
@@ -24,3 +25,4 @@ MonoBehaviour:
   _specialCoinChance: 0.02
   _spawnProbability: 20
   _hitMechanism: {fileID: 0}
+  _dieMechanism: {fileID: 0}

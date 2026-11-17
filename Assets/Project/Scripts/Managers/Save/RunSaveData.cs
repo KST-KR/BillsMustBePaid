@@ -23,11 +23,15 @@ public class RunSaveData
     // 장비저장 데이터
     public EquipmentSaveData equipmentData;
 
+    // 저금통 저장 데이터
+    public RunPiggyBankSaveData piggyBankData;
+
     public RunSaveData()
     {
         runGrowth = new RunGrowthSaveData();
         runPerks = new RunPerkSaveData();
         billData = new BillRunSaveData();
         equipmentData = new EquipmentSaveData();
+        piggyBankData = new RunPiggyBankSaveData();
     }
 }
