@@ -26,34 +26,25 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private List<GameObject> _spawnedPigBanks = new List<GameObject>();
     private float _currentRespawnTimer = 0f;
     private int _stageSpawnUnlockLevel = 1;
+    private bool _isInitialized;
+    #endregion
+
+    #region 프로퍼티
+    public bool IsInitialized => _isInitialized;
     #endregion
 
     #region 이벤트 함수
-    private void OnEnable()
-    {
-        if (StageManager.Instance != null)
-        {
-            StageManager.Instance.OnStageStarted += HandleStageStarted;
-            StageManager.Instance.OnStageCleared += HandleStageCleared; 
-            StageManager.Instance.OnStageFailed += HandleStageFailed;   
-        }
-    }
-
     private void Start()
     {
-        if (_spawnPoint == null)
-        {
-            Debug.LogError("SpawnPoint가 존재 하지 않습니다. 확인 필요");
-            return;
-        }
+        StartCoroutine(WaitForInitialization());
+    }
 
-        if (StageManager.Instance == null || !StageManager.Instance.IsStageActive)
+    private void OnEnable()
+    {
+        if (_isInitialized)
         {
-            Debug.LogWarning("에디터 단독 테스트 감지: 1스테이지 기준으로 강제 스폰합니다.");
-            SpawnPigForStage(1);
+            SubscribeStageEvents();
         }
-
-        StartCoroutine(CheckPigBankRoutine());
     }
 
     private void OnDisable()
@@ -71,6 +62,11 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     /// </summary>
     private void OnDrawGizmos()
     {
+        if (_spawnPoint == null)
+        {
+            return;
+        }
+
         Gizmos.color = Color.green;
         Vector3 boxSize = new Vector3(_spawnAreaSize.x, 0.1f, _spawnAreaSize.y);
         Gizmos.DrawCube(_spawnPoint.position, boxSize);
@@ -85,9 +81,52 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             _spawnedPigBanks.Add(pig);
         }
     }
+
+    public void Initialize(PigBankDataBaseSO database)
+    {
+        if (_isInitialized)
+        {
+            return;
+        }
+
+        if (database == null)
+        {
+            Debug.LogError("SpawnPigBankManager: PigBankDataBaseSO가 전달되지 않았습니다.");
+            return;
+        }
+
+        _pigDatabase = database;
+
+        if (!SubscribeStageEvents())
+        {
+            _pigDatabase = null;
+            return;
+        }
+
+        _isInitialized = true;
+
+        Debug.Log("SpawnPigBankManager 초기화 완료");
+    }
     #endregion
 
     #region 커스텀 메소드 (Private)
+    private IEnumerator WaitForInitialization()
+    {
+        // 데이터 초기화가 완료될 때까지 대기
+        while (!_isInitialized)
+        {
+            yield return null;
+        }
+
+        if (_spawnPoint == null)
+        {
+            Debug.LogError("SpawnPoint가 존재 하지 않습니다. 확인 필요");
+            yield break;
+        }
+
+        StartCoroutine(CheckPigBankRoutine());
+    }
+
     /// <summary>
     /// 스테이지 넘버를 받고 스테이지에서 스폰할 총 마리 수를 반환
     /// </summary>
@@ -183,7 +222,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             // 돼지가 모두 사라졌고, 리스폰 코루틴이 돌고 있지 않다면 실행
             if (_spawnedPigBanks.Count == 0)
             {
-                if (StageManager.Instance == null || StageManager.Instance.IsStageActive)
+                if (StageManager.Instance != null && StageManager.Instance.IsStageActive)
                 {
                     _currentRespawnTimer += checkInterval;
 
@@ -204,7 +243,6 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
     private void RespawnSinglePig()
     {
-        int currentStage = (StageManager.Instance != null) ? StageManager.Instance.CurrentStage : 1;
         string pigID = GetRandomPigID();
 
         if (PigBankObjectPoolManager.Instance != null)
@@ -326,6 +364,26 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         return availablePigs[availablePigs.Count - 1].ID;
 
+    }
+
+    private bool SubscribeStageEvents()
+    {
+        if (StageManager.Instance == null)
+        {
+            Debug.LogError("SpawnPigBankManager: StageManager를 찾을 수 없습니다.");
+            return false;
+        }
+
+        StageManager.Instance.OnStageStarted -= HandleStageStarted;
+        StageManager.Instance.OnStageStarted += HandleStageStarted;
+
+        StageManager.Instance.OnStageCleared -= HandleStageCleared;
+        StageManager.Instance.OnStageCleared += HandleStageCleared;
+
+        StageManager.Instance.OnStageFailed -= HandleStageFailed;
+        StageManager.Instance.OnStageFailed += HandleStageFailed;
+
+        return true;
     }
     #endregion
 }

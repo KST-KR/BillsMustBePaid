@@ -1,3 +1,4 @@
+
 using System;
 using UnityEngine;
 
@@ -27,32 +28,62 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     public event Action<UnlockInfo> OnPigBankUnlocked;
     #endregion
 
-    #region 인스펙터
-    [Header("해금 데이터 설정 (인스펙터에서 수정 가능)")]
-    [SerializeField] private UnlockInfo[] _unlockTable;
-    #endregion
-
     #region 내부 변수
+
+    // Addressables에서 로딩한 해금 규칙 데이터
+    private PigBankUnlockData _unlockData;
+
     private int _unlockLevel = 1;
     private int _totalCrash = 0;
+
+    #endregion
+
+    #region 초기화
+
+    /// <summary>
+    /// 돼지 저금통 해금 데이터를 전달받아 초기화
+    /// </summary>
+    public void Initialize(PigBankUnlockData data)
+    {
+        if (data == null)
+        {
+            Debug.LogError("PigBankUnlock : 해금 데이터가 전달되지 않았습니다.");
+            return;
+        }
+
+        _unlockData = data;
+
+        OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
+    }
+
     #endregion
 
     #region 커스텀 함수(public)
+
     /// <summary>
     /// 돼지 저금통이 파괴될 때 호출되어 누적 횟수와 해금 관리
     /// </summary>
     public void UnlockPigBank()
     {
         _totalCrash++;
+
         Debug.Log($"StageReward : 돼지 파괴 누적 횟수: {_totalCrash}");
 
+        if (_unlockData == null || _unlockData.UnlockTable == null)
+        {
+            Debug.LogError("PigBankUnlock : 해금 데이터가 초기화되지 않았습니다.");
+            OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
+            return;
+        }
+
+        UnlockInfo[] unlockTable = _unlockData.UnlockTable;
         int currentIndex = _unlockLevel - 1;
 
         // 배열 범위를 벗어나지 않는지 확인
-        if (currentIndex < _unlockTable.Length)
+        if (currentIndex < unlockTable.Length)
         {
             // 현재 레벨에 설정된 목표 횟수에 도달했는지 확인
-            if (_totalCrash >= _unlockTable[currentIndex].unlockCount)
+            if (_totalCrash >= unlockTable[currentIndex].unlockCount)
             {
                 UnlockInfo unlockedInfo = _unlockTable[currentIndex];
 
@@ -71,10 +102,18 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     /// </summary>
     public PigBankDataBaseSO GetUnlockLevel()
     {
-        int currentIndex = _unlockLevel - 1;
-        if (currentIndex >= 0 && currentIndex < _unlockTable.Length)
+        if (_unlockData == null || _unlockData.UnlockTable == null)
         {
-            return _unlockTable[currentIndex]._pigData;
+            Debug.LogError("PigBankUnlock : 해금 데이터가 초기화되지 않았습니다.");
+            return null;
+        }
+
+        UnlockInfo[] unlockTable = _unlockData.UnlockTable;
+        int currentIndex = _unlockLevel - 1;
+
+        if (currentIndex >= 0 && currentIndex < unlockTable.Length)
+        {
+            return unlockTable[currentIndex]._pigData;
         }
         return null;
     }
@@ -86,7 +125,9 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     {
         _unlockLevel = 1;
         _totalCrash = 0;
+
         OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
+
         Debug.Log("StageReward : 파산/게임 오버로 인해 해금 레벨이 초기화되었습니다.");
     }
 
@@ -115,7 +156,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     /// </summary>
     public void ExportSaveData(RunPiggyBankSaveData data)
     {
-        if(data == null)
+        if (data == null)
         {
             return;
         }
@@ -124,9 +165,12 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
         data.unlockTotalCrash = _totalCrash;
     }
 
+    /// <summary>
+    /// 해금 데이터 복원
+    /// </summary>
     public void ImportSaveData(RunPiggyBankSaveData data)
     {
-        if(data == null)
+        if (data == null)
         {
             ResetUnlockSystem();
             return;
@@ -134,7 +178,9 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
 
         _unlockLevel = Mathf.Max(1, data.unlockLevel);
         _totalCrash = Mathf.Max(0, data.unlockTotalCrash);
+
         OnUnlockProgressChanged?.Invoke(_totalCrash, _unlockLevel);
     }
+
     #endregion
 }

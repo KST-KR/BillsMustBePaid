@@ -11,13 +11,27 @@ public class GameSceneBootstrap : MonoBehaviour
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
         yield return null;
 
-        //TODO: 1. 필수 매니저 확인
-        // 2. GameDataLoader를 통한 기본 데이터 로딩
-        // 3. 로딩 성공 여부 확인
-        // 4. 실행 모드에 따라 기존 초기화 진행
-
         try
         {
+            // Addressables 로딩
+            GameDataLoader dataLoader = GameDataLoader.Instance;
+
+            if (dataLoader == null)
+            {
+                Debug.LogError("GameDataLoader를 찾을 수 없음.");
+                yield break;
+            }
+
+            // 게임 데이터 카탈로그 로딩
+            yield return dataLoader.LoadCatalog();
+
+            // 카탈로그 로딩 결과 확인
+            if (!dataLoader.IsLoaded)
+            {
+                Debug.LogError("게임 데이터 카탈로그 로딩 실패");
+                yield break;
+            }
+
             if (GameManager.Instance == null)
             {
                 Debug.LogError("GameManager를 찾을 수 없음.");
@@ -43,6 +57,13 @@ public class GameSceneBootstrap : MonoBehaviour
             if (!SaveManager.Instance.SetCurrentSlotIndex(slotIndex))
             {
                 Debug.LogError("게임 실행에 필요한 저장 슬롯 정보가 없음.");
+                yield break;
+            }
+
+            // Addressables 데이터 기반 Manager 초기화
+            if (!InitializeManagers(dataLoader.Catalog))
+            {
+                Debug.LogError("게임 데이터 초기화 실패");
                 yield break;
             }
 
@@ -76,6 +97,90 @@ public class GameSceneBootstrap : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// GameDataCatalog의 정적 데이터를 각 Manager에 전달
+    /// </summary>
+    /// <param name="catalog"></param>
+    /// <returns></returns>
+    private bool InitializeManagers(GameDataCatalog catalog)
+    {
+        if (catalog == null)
+        {
+            Debug.LogError("GameDataCatalog가 전달되지 않음.");
+            return false;
+        }
+        
+        // 카탈로그 내부 데이터 검증
+        if (!catalog.Validate())
+        {
+            Debug.LogError("GameDataCatalog 데이터 검증 실패");
+            return false;
+        }
+
+        // 필요한 Manager 확인
+        if (GrowthManager.Instance == null ||
+            EquipmentManager.Instance == null ||
+            BillManager.Instance == null ||
+            LegacyShopManager.Instance == null ||
+            PerkManager.Instance == null ||
+            PigBankUnlock.Instance == null ||
+            StageRewardManager.Instance == null ||
+            PigBankObjectPoolManager.Instance == null ||
+            SpawnPigBankManager.Instance == null)
+        {
+            Debug.LogError("게임 데이터 초기화에 필요한 Manager가 없습니다.");
+            return false;
+        }
+
+        // 성장 데이터
+        GrowthManager.Instance.Initialize(catalog.Upgrades, catalog.SkillSets);
+
+        // 장비 데이터
+        EquipmentManager.Instance.Initialize(catalog.EquipmentDatabase);
+
+        // 고지서 데이터
+        BillManager.Instance.Initialize(catalog.BillRules);
+
+        // 영구 상점 데이터
+        LegacyShopManager.Instance.Initialize(catalog.LegacyShopItems);
+
+        // 퍼크 데이터
+        PerkManager.Instance.ConfigurePerks(catalog.Perks);
+
+        // 저금통 해금 데이터
+        PigBankUnlock.Instance.Initialize(catalog.PigBankUnlockData);
+
+        // 저금통 파괴 레벨 데이터
+        StageRewardManager.Instance.Initialize(catalog.PigCrashLevelData);
+
+        if (!StageRewardManager.Instance.IsInitialized)
+        {
+            Debug.LogError("StageRewardManager 초기화 실패.");
+            return false;
+        }
+
+        // 저금통 데이터베이스 및 오브젝트 풀
+        PigBankObjectPoolManager.Instance.Initialize(catalog.PigBankDatabase);
+
+        if (!PigBankObjectPoolManager.Instance.IsInitialized)
+        {
+            Debug.LogError("PigBankObjectPoolManager 초기화 실패.");
+            return false;
+        }
+
+        // 저금통 스폰 데이터
+        SpawnPigBankManager.Instance.Initialize(catalog.PigBankDatabase);
+
+        if (!SpawnPigBankManager.Instance.IsInitialized)
+        {
+            Debug.LogError("SpawnPigBankManager 초기화 실패.");
+            return false;
+        }
+
+        Debug.Log("모든 Manager 데이터 초기화 완료");
+
+        return true;
+    }
 
     /// <summary>
     /// 새로운 런을 시작합니다.
@@ -346,6 +451,20 @@ public class GameSceneBootstrap : MonoBehaviour
 
             // 성장 및 장비 데이터 복원
             saveManager.NotifyGameLoaded(saveData);
+
+            // 저금통 해금 및 파괴 레벨 데이터 복원
+            if (saveData.runData.piggyBankData != null)
+            {
+                if (PigBankUnlock.Instance != null)
+                {
+                    PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+
+                if (StageRewardManager.Instance != null)
+                {
+                    StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                }
+            }
 
             // 런 활성 상태 복원
             gameManager.RestoreRunState();

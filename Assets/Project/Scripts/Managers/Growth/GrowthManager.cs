@@ -541,6 +541,28 @@ public class GrowthManager : Singleton<GrowthManager>
         RefreshSkillSetEffects();
     }
 
+    /// <summary>
+    /// Addressables에서 로딩한 성장 데이터를 적용
+    /// </summary>
+    public void Initialize(UpgradeData[] upgrades, GrowthSkillSetData[] skillSets)
+    {
+        if (upgrades == null)
+        {
+            Debug.LogError("GrowthManager: UpgradeData가 전달되지 않았습니다.");
+            return;
+        }
+
+        if (skillSets == null)
+        {
+            Debug.LogError("GrowthManager: GrowthSkillSetData가 전달되지 않았습니다.");
+            return;
+        }
+
+        _upgrades = upgrades;
+        _skillSets = skillSets;
+
+        Debug.Log("GrowthManager 초기화 완료");
+    }
     #endregion
 
     #region 커스텀 (Private)
