@@ -82,9 +82,15 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject _shopCameraRoot;
     [SerializeField] private GameObject _shopItemRoot;
 
-    [Header("돼지 저금통 레벨 UI")]
+    [Header("돼지 저금통 파괴 수 UI")]
     [SerializeField] private TMP_Text _stagePigCountText;
-    [SerializeField] private TMP_Text _unlockLevelText;
+    [SerializeField] private TMP_Text _stageClearText;
+    [TextArea(1, 3)]
+    [SerializeField] private string[] _stageClearTextLogues;
+
+    [Header("돼지 저금통 해금 UI")]
+    [SerializeField] private Image _unlockedPigIconImage;
+    [SerializeField] private TMP_Text _unlockedPigNameText;
     #endregion
 
     #region 내부 변수
@@ -103,12 +109,18 @@ public class UIManager : Singleton<UIManager>
     private float _extraAttackTextTimer;
 
     private PigBankUnlock _pigBankUnlock;
+
+    // 돼지 저금통 해금 UI
+    private bool _isShowingUnlock;
+
+    private int _lastLogueIndex = -1;
     #endregion
 
     #region 이벤트 함수
     protected override void OnSingletonAwake()
     {
         SetSelectedUpgradeTab(null);
+        HideUnlockUI();
 
         if (_extraAttackTarget != null)
         {
@@ -228,9 +240,10 @@ public class UIManager : Singleton<UIManager>
 
         if(_pigBankUnlock != null)
         {
-            _pigBankUnlock.OnUnlockProgressChanged += UpdateUnlockUI;
+            _pigBankUnlock.OnUnlockProgressChanged += HandleUnlockProgressChanged;
+            _pigBankUnlock.OnPigBankUnlocked += ShowPigBankUnlockUI;
 
-            UpdateUnlockUI(_pigBankUnlock.TotalCrash, _pigBankUnlock.UnlockLevel);
+            RefreshNextUnlockSilhouette();
         }
 
         if (_playerStamina != null)
@@ -295,7 +308,8 @@ public class UIManager : Singleton<UIManager>
 
         if (_pigBankUnlock != null)
         {
-            _pigBankUnlock.OnUnlockProgressChanged -= UpdateUnlockUI;
+            _pigBankUnlock.OnUnlockProgressChanged -= HandleUnlockProgressChanged;
+            _pigBankUnlock.OnPigBankUnlocked -= ShowPigBankUnlockUI;
         }
 
         if (_playerStamina != null)
@@ -604,14 +618,123 @@ public class UIManager : Singleton<UIManager>
     }
 
     /// <summary>
-    /// 돼지 저금통 해금 레벨, 파괴 개수 갱신
+    /// 해금 이미지와 텍스트를 숨김
     /// </summary>
-    private void UpdateUnlockUI(int totalCrash, int unlockLevel)
+    private void HideUnlockUI()
     {
-        if(_unlockLevelText != null)
+        if(_unlockedPigIconImage != null)
         {
-            _unlockLevelText.text = $"해금 Lv. {unlockLevel}";
+            _unlockedPigIconImage.gameObject.SetActive(false);
         }
+
+        if (_unlockedPigNameText != null)
+        {
+            _unlockedPigNameText.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 파괴 횟수 및 해금 레벨 변경 시 호출
+    /// </summary>
+    private void HandleUnlockProgressChanged(int totalCrash, int unlockLevel)
+    {
+
+        // 방금 해금 알림을 띄운 상태가 아니라면, 다음 목표 실루엣과 남은 마릿수 갱신
+        if (!_isShowingUnlock)
+        {
+            RefreshNextUnlockSilhouette();
+        }
+    }
+
+    /// <summary>
+    /// 새로운 돼지 저금통이 해금된 순간: 원래 색상(White)으로 복구하고 해금 문구 표시
+    /// </summary>
+    private void ShowPigBankUnlockUI(UnlockInfo unlockedInfo)
+    {
+        _isShowingUnlock = true;
+
+        if (_unlockedPigIconImage != null)
+        {
+            if (unlockedInfo.pigIcon != null)
+            {
+                _unlockedPigIconImage.sprite = unlockedInfo.pigIcon;
+                _unlockedPigIconImage.color = Color.white; // 검은색 실루엣 해제 (원래 색 복구)
+                _unlockedPigIconImage.preserveAspect = true;
+                _unlockedPigIconImage.gameObject.SetActive(true);
+            }
+            else
+            {
+                _unlockedPigIconImage.gameObject.SetActive(false);
+            }
+        }
+
+        if (_unlockedPigNameText != null)
+        {
+            _unlockedPigNameText.text = $"{unlockedInfo._pigName} 해금!";
+            _unlockedPigNameText.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// 평상시 상태: 다음 해금 대상의 검은색 실루엣과 남은 마릿수 표시
+    /// </summary>
+    private void RefreshNextUnlockSilhouette()
+    {
+        _isShowingUnlock = false;
+
+        if (_pigBankUnlock == null)
+        {
+            return;
+        }
+
+        if (_pigBankUnlock.TryGetNextUnlockInfo(out UnlockInfo nextInfo, out int remainingCount))
+        {
+            if (_unlockedPigIconImage != null)
+            {
+                if (nextInfo.pigIcon != null)
+                {
+                    _unlockedPigIconImage.sprite = nextInfo.pigIcon;
+                    _unlockedPigIconImage.color = Color.black; // 검은색 실루엣 처리
+                    _unlockedPigIconImage.preserveAspect = true;
+                    _unlockedPigIconImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    _unlockedPigIconImage.gameObject.SetActive(false);
+                }
+            }
+
+            if (_unlockedPigNameText != null)
+            {
+                _unlockedPigNameText.text = $"해금까지 {remainingCount}마리";
+                _unlockedPigNameText.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            // 모든 돼지를 전부 해금한 경우
+            if (_unlockedPigIconImage != null)
+            {
+                _unlockedPigIconImage.gameObject.SetActive(false);
+            }
+
+            if (_unlockedPigNameText != null)
+            {
+                _unlockedPigNameText.text = "모두 해금 완료!";
+                _unlockedPigNameText.gameObject.SetActive(true);
+            }
+        }
+    }
+
+    private void ShowStageClearLogue()
+    {
+        if(_stageClearText == null || _stageClearTextLogues == null || _stageClearTextLogues.Length == 0)
+        {
+            return;
+        }
+
+       int randomIndex = Random.Range(0, _stageClearTextLogues.Length);
+        _stageClearText.text = _stageClearTextLogues[randomIndex];
     }
 
     /// <summary>
@@ -796,6 +919,7 @@ public class UIManager : Singleton<UIManager>
     public void ShowGameUI()
     {
         HideAllPanels();
+        RefreshNextUnlockSilhouette();
 
         bool isStageActive = IsStageActive();
 
@@ -872,6 +996,8 @@ public class UIManager : Singleton<UIManager>
         {
             UpdateResultCoinCountUI(_stageRewardManager.EarnedSilverCoinCount, _stageRewardManager.EarnedGoldCoinCount);
         }
+
+        ShowStageClearLogue();
     }
 
     /// <summary>

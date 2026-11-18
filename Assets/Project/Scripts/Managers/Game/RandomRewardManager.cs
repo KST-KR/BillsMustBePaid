@@ -76,6 +76,10 @@ public class RandomRewardManager : MonoBehaviour
             FragmentObjectPoolManager.Instance.SpawnRandomFragments(transform.position);
         }
 
+        if (SpecialCoinPoolManager.HasInstance)
+        {
+            SpecialCoinPoolManager.Instance.TrySpawnRandomCoin(transform.position, _pigData.SpecialCoinChance);
+        }
     }
     #endregion
 
