@@ -19,12 +19,19 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
     private Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDistionary = new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
     private Dictionary<PigBankGameDataSO, Transform> _rootDistionary = new Dictionary<PigBankGameDataSO, Transform>();
     private List<GameObject> _activePigs = new List<GameObject>();
+
+    private bool _isInitialized;
+    #endregion
+
+    #region 프로퍼티
+    public bool IsInitialized => _isInitialized;
     #endregion
 
     #region 이벤트
     protected override void OnSingletonAwake()
     {
-        InitPools();
+        // Addressables 데이터 로딩 이후 Initialize()에서 풀 생성
+        // InitPools();
     }
 
     #endregion
@@ -32,7 +39,13 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
     #region 커스텀 메소드 (Public)
     public GameObject SpawnPigBank(string pigID, Vector3 position, Quaternion rotation)
     {
-        if(!_pigDatabase.TryGet(pigID, out PigBankGameDataSO pigData))
+        if (!_isInitialized)
+        {
+            Debug.LogError("PigBankObjectPoolManager가 초기화되지 않았습니다.");
+            return null;
+        }
+
+        if (!_pigDatabase.TryGet(pigID, out PigBankGameDataSO pigData))
         {
             Debug.LogError($"ID에 해당하는 돼지 데이터를 찾을 수 없습니다 : {pigID}");
 
@@ -109,24 +122,68 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         pig.transform.SetParent(_rootDistionary[pigData]);
         _poolDistionary[pigData].Enqueue(pig);
     }
-    #endregion
 
-    #region 커스텀 메소드 (Private)
-    private void InitPools()
+    /// <summary>
+    /// Addressables에서 로딩한 저금통 데이터베이스 적용 및 오브젝트 풀 생성
+    /// </summary>
+    public void Initialize(PigBankDataBaseSO database)
     {
-        if(_pigDatabase == null)
+        if (_isInitialized)
         {
-            Debug.LogWarning("PigBankDataBaseSO가 연결되지 않았다. 확인필요");
+            return;
+        }
+
+        if (_generationCount <= 0)
+        {
+            Debug.LogError("PigBankObjectPoolManager: 생성 개수는 1 이상이어야 합니다.");
+            return;
+        }
+
+        if (database == null)
+        {
+            Debug.LogError("PigBankObjectPoolManager: PigBankDataBaseSO가 전달되지 않았습니다.");
+            return;
+        }
+
+        _pigDatabase = database;
+
+        if (!InitPools())
+        {
+            Debug.LogError("PigBankObjectPoolManager: 오브젝트 풀 생성에 실패했습니다.");
+
+            ClearPools();
+            _pigDatabase = null;
 
             return;
         }
 
-        foreach(var pigData in _pigDatabase.Datas)
+        _isInitialized = true;
+
+        Debug.Log("PigBankObjectPoolManager 초기화 완료");
+    }
+    #endregion
+
+    #region 커스텀 메소드 (Private)
+    private bool InitPools()
+    {
+        if (_pigDatabase == null || _pigDatabase.Datas == null || _pigDatabase.Datas.Count == 0)
         {
-            if(pigData == null || pigData.PigPrefab == null) 
+            Debug.LogError("PigBankDataBaseSO 또는 Datas가 존재하지 않습니다.");
+            return false;
+        }
+
+        foreach (var pigData in _pigDatabase.Datas)
+        {
+            if (pigData == null || pigData.PigPrefab == null)
             {
-                Debug.LogError("PigData가 없거나 PigPrefab이 존재하지 않음");
-                continue;
+                Debug.LogError("PigData가 없거나 PigPrefab이 존재하지 않습니다.");
+                return false;
+            }
+
+            if (_poolDistionary.ContainsKey(pigData))
+            {
+                Debug.LogError($"중복된 PigData가 등록되어 있습니다: {pigData.ID}");
+                return false;
             }
 
             GameObject rootObj = new GameObject($"PoolRoot_{pigData.ID}");
@@ -135,7 +192,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 
             Queue<GameObject> queue = new Queue<GameObject>();
 
-            for(int i = 0; i < _generationCount; i++)
+            for (int i = 0; i < _generationCount; i++)
             {
                 GameObject pig = Instantiate(pigData.PigPrefab, rootObj.transform);
                 pig.SetActive(false);
@@ -144,6 +201,23 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 
             _poolDistionary[pigData] = queue;
         }
+
+        return true;
+    }
+
+    private void ClearPools()
+    {
+        foreach (Transform root in _rootDistionary.Values)
+        {
+            if (root != null)
+            {
+                Destroy(root.gameObject);
+            }
+        }
+
+        _poolDistionary.Clear();
+        _rootDistionary.Clear();
+        _activePigs.Clear();
     }
     #endregion
 

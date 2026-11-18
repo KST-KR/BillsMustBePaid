@@ -263,6 +263,19 @@ public sealed class PerkManager : Singleton<PerkManager>
         InitNextTierDictionary();
         OnPerkStateChanged?.Invoke();
     }
+
+    public void Initialize(PerkData[] perks)
+    {
+        if (perks == null)
+        {
+            Debug.LogError("PerkManager: PerkData가 전달되지 않았습니다.");
+            return;
+        }
+
+        ConfigurePerks(perks);
+
+        Debug.Log("PerkManager 초기화 완료");
+    }
     #endregion
 
     #region 커스텀 Private

@@ -33,6 +33,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     private SaveManager _saveManager;
     private CurrencyManager _currencyManager;
     private bool _isSubscribed;
+    private bool _isInitialized;
     #endregion
 
     #region 이벤트 함수
@@ -46,7 +47,6 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     {
         SubscribeEvents();
         BindShopButtons();
-        LoadCurrentSlotData();
         UpdateNextCycleButtonLabel();
     }
 
@@ -320,6 +320,26 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
         return ownedItems;
     }
+
+    /// <summary>
+    /// Addressables에서 로딩한 영구 상점 아이템 데이터 적용
+    /// </summary>
+    public void Initialize(LegacyShopItemData[] items)
+    {
+        if (items == null)
+        {
+            Debug.LogError("LegacyShopManager: LegacyShopItemData가 전달되지 않았습니다.");
+            return;
+        }
+
+        _items = items;
+        _isInitialized = true;
+
+        // 데이터가 준비된 이후 저장된 구매 이력 복원
+        LoadCurrentSlotData();
+
+        Debug.Log("LegacyShopManager 초기화 완료");
+    }
     #endregion
 
     #region 커스텀 메서드 (Private)
@@ -433,6 +453,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private void LoadCurrentSlotData()
     {
+        if (!_isInitialized)
+        {
+            return;
+        }
+
         CacheManagers();
         if (_saveManager == null || _saveManager.CurrentSlotIndex < 1 || _saveManager.CurrentSlotIndex > 3 ||
             !_saveManager.HasSaveData(_saveManager.CurrentSlotIndex))

@@ -420,6 +420,22 @@ public class BillManager : Singleton<BillManager>
         OnBillChanged?.Invoke(CurrentBill);
         RefreshPayButtonImage();
     }
+
+    /// <summary>
+    /// Addressables에서 로딩한 청구서 발행 규칙 적용
+    /// </summary>
+    public void Initialize(BillData[] billRules)
+    {
+        if (billRules == null)
+        {
+            Debug.LogError("BillManager: BillData가 전달되지 않았습니다.");
+            return;
+        }
+
+        _billRules = billRules;
+
+        Debug.Log("BillManager 초기화 완료");
+    }
     #endregion
 
     #region 커스텀 (Private)

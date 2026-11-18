@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b6e55e08c9e9d4eb6efbdbdeb636f4, type: 3}
+  m_Name: PigBankUnlockData
+  m_EditorClassIdentifier: 
+  _unlockTable:
+  - unlockCount: 10
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 30
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 50
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 70
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 90
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 110
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 130
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 150
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+  - unlockCount: 170
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
