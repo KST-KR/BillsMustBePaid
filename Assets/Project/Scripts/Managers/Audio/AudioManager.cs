@@ -29,12 +29,32 @@ public class AudioManager : PersistentSingleton<AudioManager>
 
     [Header("Audio Volume")]
     [SerializeField, Range(0f, 1f)]
+    private float _masterVolume = 1f;
+
+    [SerializeField, Range(0f, 1f)]
     private float _bgmVolume = 1f;
 
     [SerializeField, Range(0f, 1f)]
     private float _sfxVolume = 1f;
 
     #endregion
+
+    protected override void OnSingletonAwake()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
+        }
+        ApplySavedVolumes();
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
+        }
+    }
 
     #region 커스텀 메서드 (Public)
 
@@ -52,7 +72,7 @@ public class AudioManager : PersistentSingleton<AudioManager>
         }
 
         _bgmSource.clip = clip;
-        _bgmSource.volume = _bgmVolume;
+        ApplyBGMVolume();
         _bgmSource.loop = true;
         _bgmSource.Play();
     }
@@ -79,7 +99,7 @@ public class AudioManager : PersistentSingleton<AudioManager>
             return;
         }
 
-        _sfxSource.PlayOneShot(clip, _sfxVolume);
+        _sfxSource.PlayOneShot(clip);
     }
 
     /// <summary>
@@ -107,7 +127,7 @@ public class AudioManager : PersistentSingleton<AudioManager>
     {
 
         _bgmVolume = Mathf.Clamp01(volume);
-        _bgmSource.volume = _bgmVolume;
+        ApplyBGMVolume();
     }
 
     /// <summary>
@@ -117,6 +137,14 @@ public class AudioManager : PersistentSingleton<AudioManager>
     {
 
         _sfxVolume = Mathf.Clamp01(volume);
+        ApplySFXVolume();
+    }
+
+    public void SetMasterVolume(float volume)
+    {
+        _masterVolume = Mathf.Clamp01(volume);
+        ApplyBGMVolume();
+        ApplySFXVolume();
     }
 
     /// <summary>
@@ -130,6 +158,42 @@ public class AudioManager : PersistentSingleton<AudioManager>
     #endregion
 
     #region 커스텀 메서드 (Private)
+
+    private void ApplySavedVolumes()
+    {
+        SettingsManager settingsManager = SettingsManager.Instance;
+        if (settingsManager != null)
+        {
+            SaveSettingData settings = settingsManager.Settings;
+            _masterVolume = Mathf.Clamp01(settings.masterVolume);
+            _bgmVolume = Mathf.Clamp01(settings.musicVolume);
+            _sfxVolume = Mathf.Clamp01(settings.sfxVolume);
+        }
+
+        ApplyBGMVolume();
+        ApplySFXVolume();
+    }
+
+    private void HandleSettingsChanged()
+    {
+        ApplySavedVolumes();
+    }
+
+    private void ApplyBGMVolume()
+    {
+        if (_bgmSource != null)
+        {
+            _bgmSource.volume = _bgmVolume * _masterVolume;
+        }
+    }
+
+    private void ApplySFXVolume()
+    {
+        if (_sfxSource != null)
+        {
+            _sfxSource.volume = _sfxVolume * _masterVolume;
+        }
+    }
 
     /// <summary>
     /// 매핑된 사운드 클립을 검색합니다.

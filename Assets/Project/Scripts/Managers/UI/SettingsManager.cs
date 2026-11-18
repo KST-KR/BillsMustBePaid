@@ -9,6 +9,13 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
 {
     #region 속성
     public SaveSettingData Settings => CopySettings(_settings);
+    public float CursorSpeed => _settings.cursorSpeed;
+    public float CursorSize => _settings.cursorSize;
+    public float CursorColor => _settings.cursorColor;
+    public float CursorOpacity => _settings.cursorOpacity;
+    public bool DamageTextEnabled => _settings.damageTextMode == 0;
+    public bool CoinEnabled => _settings.coinEnabled;
+    public int FragmentAmount => _settings.fragmentAmount;
     #endregion
 
     #region 이벤트
@@ -17,6 +24,11 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
 
     #region 내부 변수
     private SaveSettingData _settings;
+    [SerializeField] private Texture2D _cursorSourceTexture;
+    private Texture2D _runtimeCursorTexture;
+    private float _appliedCursorSize = -1f;
+    private float _appliedCursorColor = -1f;
+    private float _appliedCursorOpacity = -1f;
     #endregion
 
     #region 이벤트 함수
@@ -28,6 +40,11 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
             resolutionHeight = Screen.height,
             fullscreen = Screen.fullScreen
         };
+        if (_cursorSourceTexture == null)
+        {
+            Debug.LogWarning("커서 텍스처 없음");
+        }
+        ApplyCursor();
         SceneManager.sceneLoaded += HandleSceneLoaded;
         if (gameObject.GetComponent<SettingController>() == null)
         {
@@ -44,6 +61,12 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
     protected override void OnSingletonDestroy()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        if (_runtimeCursorTexture != null)
+        {
+            Destroy(_runtimeCursorTexture);
+            _runtimeCursorTexture = null;
+        }
     }
     #endregion
 
@@ -103,6 +126,7 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
             ApplyDisplay();
         }
 
+        ApplyCursor();
         OnSettingsChanged?.Invoke();
     }
 
@@ -121,7 +145,22 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
         _settings = CopySettings(settings);
         NormalizeSettings();
         ApplyDisplay();
+        ApplyCursor();
         OnSettingsChanged?.Invoke();
+    }
+
+    public void SetCursorSourceTexture(Texture2D texture)
+    {
+        if (texture == null || _cursorSourceTexture == texture)
+        {
+            return;
+        }
+
+        _cursorSourceTexture = texture;
+        _appliedCursorSize = -1f;
+        _appliedCursorColor = -1f;
+        _appliedCursorOpacity = -1f;
+        ApplyCursor();
     }
     #endregion
 
@@ -148,6 +187,80 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
             _settings.fullscreen ? FullScreenMode.ExclusiveFullScreen : FullScreenMode.Windowed);
     }
 
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus && _settings != null)
+        {
+            ApplyCursor();
+        }
+    }
+
+    /// <summary>
+    /// 실시간으로 커서 텍스처를 생성함 (설정도 적용)
+    /// </summary>
+    private void ApplyCursor()
+    {
+        if (_settings == null)
+        {
+            return;
+        }
+
+        if (_cursorSourceTexture == null)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+            return;
+        }
+
+        if (_runtimeCursorTexture != null &&
+            Mathf.Approximately(_appliedCursorSize, _settings.cursorSize) &&
+            Mathf.Approximately(_appliedCursorColor, _settings.cursorColor) &&
+            Mathf.Approximately(_appliedCursorOpacity, _settings.cursorOpacity))
+        {
+            Cursor.SetCursor(_runtimeCursorTexture, Vector2.zero, CursorMode.ForceSoftware);
+            return;
+        }
+
+        if (_runtimeCursorTexture != null)
+        {
+            Destroy(_runtimeCursorTexture);
+        }
+
+        float sizeScale = Mathf.Lerp(1f, 2f, _settings.cursorSize);
+        int width = Mathf.Max(1, Mathf.RoundToInt(_cursorSourceTexture.width * sizeScale));
+        int height = Mathf.Max(1, Mathf.RoundToInt(_cursorSourceTexture.height * sizeScale));
+        _runtimeCursorTexture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+        {
+            name = "RuntimeCursor",
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+            hideFlags = HideFlags.HideAndDontSave
+        };
+
+        // 커서 밝기 조절
+        Color hueTint = Color.HSVToRGB(_settings.cursorColor, 1f, 1f);
+        Color tint = Color.Lerp(Color.white, hueTint, 0.35f);
+        Color32[] pixels = new Color32[width * height];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Color pixel = _cursorSourceTexture.GetPixelBilinear((x + 0.5f) / width, (y + 0.5f) / height);
+                pixel.r = Mathf.Clamp01(pixel.r * tint.r * 1.5f);
+                pixel.g = Mathf.Clamp01(pixel.g * tint.g * 1.5f);
+                pixel.b = Mathf.Clamp01(pixel.b * tint.b * 1.5f);
+                pixel.a *= _settings.cursorOpacity;
+                pixels[y * width + x] = pixel;
+            }
+        }
+
+        _runtimeCursorTexture.SetPixels32(pixels);
+        _runtimeCursorTexture.Apply(false, true);
+        _appliedCursorSize = _settings.cursorSize;
+        _appliedCursorColor = _settings.cursorColor;
+        _appliedCursorOpacity = _settings.cursorOpacity;
+        Cursor.SetCursor(_runtimeCursorTexture, Vector2.zero, CursorMode.ForceSoftware);
+    }
+
     private void NormalizeSettings()
     {
         if (_settings.resolutionWidth <= 0 || _settings.resolutionHeight <= 0)
@@ -163,9 +276,8 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
         _settings.cursorSize = Mathf.Clamp01(_settings.cursorSize);
         _settings.cursorColor = Mathf.Clamp01(_settings.cursorColor);
         _settings.cursorOpacity = Mathf.Clamp01(_settings.cursorOpacity);
-        _settings.coinAmount = Mathf.Clamp01(_settings.coinAmount);
-        _settings.fragmentAmount = Mathf.Clamp01(_settings.fragmentAmount);
-        _settings.damageTextMode = Mathf.Max(0, _settings.damageTextMode);
+        _settings.fragmentAmount = Mathf.Clamp(_settings.fragmentAmount, 0, 3);
+        _settings.damageTextMode = Mathf.Clamp(_settings.damageTextMode, 0, 1);
         _settings.moneyTextMode = Mathf.Max(0, _settings.moneyTextMode);
     }
 
@@ -185,7 +297,7 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
             cursorOpacity = settings.cursorOpacity,
             damageTextMode = settings.damageTextMode,
             moneyTextMode = settings.moneyTextMode,
-            coinAmount = settings.coinAmount,
+            coinEnabled = settings.coinEnabled,
             fragmentAmount = settings.fragmentAmount
         };
     }

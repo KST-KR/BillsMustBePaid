@@ -86,7 +86,9 @@ public class RandomRewardManager : MonoBehaviour
     #region 커스텀 메소드 (Private)
     private void DropCoins()
     {
-        if(_pigData == null)
+        if (_pigData == null ||
+            (SettingsManager.Instance != null && !SettingsManager.Instance.CoinEnabled) ||
+            (CoinObjectPoolManager.Instance != null && !CoinObjectPoolManager.Instance.IsEnabled))
         {
             return;
         }

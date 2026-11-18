@@ -12,6 +12,9 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class SettingController : MonoBehaviour
 {
+    [Header("커서 텍스처")]
+    [SerializeField] private Texture2D _cursorSourceTexture;
+
     #region 내부 변수
     private SettingsManager _manager;
     private readonly List<Action> _removeListeners = new List<Action>();
@@ -35,7 +38,27 @@ public sealed class SettingController : MonoBehaviour
             return;
         }
 
-        SettingController controller = manager.GetComponent<SettingController>();
+        SettingController controller = null;
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            SettingController[] sceneControllers = root.GetComponentsInChildren<SettingController>(true);
+            if (sceneControllers.Length > 0)
+            {
+                controller = sceneControllers[0];
+                break;
+            }
+        }
+
+        if (controller != null && controller._cursorSourceTexture != null)
+        {
+            manager.SetCursorSourceTexture(controller._cursorSourceTexture);
+        }
+
+        if (controller == null)
+        {
+            controller = manager.GetComponent<SettingController>();
+        }
+
         if (controller != null)
         {
             controller.Bind(scene, manager);
@@ -76,8 +99,8 @@ public sealed class SettingController : MonoBehaviour
         BindSlider(panel, "CursorSizeSlider", s => s.cursorSize, (s, v) => s.cursorSize = v);
         BindSlider(panel, "CursorColorSlider", s => s.cursorColor, (s, v) => s.cursorColor = v);
         BindSlider(panel, "CursorOpacitySlider", s => s.cursorOpacity, (s, v) => s.cursorOpacity = v);
-        BindSlider(panel, "CoinSlider", s => s.coinAmount, (s, v) => s.coinAmount = v);
-        BindSlider(panel, "FragmentSlider", s => s.fragmentAmount, (s, v) => s.fragmentAmount = v);
+        BindDropdown(panel, "CoinRow", "CoinDropdown", s => s.coinEnabled ? 0 : 1, (s, v) => s.coinEnabled = v == 0);
+        BindSlider(panel, "FragmentSlider", s => s.fragmentAmount, (s, v) => s.fragmentAmount = (int)v);
         BindDropdown(panel, "DamageTextRow", "DamageTextDropdown", s => s.damageTextMode, (s, v) => s.damageTextMode = v);
         BindDropdown(panel, "MoneyTextRow", "DisplayModeDropdown", s => s.moneyTextMode, (s, v) => s.moneyTextMode = v);
         _manager.OnSettingsChanged += RefreshControls;

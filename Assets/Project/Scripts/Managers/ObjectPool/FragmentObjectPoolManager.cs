@@ -57,6 +57,11 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     #region 커스텀 메소드 (Public)
     public GameObject SpawnFragment(EFragmentType type, Vector3 spawnPosition)
     {
+        if (SettingsManager.Instance != null && SettingsManager.Instance.FragmentAmount == 0)
+        {
+            return null;
+        }
+
         if(!_poolDictionary.ContainsKey(type))
         {
             Debug.LogWarning($"존재하지 않는 파편 입니다{type}");
@@ -81,8 +86,30 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         return fragment;
     }
     
-    public void SpawnRandomFragments(Vector3 spawnPosition, int spawnCount = 5, float spawnInterval = 0.03f)
+    public void SpawnRandomFragments(Vector3 spawnPosition, int spawnCount = -1, float spawnInterval = 0.03f)
     {
+        int fragmentOption = SettingsManager.Instance != null ? SettingsManager.Instance.FragmentAmount : 3;
+        if (fragmentOption == 0)
+        {
+            return;
+        }
+
+        if (spawnCount < 0)
+        {
+            switch (fragmentOption)
+            {
+                case 1:
+                    spawnCount = 1;
+                    break;
+                case 2:
+                    spawnCount = 3;
+                    break;
+                default:
+                    spawnCount = 5;
+                    break;
+            }
+        }
+
         StartCoroutine(RandomFragmentsCoroutine(spawnPosition, spawnCount, spawnInterval));
     }
     #endregion

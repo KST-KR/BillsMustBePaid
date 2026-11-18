@@ -25,13 +25,13 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     #region 인스펙터
     [Header("해금 데이터 설정 (인스펙터에서 수정 가능)")]
     [SerializeField] private CoinInfo[] _coinTable;
-
-    [Header("생성 개수")]
-    [SerializeField] private int _generationCount = 50;
     #endregion
 
     #region 내부 변수
     private Dictionary<CoinType, Queue<GameObject>> _coinPools = new Dictionary<CoinType, Queue<GameObject>>();
+    private readonly HashSet<GameObject> _activeCoins = new HashSet<GameObject>();
+
+    public bool IsEnabled => SettingsManager.Instance == null || SettingsManager.Instance.CoinEnabled;
 
     #endregion
 
@@ -44,6 +44,18 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         }
 
         InitializePool();
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
+        }
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
+        }
     }
     #endregion
 
@@ -53,6 +65,17 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     /// </summary>
     public GameObject GetCoin(CoinType type, Vector3 position, Quaternion rotation)
     {
+        if (!IsEnabled)
+        {
+            return null;
+        }
+
+        int index = (int)type;
+        if (_coinTable == null || index < 0 || index >= _coinTable.Length || _coinTable[index]._coinPrefab == null)
+        {
+            return null;
+        }
+
         if(!_coinPools.ContainsKey(type))
         {
             _coinPools[type] = new Queue<GameObject>();
@@ -68,7 +91,6 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
 
         else
         {
-            int index = (int)type;
             GameObject prefab = _coinTable[index]._coinPrefab;
             coin = Instantiate(prefab, transform);
         }
@@ -76,6 +98,7 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         coin.transform.position = position;
         coin.transform.rotation = rotation;
         coin.SetActive(true);
+        _activeCoins.Add(coin);
         return coin;      
     }
 
@@ -84,6 +107,19 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     /// </summary>
     public void ReturnCoin(CoinType type, GameObject coin)
     {
+        if (coin == null)
+        {
+            return;
+        }
+
+        _activeCoins.Remove(coin);
+        if (!IsEnabled)
+        {
+            coin.SetActive(false);
+            Destroy(coin);
+            return;
+        }
+
         coin.SetActive(false);
         coin.transform.SetParent(transform);
 
@@ -110,23 +146,39 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     #region 커스텀 메소드 (Private)
     private void InitializePool()
     {
-        // Enum에 정의된 모든 코인 종류를 순회하며 각각 풀 생성
         foreach (CoinType type in Enum.GetValues(typeof(CoinType)))
         {
             _coinPools[type] = new Queue<GameObject>();
+        }
+    }
 
-            int index = (int)type;
-            if (index >= _coinTable.Length) continue;
+    private void HandleSettingsChanged()
+    {
+        if (IsEnabled)
+        {
+            return;
+        }
 
-            GameObject prefab = _coinTable[index]._coinPrefab;
-            if (prefab == null) continue;
-
-            for (int i = 0; i < _generationCount; i++)
+        foreach (GameObject coin in _activeCoins)
+        {
+            if (coin != null)
             {
-                GameObject coin = Instantiate(prefab, transform);
                 coin.SetActive(false);
-                _coinPools[type].Enqueue(coin);
+                Destroy(coin);
             }
+        }
+        _activeCoins.Clear();
+
+        foreach (Queue<GameObject> pool in _coinPools.Values)
+        {
+            foreach (GameObject coin in pool)
+            {
+                if (coin != null)
+                {
+                    Destroy(coin);
+                }
+            }
+            pool.Clear();
         }
     }
     #endregion
