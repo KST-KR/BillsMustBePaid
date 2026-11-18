@@ -85,7 +85,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
             // 현재 레벨에 설정된 목표 횟수에 도달했는지 확인
             if (_totalCrash >= unlockTable[currentIndex].unlockCount)
             {
-                UnlockInfo unlockedInfo = _unlockTable[currentIndex];
+                UnlockInfo unlockedInfo = unlockTable[currentIndex];
 
                 _unlockLevel++;
                 Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");
@@ -135,13 +135,21 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     /// 다음에 해금될 돼지 저금통 정보와 남은 파괴 횟수를 반환
     /// 모든 돼지 저금통을 다 해금했으면 false 반환
     /// </summary>
-    public bool TryGetNextUnlockInfo(out UnlockInfo nextInfo, out int remainingCount)
+public bool TryGetNextUnlockInfo(out UnlockInfo nextInfo, out int remainingCount)
     {
+        if (_unlockData == null || _unlockData.UnlockTable == null)
+        {
+            nextInfo = default;
+            remainingCount = 0;
+            return false;
+        }
+
+        UnlockInfo[] unlockTable = _unlockData.UnlockTable;
         int nextIndex = _unlockLevel - 1;
 
-        if(_unlockTable != null && nextIndex >= 0 && nextIndex < _unlockTable.Length)
+        if (nextIndex >= 0 && nextIndex < unlockTable.Length)
         {
-            nextInfo = _unlockTable[nextIndex];
+            nextInfo = unlockTable[nextIndex];
             remainingCount = Mathf.Max(0, nextInfo.unlockCount - _totalCrash);
             return true;
         }
