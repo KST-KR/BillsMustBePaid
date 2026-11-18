@@ -28096,6 +28096,7 @@ GameObject:
   - component: {fileID: 1376145195}
   - component: {fileID: 1376145194}
   - component: {fileID: 1376145193}
+  - component: {fileID: 1376145197}
   m_Layer: 0
   m_Name: 'ObjectPoolManager '
   m_TagString: Untagged
@@ -28174,6 +28175,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1376145197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376145192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04b533182ac833b43912670128e1a131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _specialCoinPrefabs:
+  - {fileID: 3103938258135072058, guid: 1f11b4425b4bcd543a7806dd9b4fb82e, type: 3}
+  - {fileID: 7634238508408207280, guid: 16ff4627b47f0d54b9519f7f74e360ed, type: 3}
+  - {fileID: 2889984857899841234, guid: 639be4f4fa01c74459ca24c1f8f42566, type: 3}
 --- !u!1 &1376154731
 GameObject:
   m_ObjectHideFlags: 0

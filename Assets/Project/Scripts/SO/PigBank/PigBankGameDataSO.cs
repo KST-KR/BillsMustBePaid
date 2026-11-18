@@ -26,6 +26,8 @@ public abstract class PigBankGameDataSO : ScriptableObject
     public MechanismSO HitMechanism => _hitMechanism;
 
     public MechanismSO DieMechanism => _dieMechanism;
+
+    public float SpecialCoinChance => _specialCoinChance;
     #endregion
 
     #region 인스펙터
