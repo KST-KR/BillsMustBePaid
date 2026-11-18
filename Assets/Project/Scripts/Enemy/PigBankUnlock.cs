@@ -91,6 +91,26 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
     }
 
     /// <summary>
+    /// 다음에 해금될 돼지 저금통 정보와 남은 파괴 횟수를 반환
+    /// 모든 돼지 저금통을 다 해금했으면 false 반환
+    /// </summary>
+    public bool TryGetNextUnlockInfo(out UnlockInfo nextInfo, out int remainingCount)
+    {
+        int nextIndex = _unlockLevel - 1;
+
+        if(_unlockTable != null && nextIndex >= 0 && nextIndex < _unlockTable.Length)
+        {
+            nextInfo = _unlockTable[nextIndex];
+            remainingCount = Mathf.Max(0, nextInfo.unlockCount - _totalCrash);
+            return true;
+        }
+
+        nextInfo = default;
+        remainingCount = 0;
+        return false;
+    }
+
+    /// <summary>
     /// 해금 데이터 내보내기, 복원하기
     /// </summary>
     public void ExportSaveData(RunPiggyBankSaveData data)
