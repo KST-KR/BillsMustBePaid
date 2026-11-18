@@ -46,11 +46,8 @@ public class StageRewardManager : Singleton<StageRewardManager>
     #endregion
 
     #region 인스펙터
-    [Header("파괴 레벨 시스템")]
-    [SerializeField] private int _maxLevel = 5;
-
-    [Header("레벨별 데이터 설정")]
-    [SerializeField] private CrashLevelInfo[] _levelTable;
+    private int _maxLevel = 5;
+    private CrashLevelInfo[] _levelTable;
 
     [Header("돼지 10종 개별 파괴 진행도")]
     [SerializeField] private PigCrashProgress[] _pigCrashList = new PigCrashProgress[10];
@@ -71,11 +68,16 @@ public class StageRewardManager : Singleton<StageRewardManager>
 
     private bool _isSettled;
     private bool _isSubscribed;
+    private bool _isInitialized;
 
     public int EarnedSilverCoinCount { get; private set; }
     public int EarnedGoldCoinCount { get; private set; }
 
     private int _stageDestroyedPigCount = 0;
+    #endregion
+
+    #region 프로퍼티
+    public bool IsInitialized => _isInitialized;
     #endregion
 
     #region 이벤트 함수
@@ -421,6 +423,42 @@ public class StageRewardManager : Singleton<StageRewardManager>
             // 불러온 레벨을 각 슬롯 UI에 즉시 반영
             OnPigCrashLevelChanged?.Invoke(i, _pigCrashList[i].currentLevel);
         }
+    }
+
+    /// <summary>
+    /// Addressables에서 로딩한 파괴 레벨 데이터를 초기화
+    /// </summary>
+    public void Initialize(PigCrashLevelData data)
+    {
+        if (_isInitialized)
+        {
+            return;
+        }
+
+        if (data == null)
+        {
+            Debug.LogError("StageRewardManager: PigCrashLevelData가 전달되지 않았습니다.");
+            return;
+        }
+
+        if (data.LevelTable == null || data.LevelTable.Length == 0)
+        {
+            Debug.LogError("StageRewardManager: 레벨 테이블이 비어 있습니다.");
+            return;
+        }
+
+        if (data.MaxLevel <= 0)
+        {
+            Debug.LogError("StageRewardManager: 최대 레벨은 1 이상이어야 합니다.");
+            return;
+        }
+
+        _maxLevel = data.MaxLevel;
+        _levelTable = data.LevelTable;
+
+        _isInitialized = true;
+
+        Debug.Log("StageRewardManager 초기화 완료");
     }
     #endregion
 }

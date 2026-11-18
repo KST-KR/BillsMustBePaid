@@ -314,5 +314,21 @@ public class EquipmentManager : Singleton<EquipmentManager>
             _ownedEquipments.Add(equipment);
         }
     }
+
+    /// <summary>
+    /// Addressables에서 로딩한 장비 데이터베이스 적용
+    /// </summary>
+    public void Initialize(EquipmentDatabase database)
+    {
+        if (database == null)
+        {
+            Debug.LogError("EquipmentManager: EquipmentDatabase가 전달되지 않았습니다.");
+            return;
+        }
+
+        _equipmentDatabase = database;
+
+        Debug.Log("EquipmentManager 초기화 완료");
+    }
     #endregion
 }
