@@ -8637,10 +8637,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fea4a7bf92d6694a9be9172ed637394, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _legacyDisplayDropdown: {fileID: 0}
-  _tmpDisplayDropdown: {fileID: 1807905823}
-  _legacyDisplayModeDropdown: {fileID: 0}
-  _tmpDisplayModeDropdown: {fileID: 40442980}
 --- !u!4 &740845988
 Transform:
   m_ObjectHideFlags: 0
