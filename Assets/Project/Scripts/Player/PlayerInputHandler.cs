@@ -15,6 +15,8 @@ public class PlayerInputHandler : MonoBehaviour
     [Header("입력 설정")]
     [SerializeField] private Camera _mainCamera;
     [SerializeField] private LayerMask _groundLayer;
+    
+    [SerializeField, Min(0f)] private float _mouseDeltaScale = 10f;
 
     [Header("책상 범위")]
     // 손과 에임이 머물 수 있는 책상의 콜라이더
@@ -30,6 +32,8 @@ public class PlayerInputHandler : MonoBehaviour
     private float _groundHeight;
     // 마지막으로 마우스가 닿은 지면 콜라이더
     private Collider _lastGroundCollider;
+    private Vector3 _cursorScreenPosition;
+    private bool _hasCursorPosition;
     #endregion
 
     #region 프로퍼티
@@ -54,6 +58,17 @@ public class PlayerInputHandler : MonoBehaviour
     /// 마우스가 실제 지면 콜라이더 위에 있는지
     /// </summary>
     public  bool IsMouseOnGround { get; private set; }
+
+    /// <summary>
+    /// 속도 적용 커서 좌표
+    /// </summary>
+    public Vector3 CursorScreenPosition => _cursorScreenPosition;
+
+    public void ResetCursorPosition()
+    {
+        _cursorScreenPosition = Input.mousePosition;
+        _hasCursorPosition = true;
+    }
     #endregion
 
     #region 이벤트
@@ -78,11 +93,13 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnEnable()
     {
+        ResetCursorPosition();
         UpdateMouseWorldPosition();
     }
 
     void Update()
     {
+        UpdateCursorPosition();
         UpdateMouseWorldPosition();
     }
     #endregion
@@ -104,7 +121,7 @@ public class PlayerInputHandler : MonoBehaviour
             return;
         }
 
-        Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
+        Ray ray = _mainCamera.ScreenPointToRay(_cursorScreenPosition);
         Vector3 point;
 
         if (TryRaycastTopSurface(ray, out RaycastHit hit))
@@ -138,6 +155,27 @@ public class PlayerInputHandler : MonoBehaviour
         RawMouseWorldPosition = point;
         MouseWorldPosition = ClampToArea(point, area);
         HasMouseWorldPosition = true;
+    }
+
+    private void UpdateCursorPosition()
+    {
+        if (!_hasCursorPosition)
+        {
+            _cursorScreenPosition = Input.mousePosition;
+            _hasCursorPosition = true;
+        }
+
+        float speed = 1f;
+        if (SettingsManager.Instance != null)
+        {
+            speed = Mathf.Lerp(1.2f, 3.6f, SettingsManager.Instance.CursorSpeed);
+        }
+        
+        Vector3 delta = new Vector3(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"), 0f) * _mouseDeltaScale;
+        _cursorScreenPosition += delta * speed;
+        _cursorScreenPosition.x = Mathf.Clamp(_cursorScreenPosition.x, 0f, Screen.width);
+        _cursorScreenPosition.y = Mathf.Clamp(_cursorScreenPosition.y, 0f, Screen.height);
+        _cursorScreenPosition.z = 0f;
     }
 
     /// <summary>

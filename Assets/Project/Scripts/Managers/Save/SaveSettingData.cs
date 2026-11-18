@@ -14,10 +14,10 @@ public sealed class SaveSettingData
     public bool fullscreen = true;
     public float cursorSpeed = 0.8f;
     public float cursorSize = 0.8f;
-    public float cursorColor = 0.8f;
-    public float cursorOpacity = 0.8f;
+    public float cursorColor = 0.18f;
+    public float cursorOpacity = 1.0f;
     public int damageTextMode;
     public int moneyTextMode;
-    public float coinAmount = 0.8f;
-    public float fragmentAmount = 0.8f;
+    public bool coinEnabled = true;
+    public int fragmentAmount = 5;
 }

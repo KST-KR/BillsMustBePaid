@@ -47,6 +47,9 @@ public class PlayerAimController : MonoBehaviour
     private bool _isShown;
     private bool _hasPosition;
     private float _pulseTimer;
+    private bool _cursorStateSaved;
+    private CursorLockMode _previousCursorLockState;
+    private bool _previousCursorVisibility;
     #endregion
 
     #region 이벤트 함수
@@ -104,6 +107,15 @@ public class PlayerAimController : MonoBehaviour
         if (_isShown)
         {
             SetShown(false);
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus && _isShown)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
 
@@ -207,7 +219,7 @@ public class PlayerAimController : MonoBehaviour
             return;
         }
 
-        _centerDot.position = Input.mousePosition;
+        _centerDot.position = _inputHandler.CursorScreenPosition;
         _centerDot.localScale = Vector3.one * pulse;
     }
 
@@ -227,6 +239,10 @@ public class PlayerAimController : MonoBehaviour
 
         if (isShown)
         {
+            SaveCursorState();
+            _inputHandler.ResetCursorPosition();
+            Cursor.lockState = CursorLockMode.Locked;
+
             _pulseTimer = 0f;
 
             if (_fillRing != null)
@@ -235,18 +251,38 @@ public class PlayerAimController : MonoBehaviour
             }
         }
 
-        if (_hideSystmeCursor)
+        if (!isShown)
         {
-            Cursor.visible = !isShown;
+            RestoreCursor();
         }
+        else if (_hideSystmeCursor)
+        {
+            Cursor.visible = false;
+        }
+    }
+
+    private void SaveCursorState()
+    {
+        if (_cursorStateSaved)
+        {
+            return;
+        }
+
+        _previousCursorLockState = Cursor.lockState;
+        _previousCursorVisibility = Cursor.visible;
+        _cursorStateSaved = true;
     }
 
     private void RestoreCursor()
     {
-        if (_hideSystmeCursor)
+        if (!_cursorStateSaved)
         {
-            Cursor.visible = true;
+            return;
         }
+
+        Cursor.lockState = _previousCursorLockState;
+        Cursor.visible = _previousCursorVisibility;
+        _cursorStateSaved = false;
     }
     #endregion
 }
