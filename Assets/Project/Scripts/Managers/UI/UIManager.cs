@@ -85,6 +85,10 @@ public class UIManager : Singleton<UIManager>
     [Header("돼지 저금통 레벨 UI")]
     [SerializeField] private TMP_Text _stagePigCountText;
     [SerializeField] private TMP_Text _unlockLevelText;
+
+    [Header("돼지 저금통 해금 UI")]
+    [SerializeField] private Image _unlockedPigIconImage;
+    [SerializeField] private TMP_Text _unlockedPigNameText;
     #endregion
 
     #region 내부 변수
@@ -109,6 +113,7 @@ public class UIManager : Singleton<UIManager>
     protected override void OnSingletonAwake()
     {
         SetSelectedUpgradeTab(null);
+        HideUnlockUI();
 
         if (_extraAttackTarget != null)
         {
@@ -229,6 +234,7 @@ public class UIManager : Singleton<UIManager>
         if(_pigBankUnlock != null)
         {
             _pigBankUnlock.OnUnlockProgressChanged += UpdateUnlockUI;
+            _pigBankUnlock.OnPigBankUnlocked += ShowPigBankUnlockUI;
 
             UpdateUnlockUI(_pigBankUnlock.TotalCrash, _pigBankUnlock.UnlockLevel);
         }
@@ -296,6 +302,7 @@ public class UIManager : Singleton<UIManager>
         if (_pigBankUnlock != null)
         {
             _pigBankUnlock.OnUnlockProgressChanged -= UpdateUnlockUI;
+            _pigBankUnlock.OnPigBankUnlocked -= ShowPigBankUnlockUI;
         }
 
         if (_playerStamina != null)
@@ -604,13 +611,55 @@ public class UIManager : Singleton<UIManager>
     }
 
     /// <summary>
-    /// 돼지 저금통 해금 레벨, 파괴 개수 갱신
+    /// 돼지 저금통 해금 레벨, 파괴 개수 갱신 
     /// </summary>
     private void UpdateUnlockUI(int totalCrash, int unlockLevel)
     {
         if(_unlockLevelText != null)
         {
             _unlockLevelText.text = $"해금 Lv. {unlockLevel}";
+        }
+    }
+
+    /// <summary>
+    /// 새로운 돼지 저금통이 해금된 순간 이미지와 이름 텍스트를 켬
+    /// </summary>
+    private void ShowPigBankUnlockUI(UnlockInfo unlockedInfo)
+    {
+        if(_unlockedPigIconImage != null)
+        {
+            if(unlockedInfo.pigIcon != null)
+            {
+                _unlockedPigIconImage.sprite = unlockedInfo.pigIcon;
+                _unlockedPigIconImage.preserveAspect = true;
+                _unlockedPigIconImage.gameObject.SetActive(true);
+            }
+            else
+            {
+                _unlockedPigIconImage.gameObject.SetActive(false);
+            }
+        }
+
+        if(_unlockedPigNameText != null)
+        {
+            _unlockedPigNameText.text = $"{unlockedInfo._pigName} 해금!";
+            _unlockedPigNameText.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// 해금 이미지와 텍스트를 숨김
+    /// </summary>
+    private void HideUnlockUI()
+    {
+        if(_unlockedPigIconImage != null)
+        {
+            _unlockedPigIconImage.gameObject.SetActive(false);
+        }
+
+        if (_unlockedPigNameText != null)
+        {
+            _unlockedPigNameText.gameObject.SetActive(false);
         }
     }
 
@@ -891,6 +940,7 @@ public class UIManager : Singleton<UIManager>
     public void HideAllPanels()
     {
         HidePauseUI();
+        HideUnlockUI();
 
         SetPanelActive(_stageClearPanel, false);
         SetPanelActive(_gameOverPanel, false);

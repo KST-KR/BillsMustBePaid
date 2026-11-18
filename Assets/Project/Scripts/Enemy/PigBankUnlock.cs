@@ -9,6 +9,10 @@ public struct UnlockInfo
 
     [Tooltip("해금 되는 돼지 저금통")]
     public PigBankDataBaseSO _pigData;
+
+    [Tooltip("UI 표시용 돼지 이름 및 아이콘")]
+    public string _pigName;
+    public Sprite pigIcon;
 }
 
 public class PigBankUnlock : Singleton<PigBankUnlock>
@@ -20,6 +24,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
 
     #region 이벤트
     public event Action<int, int> OnUnlockProgressChanged;
+    public event Action<UnlockInfo> OnPigBankUnlocked;
     #endregion
 
     #region 인스펙터
@@ -49,8 +54,12 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
             // 현재 레벨에 설정된 목표 횟수에 도달했는지 확인
             if (_totalCrash >= _unlockTable[currentIndex].unlockCount)
             {
+                UnlockInfo unlockedInfo = _unlockTable[currentIndex];
+
                 _unlockLevel++;
-                Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");              
+                Debug.Log($" ← unlock →  : 돼지 저금통 해금 해금 레벨: {_unlockLevel}");
+
+                OnPigBankUnlocked?.Invoke(unlockedInfo);
             }
         }
 
@@ -67,7 +76,7 @@ public class PigBankUnlock : Singleton<PigBankUnlock>
         {
             return _unlockTable[currentIndex]._pigData;
         }
-        return null; // 예외 처리
+        return null;
     }
 
     /// <summary>

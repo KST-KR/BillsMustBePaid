@@ -24441,8 +24441,12 @@ MonoBehaviour:
   _upgradeGoldText: {fileID: 1759934040}
   _upgradeLegacyPointText: {fileID: 600359669}
   _playerStatsHud: {fileID: 1439325676}
+  _shopCameraRoot: {fileID: 0}
+  _shopItemRoot: {fileID: 0}
   _stagePigCountText: {fileID: 1081208730}
-  _unlockLevelText: {fileID: 390461632}
+  _unlockLevelText: {fileID: 0}
+  _unlockedPigIconImage: {fileID: 1088870734}
+  _unlockedPigNameText: {fileID: 390461632}
 --- !u!4 &1179052709
 Transform:
   m_ObjectHideFlags: 0
@@ -33916,24 +33920,44 @@ MonoBehaviour:
   _unlockTable:
   - unlockCount: 5
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Basic
+    pigIcon: {fileID: 21300000, guid: ca9cecbfc4926e24f98f544cc745cf75, type: 3}
   - unlockCount: 15
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Tourist
+    pigIcon: {fileID: 21300000, guid: 411397206123b914e869b2023bef428b, type: 3}
   - unlockCount: 20
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Andry
+    pigIcon: {fileID: 21300000, guid: dc668a138efb0ab44bc2cb29bd6ba1ca, type: 3}
   - unlockCount: 30
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Woody
+    pigIcon: {fileID: 21300000, guid: b0eb23fe08e3d4b42a9de8482d03d2f4, type: 3}
   - unlockCount: 40
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  - unlockCount: 30
-    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  - unlockCount: 40
-    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  - unlockCount: 45
-    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Pinata
+    pigIcon: {fileID: 21300000, guid: 887bc01a288a532458d88056587ca3b1, type: 3}
   - unlockCount: 50
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  - unlockCount: 55
+    _pigName: Stone
+    pigIcon: {fileID: 21300000, guid: ca6570f9a7df5df4da4a399a239fd706, type: 3}
+  - unlockCount: 70
     _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Donpleon
+    pigIcon: {fileID: 21300000, guid: 25feb1593dd0bb540b4bb467a4bb7039, type: 3}
+  - unlockCount: 75
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: BlackHole
+    pigIcon: {fileID: 21300000, guid: bec20453346d1ee45886413b18ce6f14, type: 3}
+  - unlockCount: 80
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: Witch
+    pigIcon: {fileID: 21300000, guid: e2649862cd3a52543a8d16657f59efda, type: 3}
+  - unlockCount: 90
+    _pigData: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
+    _pigName: 'Leprechaun '
+    pigIcon: {fileID: 21300000, guid: 26f761746819a034bad56bd3bb2b52e6, type: 3}
 --- !u!4 &1594968988
 Transform:
   m_ObjectHideFlags: 0
