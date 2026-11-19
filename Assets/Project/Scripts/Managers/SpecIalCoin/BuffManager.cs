@@ -14,6 +14,12 @@ public class BuffManager : Singleton<BuffManager>
 
     public float JackpotRemainingTime { get; private set; }
     public float DoubleCoinRemainingTime { get; private set; }
+
+    public float JackpotDuration { get; private set; }
+    public float DoubleCoinDuration { get; private set; }
+
+    public float JackpotProgress => (JackpotDuration > 0f) ? Mathf.Clamp01(JackpotRemainingTime / JackpotDuration) : 0f;
+    public float DoubleCoinProgress => (DoubleCoinDuration > 0f) ? Mathf.Clamp01(DoubleCoinRemainingTime / DoubleCoinDuration) : 0f;
     #endregion
 
     #region 이벤트
@@ -97,6 +103,7 @@ public class BuffManager : Singleton<BuffManager>
     {
         JackpotChanceMultiplier = multiplier;
         JackpotRemainingTime = duration;
+        JackpotDuration = duration;
         OnJackpotBuffStateChanged?.Invoke(true);
 
         Debug.Log($"BuffManager : 잭팟 확률 {multiplier}배 버프 시작! ({duration}초)");
@@ -119,6 +126,7 @@ public class BuffManager : Singleton<BuffManager>
     {
         CoinGainMultiplier = multiplier;
         DoubleCoinRemainingTime = duration;
+        DoubleCoinDuration = duration;
         OnDoubleCoinBuffStateChanged?.Invoke(true);
 
         Debug.Log($"[BuffManager] 코인 획득량 {multiplier}배 버프 시작! ({duration}초)");

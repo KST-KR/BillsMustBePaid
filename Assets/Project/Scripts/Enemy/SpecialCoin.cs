@@ -19,6 +19,9 @@ public class SpecialCoin : MonoBehaviour
     [SerializeField] private int _instantCoin = 500;
     [SerializeField] private bool _spawnVisualCoinsOnInstant = true;
 
+    [Header("즉시 코인 지급 연출 드랍 위치")]
+    [SerializeField] private Vector3 _instantCoinDropPos = new Vector3(0f, 3f, 0f);
+
     [Header("버프 수치 설정")]
     [SerializeField] private float _jackpotChanceUp = 5f;
     [SerializeField] private float _jackpotDuration = 30f;
@@ -186,7 +189,7 @@ public class SpecialCoin : MonoBehaviour
             for (int i = 0; i < goldCount; i++)
             {
                 Vector2 randomOffset = Random.insideUnitCircle * 0.5f;
-                Vector3 spawnPos = transform.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
+                Vector3 spawnPos = _instantCoinDropPos + new Vector3(randomOffset.x, 0f, randomOffset.y);
                 CoinObjectPoolManager.Instance.GetCoin(CoinObjectPoolManager.CoinType.GOLD, spawnPos, Quaternion.identity);
             }
         }
