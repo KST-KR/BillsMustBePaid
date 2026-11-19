@@ -1,40 +1,82 @@
-﻿using UnityEngine;
+﻿
+using System.Collections;
+using UnityEngine;
 
+/// <summary>
+/// 게임 최초 실행 시 데이터 로딩과 로딩 화면 표시를 관리
+/// </summary>
 public class GameDataLoaderTester : MonoBehaviour
 {
+    #region 인스펙터
+    [Header("로딩 화면")]
+    [SerializeField] private LoadingScreenController _loadingScreen;
+    [SerializeField] private LoadingScreenUI _loadingScreenUI;
+    #endregion
+
+    #region 내부 변수
+    private bool _isLoadCompleted;
+    #endregion
+
+    #region 이벤트 함수
     private void Start()
     {
-        StartCoroutine(TestLoadCatalog());
+        StartCoroutine(LoadGameData());
     }
+    #endregion
 
-    private System.Collections.IEnumerator TestLoadCatalog()
+    #region 데이터 로딩
+    private IEnumerator LoadGameData()
     {
-        // 카탈로그 로딩
-        yield return GameDataLoader.Instance.LoadCatalog();
+        GameDataLoader dataLoader = GameDataLoader.Instance;
 
-        // 로딩 결과 확인
-        if (!GameDataLoader.Instance.IsLoaded)
+        if (dataLoader == null)
         {
-            Debug.LogError("카탈로그 로딩 테스트 실패");
+            Debug.LogError("GameDataLoader를 찾을 수 없습니다.");
             yield break;
         }
 
-        GameDataCatalog catalog = GameDataLoader.Instance.Catalog;
+        // 데이터 로딩 시작
+        StartCoroutine(LoadCatalog(dataLoader));
 
-        Debug.Log("카탈로그 로딩 테스트 성공");
+        // 로딩이 완료될 때까지 진행률 UI 갱신
+        while (!_isLoadCompleted)
+        {
+            if (_loadingScreenUI != null)
+            {
+                _loadingScreenUI.UpdateProgress(dataLoader.LoadProgress);
+            }
 
-        // 내부 데이터 확인
-        Debug.Log($"성장 데이터 개수: {catalog.Upgrades.Length}");
-        Debug.Log($"성장 스킬 세트 개수: {catalog.SkillSets.Length}");
+            yield return null;
+        }
 
-        Debug.Log($"장비 데이터베이스: {catalog.EquipmentDatabase}");
-        Debug.Log($"저금통 데이터베이스: {catalog.PigBankDatabase}");
+        // 최종 진행률 반영
+        if (_loadingScreenUI != null)
+        {
+            _loadingScreenUI.UpdateProgress(dataLoader.LoadProgress);
+        }
 
-        Debug.Log($"고지서 데이터 개수: {catalog.BillRules.Length}");
-        Debug.Log($"영구 상점 데이터 개수: {catalog.LegacyShopItems.Length}");
+        // 로딩 결과 확인
+        if (!dataLoader.IsLoaded)
+        {
+            Debug.LogError("게임 데이터 카탈로그 로딩 실패");
+            yield break;
+        }
 
-        Debug.Log($"퍼크 데이터 개수: {catalog.Perks.Length}");
-        Debug.Log($"저금통 해금 데이터: {catalog.PigBankUnlockData}");
-        Debug.Log($"저금통 파괴 레벨 데이터: {catalog.PigCrashLevelData}");
+        // 데이터 로딩 완료 후 페이드 인
+        if (_loadingScreen != null)
+        {
+            yield return _loadingScreen.FadeIn();
+        }
     }
+
+    /// <summary>
+    /// 카탈로그 로딩 및 완료 여부 전달
+    /// </summary>
+    private IEnumerator LoadCatalog(GameDataLoader dataLoader)
+    {
+        yield return dataLoader.LoadCatalog();
+
+        _isLoadCompleted = true;
+    }
+    #endregion
 }

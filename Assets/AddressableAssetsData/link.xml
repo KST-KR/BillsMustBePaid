@@ -1,0 +1,64 @@
+<linker>
+  <assembly fullname="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="AngryPigBankDataSO" preserve="all" />
+    <type fullname="BasicPigBankDataSO" preserve="all" />
+    <type fullname="BillData" preserve="all" />
+    <type fullname="DieBlackHoleSO" preserve="all" />
+    <type fullname="EquipmentData" preserve="all" />
+    <type fullname="EquipmentDatabase" preserve="all" />
+    <type fullname="GameDataCatalog" preserve="all" />
+    <type fullname="GrowthSkillSetData" preserve="all" />
+    <type fullname="HitEffect" preserve="all" />
+    <type fullname="HitSpeedBoostSO" preserve="all" />
+    <type fullname="HitSummonSelfSO" preserve="all" />
+    <type fullname="LegacyShopItemData" preserve="all" />
+    <type fullname="PerkData" preserve="all" />
+    <type fullname="PigBankDataBaseSO" preserve="all" />
+    <type fullname="PigBankHealth" preserve="all" />
+    <type fullname="PigBankMoveing" preserve="all" />
+    <type fullname="PigBankUnlockData" preserve="all" />
+    <type fullname="PigCrashLevelData" preserve="all" />
+    <type fullname="PinataPigBankDataSO" preserve="all" />
+    <type fullname="RandomRewardManager" preserve="all" />
+    <type fullname="StonePigBankDataSO" preserve="all" />
+    <type fullname="TouristPigBankDataSO" preserve="all" />
+    <type fullname="UpgradeData" preserve="all" />
+    <type fullname="WoodyPigBankDataSO" preserve="all" />
+    <type fullname="BillIssueData" preserve="nothing" serialized="true" />
+    <type fullname="CrashLevelInfo" preserve="nothing" serialized="true" />
+    <type fullname="PigBankColorData" preserve="nothing" serialized="true" />
+    <type fullname="PrerequisiteUpgrade" preserve="nothing" serialized="true" />
+    <type fullname="SkillSetBonus" preserve="nothing" serialized="true" />
+    <type fullname="SkillSetRequirement" preserve="nothing" serialized="true" />
+    <type fullname="UnlockInfo" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Unity.Addressables, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.AddressableAssets.Addressables" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.InstanceProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.LegacyResourcesProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.SceneProvider" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.Material" preserve="all" />
+    <type fullname="UnityEngine.Mesh" preserve="all" />
+    <type fullname="UnityEngine.MeshFilter" preserve="all" />
+    <type fullname="UnityEngine.MeshRenderer" preserve="all" />
+    <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.Shader" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
+    <type fullname="UnityEngine.Texture2D" preserve="all" />
+    <type fullname="UnityEngine.Transform" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.ParticleSystem" preserve="all" />
+    <type fullname="UnityEngine.ParticleSystemRenderer" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.BoxCollider" preserve="all" />
+  </assembly>
+</linker>
