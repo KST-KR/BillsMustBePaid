@@ -108,6 +108,8 @@ public class SaveSlotUI : MonoBehaviour
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         bool hasSaveData = SaveManager.Instance.HasSaveData(_slotIndex);
 
         // 저장 데이터가 있으면 해당 슬롯을 불러옴.
@@ -170,6 +172,8 @@ public class SaveSlotUI : MonoBehaviour
     /// </summary>
     private void OnDeleteButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         if (!SaveManager.Instance.HasSaveData(_slotIndex))
         {
             RefreshSlotUI();

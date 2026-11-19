@@ -65,6 +65,7 @@ public class SettingsTabUI : MonoBehaviour
     /// </summary>
     public void ShowGeneralTab()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         SetActiveTab(0);
     }
 
@@ -73,6 +74,7 @@ public class SettingsTabUI : MonoBehaviour
     /// </summary>
     public void ShowCursorTab()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         SetActiveTab(1);
     }
 
@@ -81,6 +83,7 @@ public class SettingsTabUI : MonoBehaviour
     /// </summary>
     public void ShowGameplayTab()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         SetActiveTab(2);
     }
 
