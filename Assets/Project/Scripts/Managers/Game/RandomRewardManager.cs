@@ -86,9 +86,9 @@ public class RandomRewardManager : MonoBehaviour
     #region 커스텀 메소드 (Private)
     private void DropCoins(Transform sender = null)
     {
-        float jackpotMultiplier = (BuffManager.Instance != null) ? BuffManager.Instance.JackpotChanceMultiplier : 1f;
+        float jackpotMultiplier = (BuffManager.HasInstance) ? BuffManager.Instance.JackpotChanceMultiplier : 1f;
         float finalJackpotChance = Mathf.Clamp01(_pigData.JackpotChance * jackpotMultiplier);
-        bool isJacpot = Random.value <= _pigData.JackpotChance; 
+        bool isJacpot = Random.value <= finalJackpotChance;
 
         // StageRewardManager를 통해 현재 레벨의 보너스 보상을 안전하게 가져옴
         int levelBonus = (StageRewardManager.Instance != null) ? StageRewardManager.Instance.GetPigBonusReward(_pigData.PigIndex) : 0;
@@ -110,6 +110,12 @@ public class RandomRewardManager : MonoBehaviour
         else
         {
             Debug.Log($"[Reward] 기본 코인 보상 계산: {coinCount}개");
+        }
+
+        if (BuffManager.HasInstance && BuffManager.Instance.IsDoubleCoinBuffActive)
+        {
+            coinCount = Mathf.CeilToInt(coinCount * BuffManager.Instance.CoinGainMultiplier);
+            Debug.Log($"[Reward] 특수 코인 획득량 {BuffManager.Instance.CoinGainMultiplier}배 버프 적용! (최종 {coinCount}개)");
         }
 
         if (CoinObjectPoolManager.Instance != null)
