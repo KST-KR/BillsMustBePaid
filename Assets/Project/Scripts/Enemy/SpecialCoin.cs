@@ -5,9 +5,9 @@ using UnityEngine;
 #region enum
 public enum SpecialCoinType
 {
-    CoinA,
-    CoinB,
-    CoinC,
+    InstantCoin,      // 즉시 코인 200 지급
+    JackpotChanceUp,  // 30초간 잭팟 확률 5배
+    DoubleCoinGain    // 20초간 코인 획득량 2배
 }
 #endregion
 
@@ -16,6 +16,14 @@ public class SpecialCoin : MonoBehaviour
     #region 인스펙터
     [Header("특수 코인 설정")]
     [SerializeField] private SpecialCoinType _coinType;
+    [SerializeField] private int _instantCoin = 500;
+    [SerializeField] private bool _spawnVisualCoinsOnInstant = true;
+
+    [Header("버프 수치 설정")]
+    [SerializeField] private float _jackpotChanceUp = 5f;
+    [SerializeField] private float _jackpotDuration = 30f;
+    [SerializeField] private float _coinGainMultiplier = 2f;
+    [SerializeField] private float _coinGainDuration = 20f;
 
     [Header("드롭 및 회전 설정")]
     [SerializeField] private float _dropHeightY = 1.5f;
@@ -55,6 +63,15 @@ public class SpecialCoin : MonoBehaviour
         }
 
         _coinCoroutine = StartCoroutine(SpecialCoinRoutine());
+    }
+
+    private void OnDisable()
+    {
+        if (_coinCoroutine != null)
+        {
+            StopCoroutine(_coinCoroutine);
+            _coinCoroutine = null;
+        }
     }
     #endregion
 
@@ -122,20 +139,56 @@ public class SpecialCoin : MonoBehaviour
     {
         switch (_coinType)
         {
-            case SpecialCoinType.CoinA:
-                Debug.Log("특수 효과 A 발동!");
-                // TODO: 효과 A 로직 연결
+            case SpecialCoinType.InstantCoin:
+                GrantInstantCoin();
                 break;
 
-            case SpecialCoinType.CoinB:
-                Debug.Log("특수 효과 B 발동!");
-                // TODO: 효과 B 로직 연결
+            case SpecialCoinType.JackpotChanceUp:
+                if (BuffManager.Instance != null)
+                {
+                    BuffManager.Instance.ActivateJackpotBuff(_jackpotDuration, _jackpotChanceUp);
+                }
+                Debug.Log($"{_jackpotDuration}초 동안 잭팟 확률 {_jackpotChanceUp}배 적용");
                 break;
 
-            case SpecialCoinType.CoinC:
-                Debug.Log("특수 효과 C 발동!");
-                // TODO: 효과 C 로직 연결
+            case SpecialCoinType.DoubleCoinGain:
+                if (BuffManager.Instance != null)
+                {
+                    BuffManager.Instance.ActivateDoubleCoinBuff(_coinGainDuration, _coinGainMultiplier);
+                }
+                Debug.Log($"{_coinGainDuration}초 동안 모든 코인 흭득량 {_coinGainMultiplier}배 적용");
                 break;
+        }
+    }
+
+    private void GrantInstantCoin()
+    {
+        int finalAmount = _instantCoin;
+
+        // 코인 획득량 2배 버프가 활성화되어 있다면 즉시 지급 코인에도 적용
+        if (BuffManager.Instance != null && BuffManager.Instance.IsDoubleCoinBuffActive)
+        {
+            finalAmount = Mathf.CeilToInt(finalAmount * BuffManager.Instance.CoinGainMultiplier);
+        }
+
+        if (StageRewardManager.Instance != null)
+        {
+            StageRewardManager.Instance.TryAddStageGold(finalAmount);
+            Debug.Log($"SpecialCoin : 즉시 코인 {finalAmount} 지급 완료! (현재 누적: {StageRewardManager.Instance.StageRewardGold})");
+        }
+
+        // 코인 나오는 연출
+        if (_spawnVisualCoinsOnInstant && CoinObjectPoolManager.Instance != null && CoinObjectPoolManager.Instance.IsEnabled)
+        {
+            int goldValue = CoinObjectPoolManager.Instance.GetCoinInfo(CoinObjectPoolManager.CoinType.GOLD)._value;
+            int goldCount = (goldValue > 0) ? (finalAmount / goldValue) : 0;
+
+            for (int i = 0; i < goldCount; i++)
+            {
+                Vector2 randomOffset = Random.insideUnitCircle * 0.5f;
+                Vector3 spawnPos = transform.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
+                CoinObjectPoolManager.Instance.GetCoin(CoinObjectPoolManager.CoinType.GOLD, spawnPos, Quaternion.identity);
+            }
         }
     }
 
