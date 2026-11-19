@@ -39,6 +39,10 @@ public class AudioManager : PersistentSingleton<AudioManager>
 
     #endregion
 
+    #region 내부 변수
+    private bool _isBGMPlaying;    
+    #endregion
+
     protected override void OnSingletonAwake()
     {
         if (SettingsManager.Instance != null)
@@ -56,6 +60,13 @@ public class AudioManager : PersistentSingleton<AudioManager>
         }
     }
 
+    #region 이벤트 함수
+    private void Start()
+    {
+        AudioManager.Instance?.PlayBGM(EAudioType.TitleBGM);
+    }
+    #endregion
+
     #region 커스텀 메서드 (Public)
 
     /// <summary>
@@ -63,7 +74,6 @@ public class AudioManager : PersistentSingleton<AudioManager>
     /// </summary>
     public void PlayBGM(EAudioType audioType)
     {
-
         AudioClip clip = FindAudioClip(audioType);
 
         if(clip == null)
@@ -71,10 +81,17 @@ public class AudioManager : PersistentSingleton<AudioManager>
             return;
         }
 
+        if (_isBGMPlaying && clip.name == _bgmSource.clip.name)
+        {
+            ResumeBGM();
+            return;
+        }
+
         _bgmSource.clip = clip;
         ApplyBGMVolume();
         _bgmSource.loop = true;
         _bgmSource.Play();
+        _isBGMPlaying = true;
     }
 
     /// <summary>

@@ -150,21 +150,25 @@ public class MainMenuUI : MonoBehaviour
     #region 커스텀 (public)
     public void OpenLoadPanel()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         ShowPanel(_loadPanel);
     }
 
     public void CloseLoadPanel()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         ShowPanel(_mainMenuPanel);
     }
 
     public void OpenSettingsPanel()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         ShowPanel(_settingsPanel);
     }
 
     public void CloseSettingsPanel()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         ShowPanel(_mainMenuPanel);
     }
 
@@ -195,6 +199,8 @@ public class MainMenuUI : MonoBehaviour
         {
             return;
         }
+
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
 
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.NewGame, defaultSlotIndex);
 
@@ -228,6 +234,9 @@ public class MainMenuUI : MonoBehaviour
         {
             return;
         }
+
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+        AudioManager.Instance?.PlayBGM(EAudioType.GameBGM);
 
         // 일반 이어하기 모드로 게임 씬에 전달
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.LoadGame, slotIndex);
@@ -265,6 +274,8 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         // 스킬트리 전용 진입 모드로 게임 씬에 전달
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.OpenSkillTree, slotIndex);
 
@@ -278,6 +289,8 @@ public class MainMenuUI : MonoBehaviour
     /// </summary>
     public void OnExitButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         Debug.Log("게임 종료");
 
 #if UNITY_EDITOR
