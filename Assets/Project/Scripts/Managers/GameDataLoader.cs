@@ -21,6 +21,9 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
     #region 프로퍼티
     public GameDataCatalog Catalog { get; private set; }
     public bool IsLoaded => Catalog != null;
+
+    // 전체 데이터 로딩 진행률 (0 ~ 1)
+    public float LoadProgress { get; private set; }
     #endregion
 
     #region 싱글톤 정리
@@ -45,8 +48,11 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 이미 로딩된 경우 중복 로딩 방지
         if (IsLoaded)
         {
+            LoadProgress = 1f;
             yield break;
         }
+
+        LoadProgress = 0f;
 
         if (string.IsNullOrWhiteSpace(_catalogAddress))
         {
@@ -57,7 +63,12 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // Addressables 초기화
         AsyncOperationHandle initHandle = Addressables.InitializeAsync(false);
 
-        yield return initHandle;
+        // 초기화 진행률 반영 (전체 20%)
+        while (!initHandle.IsDone)
+        {
+            LoadProgress = initHandle.PercentComplete * 0.2f;
+            yield return null;
+        }
 
         if (initHandle.Status != AsyncOperationStatus.Succeeded)
         {
@@ -72,7 +83,12 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 카탈로그 로딩
         _catalogHandle = Addressables.LoadAssetAsync<GameDataCatalog>(_catalogAddress);
 
-        yield return _catalogHandle;
+        // 카탈로그 로딩 진행률 반영 (전체 80%)
+        while (!_catalogHandle.IsDone)
+        {
+            LoadProgress = 0.2f + (_catalogHandle.PercentComplete * 0.8f);
+            yield return null;
+        }
 
         if (_catalogHandle.Status != AsyncOperationStatus.Succeeded)
         {
@@ -84,7 +100,6 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
             }
 
             _catalogHandle = default;
-
             yield break;
         }
 
@@ -96,9 +111,10 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
 
             Addressables.Release(_catalogHandle);
             _catalogHandle = default;
-
             yield break;
         }
+
+        LoadProgress = 1f;
 
         Debug.Log("게임 데이터 카탈로그 로딩 완료");
     }
