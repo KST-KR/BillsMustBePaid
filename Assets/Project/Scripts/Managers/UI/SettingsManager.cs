@@ -13,6 +13,7 @@ public sealed class SettingsManager : PersistentSingleton<SettingsManager>
     public float CursorSize => _settings.cursorSize;
     public float CursorColor => _settings.cursorColor;
     public float CursorOpacity => _settings.cursorOpacity;
+    public bool RewardTextEnabled => _settings.moneyTextMode == 0;
     public bool DamageTextEnabled => _settings.damageTextMode == 0;
     public bool CoinEnabled => _settings.coinEnabled;
     public int FragmentAmount => _settings.fragmentAmount;

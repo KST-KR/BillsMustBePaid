@@ -87,7 +87,7 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
             RandomRewardManager rewardManager = GetComponent<RandomRewardManager>();
             if (rewardManager != null)
             {
-                rewardManager.Die();
+                rewardManager.Die(transform);
             }
             else
             {
