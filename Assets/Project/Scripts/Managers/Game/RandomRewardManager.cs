@@ -43,7 +43,7 @@ public class RandomRewardManager : MonoBehaviour
         }
     }
 
-    public void Die()
+    public void Die(Transform sender = null)
     {
         if(_isDead)
         {
@@ -54,7 +54,7 @@ public class RandomRewardManager : MonoBehaviour
 
         Debug.Log("돼지 저금통 파괴");
 
-        DropCoins();
+        DropCoins(sender);
 
         if (StageRewardManager.Instance != null)
         {
@@ -84,7 +84,7 @@ public class RandomRewardManager : MonoBehaviour
     #endregion
 
     #region 커스텀 메소드 (Private)
-    private void DropCoins()
+    private void DropCoins(Transform sender = null)
     {
         if (_pigData == null ||
             (SettingsManager.Instance != null && !SettingsManager.Instance.CoinEnabled) ||
@@ -130,6 +130,13 @@ public class RandomRewardManager : MonoBehaviour
             int silverCount = 0;
 
             int remainingValue = coinCount;
+
+            // 잭팟 여부에 따라 보상 텍스트 표시 (sender PigBankHealth 위치 기준)
+            if (RewardTextManager.Instance != null && sender != null)
+            {
+                Vector3 spawnPos = sender.position + Vector3.up;
+                RewardTextManager.Instance.ShowReward(remainingValue, spawnPos, isJacpot);
+            }
 
             // 골드(100원) 단위로 나누기
             if (goldValue > 0)
