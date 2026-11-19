@@ -49,8 +49,8 @@ public class BillRecord
         Category = billData.GetCategory(cycle);
         BillName = billData.GetTitle(cycle);
         IssueDay = issueDay;
-        DueDay = issueDay + billData.DueDays;
-        DueDays = billData.DueDays;
+        DueDays = billData.GetDueDays(cycle);
+        DueDay = issueDay + DueDays;
         Amount = amount;
         Cycle = cycle;
         PenaltyType = billData.PenaltyType;

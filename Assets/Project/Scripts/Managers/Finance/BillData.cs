@@ -7,11 +7,13 @@ using UnityEngine;
 public class BillIssueData
 {
     [SerializeField, Min(0)] private int _amount;
+    [SerializeField, Range(1, 10)] private int _dueDays = 3;
     [SerializeField] private string _category;
     [SerializeField] private string _title;
     [SerializeField, Range(0.0f, 1.0f)] private float _penaltyRate;
 
     public int Amount => _amount;
+    public int DueDays => Mathf.Clamp(_dueDays, 1, 10);
     public string Category => _category;
     public string Title => _title;
     public float PenaltyRate => _penaltyRate;
@@ -26,8 +28,14 @@ public class BillIssueData
     }
 
     public BillIssueData(int amount, string category, string title, float penaltyRate)
+        : this(amount, 3, category, title, penaltyRate)
+    {
+    }
+
+    public BillIssueData(int amount, int dueDays, string category, string title, float penaltyRate = 0.0f)
     {
         _amount = amount;
+        _dueDays = Mathf.Clamp(dueDays, 1, 10);
         _category = category;
         _title = title;
         _penaltyRate = penaltyRate;
@@ -44,7 +52,6 @@ public class BillData : ScriptableObject
     public string BillId => _billId;
     public string BillName => _billName;
     public int IssueDay => _issueDay;
-    public int DueDays => _dueDays;
     public int[] BillAmounts => GetBillAmounts();
     public int IssueCount => _issues != null && _issues.Length > 0
         ? _issues.Length
@@ -58,14 +65,12 @@ public class BillData : ScriptableObject
     [SerializeField] private string _billId;
     [SerializeField] private string _billName;
     [SerializeField, Min(1)] private int _issueDay = 1;
-    [SerializeField, Min(0)] private int _dueDays;
     [SerializeField] private BillIssueData[] _issues = new BillIssueData[0];
     [SerializeField] private EBillPenaltyType _penaltyType;
-    // 구버전 에셋 호환용 기본 패널티율. 새 데이터는 회차별 BillIssueData에 저장.
     [SerializeField, HideInInspector, Min(0.0f)] private float _penaltyRate;
     [SerializeField, Min(0)] private int _perkRewardCount;
     [SerializeField, Min(1)] private int _maxIssues = 1;
-    // 구버전 에셋을 새 모델로 옮기기 위한 숨김 필드. 재저장 이후에는 비워짐.
+
     [SerializeField, HideInInspector] private int[] _billAmounts = new int[0];
     [SerializeField, HideInInspector] private string[] _billCategories = new string[0];
     [SerializeField, HideInInspector] private string[] _billTitles = new string[0];
@@ -151,6 +156,15 @@ public class BillData : ScriptableObject
         }
 
         return _issues[cycle - 1];
+    }
+
+    /// <summary>
+    /// [BILL-01-01] 회차별 납부 기한(일)을 반환
+    /// </summary>
+    public int GetDueDays(int cycle)
+    {
+        BillIssueData issue = GetIssue(cycle);
+        return issue != null ? issue.DueDays : 3;
     }
 
     /// <summary>
