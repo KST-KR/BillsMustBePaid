@@ -86,13 +86,8 @@ public class RandomRewardManager : MonoBehaviour
     #region 커스텀 메소드 (Private)
     private void DropCoins(Transform sender = null)
     {
-        if (_pigData == null ||
-            (SettingsManager.Instance != null && !SettingsManager.Instance.CoinEnabled) ||
-            (CoinObjectPoolManager.Instance != null && !CoinObjectPoolManager.Instance.IsEnabled))
-        {
-            return;
-        }
-
+        float jackpotMultiplier = (BuffManager.Instance != null) ? BuffManager.Instance.JackpotChanceMultiplier : 1f;
+        float finalJackpotChance = Mathf.Clamp01(_pigData.JackpotChance * jackpotMultiplier);
         bool isJacpot = Random.value <= _pigData.JackpotChance; 
 
         // StageRewardManager를 통해 현재 레벨의 보너스 보상을 안전하게 가져옴

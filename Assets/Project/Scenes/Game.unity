@@ -8172,6 +8172,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 420934416}
   m_CullTransparentMesh: 1
+--- !u!1 &424642536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 424642538}
+  - component: {fileID: 424642537}
+  m_Layer: 0
+  m_Name: BuffManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &424642537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424642536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30c46853d6457f640bbaf77875305f90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &424642538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424642536}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.1013026, y: -2.334983, z: 26.800747}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &428844288
 GameObject:
   m_ObjectHideFlags: 0
@@ -24871,7 +24915,7 @@ MonoBehaviour:
   _shopCameraRoot: {fileID: 1124395590}
   _shopItemRoot: {fileID: 1287026245}
   _stagePigCountText: {fileID: 1081208730}
-  _stageClearText: {fileID: 0}
+  _stageClearText: {fileID: 1653599433}
   _stageClearTextLogues:
   - "\uD30C\uAD34\uC655"
   - "\uB3FC\uC9C0 \uC800\uAE08\uD1B5 \uD559\uC0B4\uC790"
@@ -62674,3 +62718,4 @@ SceneRoots:
   - {fileID: 1722323825}
   - {fileID: 1566917955}
   - {fileID: 822033207}
+  - {fileID: 424642538}
