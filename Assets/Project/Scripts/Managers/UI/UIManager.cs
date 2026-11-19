@@ -1142,6 +1142,8 @@ public class UIManager : Singleton<UIManager>
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.ContinueButtonClick);
+
         GameSaveController saveController = GameSaveController.Instance;
 
         // 메인 메뉴에서 스킬트리로 진입한 경우
@@ -1176,6 +1178,7 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnUpgradeButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
         HideAllPanels();
         ShowUpgradeSection(_growthSkillTreePanel);
         SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
@@ -1188,10 +1191,7 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnBillButtonClicked()
     {
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX(EAudioType.BillPaymentButton);
-        }
+        AudioManager.Instance?.PlaySFX(EAudioType.BillPaymentButton);
 
         HideAllPanels();
         ShowUpgradeSection(_billPanel);
@@ -1205,6 +1205,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnSkillTreeTabButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         ShowUpgradeSection(_growthSkillTreePanel);
         SetSelectedUpgradeTab(_skillTreeTabSelectedImage);
     }
@@ -1216,10 +1218,7 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnBillTabButtonClicked()
     {
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX(EAudioType.BillPaymentButton);
-        }
+        AudioManager.Instance?.PlaySFX(EAudioType.BillPaymentButton);
 
         ShowUpgradeSection(_billPanel);
         SetSelectedUpgradeTab(_billTabSelectedImage);
@@ -1230,6 +1229,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnShopTabButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         ShowUpgradeSection(_shopPanel);
         SetSelectedUpgradeTab(_shopTabSelectedImage);
     }
@@ -1250,6 +1251,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnResumeButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ResumeGame();
@@ -1267,6 +1270,8 @@ public class UIManager : Singleton<UIManager>
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_settingsPanel, true);
 
         if (_settingsPanel != null)
@@ -1280,6 +1285,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnSettingsCloseButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_settingsPanel, false);
     }
 
@@ -1289,6 +1296,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnRunEndButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         if (!IsPaused() || !CanEndRunFromPause())
         {
             return;
@@ -1308,6 +1317,7 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnRunEndConfirmYesButtonClicked()
     {
+
         if (_stageManager == null)
         {
             _stageManager = StageManager.Instance;
@@ -1327,6 +1337,9 @@ public class UIManager : Singleton<UIManager>
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
+
         _stageManager.ClearStage();
     }
 
@@ -1335,6 +1348,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnRunEndCancelButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_runEndConfirmPanel, false);
     }
 
@@ -1344,6 +1359,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnMainMenuConfirmButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_mainMenuConfirmPanel, true);
 
         if (_mainMenuConfirmPanel != null)
@@ -1357,6 +1374,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnMainMenuCancelButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_mainMenuConfirmPanel, false);
     }
 
@@ -1372,6 +1391,8 @@ public class UIManager : Singleton<UIManager>
             return;
         }
 
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         SetPanelActive(_mainMenuConfirmPanel, false);
 
         MoveToMainMenu();
@@ -1382,6 +1403,8 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void OnQuitButtonClicked()
     {
+        AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.QuitGame();

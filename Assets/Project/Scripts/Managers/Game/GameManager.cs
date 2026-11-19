@@ -79,6 +79,8 @@ public class GameManager : Singleton<GameManager>
             PigBankUnlock.Instance.ResetUnlockSystem();
         }
 
+        AudioManager.Instance?.PlayBGM(EAudioType.GameBGM);
+
         ChangeGameState(EGameState.Playing);
         OnRunStarted?.Invoke();
     }
@@ -175,6 +177,7 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void ReturnToTitle()
     {
+        AudioManager.Instance?.PlayBGM(EAudioType.TitleBGM);
         EndRun();
         ChangeGameState(EGameState.Title);
     }

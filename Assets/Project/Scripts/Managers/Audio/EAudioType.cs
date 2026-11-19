@@ -39,6 +39,12 @@ public enum EAudioType
     NextCycleStarted,
     BillPaymentButton,
     SkillTreeItemSelected,
-    LegacyRelicSelected
+    LegacyRelicSelected,
+
+    // 공통메뉴
+    MenuSelect,
+
+    // 계속하기 선택
+    ContinueButtonClick,
 }
 
