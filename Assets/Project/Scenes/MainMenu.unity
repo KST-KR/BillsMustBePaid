@@ -492,7 +492,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2477,7 +2477,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -4361,8 +4361,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 829, y: -467}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 796.72156, y: -413.5736}
+  m_SizeDelta: {x: 224.5569, y: 136.8528}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &325413285
 MonoBehaviour:
@@ -9656,6 +9656,8 @@ MonoBehaviour:
     _audioClip: {fileID: 8300000, guid: 43f6b9b84c0663b4ba40e61884f7a9c3, type: 3}
   - _audioType: 27
     _audioClip: {fileID: 8300000, guid: 56201fab426ef4a4eb72a708b8e91fb5, type: 3}
+  - _audioType: 28
+    _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
   _masterVolume: 1
   _bgmVolume: 1
   _sfxVolume: 1
@@ -10419,7 +10421,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -11051,7 +11053,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &930432187
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11065,7 +11067,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 792835283}
-  m_Father: {fileID: 1210294628}
+  m_Father: {fileID: 1874212631}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -13634,7 +13636,6 @@ RectTransform:
   m_Children:
   - {fileID: 504024450}
   - {fileID: 1874212631}
-  - {fileID: 930432187}
   - {fileID: 503804697}
   - {fileID: 1893547809}
   m_Father: {fileID: 0}
@@ -19356,9 +19357,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a681cabc1a1442545baefbc2b86e1a10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _mainMenuSceneName: MainMenu
   _gameSceneName: Game
   _legacyShopSceneName: GameLegacyShop
-  _mainMenuSceneName: MainMenu
   _fadeCanvasGroup: {fileID: 1682017180}
   _fadeDuration: 1
 --- !u!4 &1828709215
@@ -20007,6 +20008,7 @@ RectTransform:
   m_Children:
   - {fileID: 1847379422}
   - {fileID: 325413284}
+  - {fileID: 930432187}
   m_Father: {fileID: 1210294628}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -20073,7 +20075,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

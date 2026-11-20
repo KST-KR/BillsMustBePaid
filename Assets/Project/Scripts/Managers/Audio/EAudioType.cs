@@ -46,5 +46,8 @@ public enum EAudioType
 
     // 계속하기 선택
     ContinueButtonClick,
+
+    // 책상 타격
+    DeskHit,
 }
 
