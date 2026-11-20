@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
 
+public enum ETonyLoanState
+{
+    Available,
+    Outstanding,
+    WaitingForRegularBill
+}
+
 [Serializable]
 public sealed class BillRecordSaveData
 {
@@ -44,7 +51,7 @@ public sealed class BillRecordSaveData
 public sealed class BillRunSaveData
 {
     public int currentDay;
-    public bool hasTakenTonyLoan;
+    public ETonyLoanState tonyLoanState;
     public List<BillRecordSaveData> bills = new List<BillRecordSaveData>();
     public List<string> dueSoonNotifiedBillIds = new List<string>();
 }
