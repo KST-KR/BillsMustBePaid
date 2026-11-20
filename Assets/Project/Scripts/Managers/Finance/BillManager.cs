@@ -10,13 +10,14 @@ using UnityEngine.UI;
 public class BillManager : Singleton<BillManager>
 {
     public const float CTonyLoanPenaltyRate = 0.5f;
+    private const string CTonyLoanBillTypeId = "TONY_LOAN";
 
     #region 속성
     public IReadOnlyList<BillRecord> Bills => _bills;
     public IReadOnlyList<BillRecord> UnpaidBills => GetUnpaidBills();
     public BillRecord CurrentBill => GetNextUnpaidBill();
     public int CurrentDay => _currentDay;
-    public bool CanTakeTonyLoan => GetTonyLoanAmount() > 0 && !_hasTakenTonyLoan && !HasExpiredBills && (GameManager.Instance == null || GameManager.Instance.IsRunActive);
+    public bool CanTakeTonyLoan => GetTonyLoanAmount() > 0 && _tonyLoanState == ETonyLoanState.Available && !HasExpiredBills && (GameManager.Instance == null || GameManager.Instance.IsRunActive);
     public bool HasExpiredBills
     {
         get
@@ -62,7 +63,7 @@ public class BillManager : Singleton<BillManager>
     private CurrencyManager _currencyManager;
 
     private int _currentDay;
-    private bool _hasTakenTonyLoan;
+    private ETonyLoanState _tonyLoanState = ETonyLoanState.Available;
     #endregion
 
     #region 이벤트 함수
@@ -162,6 +163,15 @@ public class BillManager : Singleton<BillManager>
         }
 
         bill.SetStatus(EBillStatus.Paid);
+        if (string.Equals(bill.BillTypeId, CTonyLoanBillTypeId, StringComparison.OrdinalIgnoreCase))
+        {
+            _tonyLoanState = ETonyLoanState.WaitingForRegularBill;
+        }
+        else if (_tonyLoanState == ETonyLoanState.WaitingForRegularBill)
+        {
+            _tonyLoanState = ETonyLoanState.Available;
+        }
+
         OnBillPaid?.Invoke(bill);
         OnBillChanged?.Invoke(bill);
 
@@ -208,9 +218,9 @@ public class BillManager : Singleton<BillManager>
             return false;
         }
 
-        BillRecord loanBill = new BillRecord("TONY_LOAN", "대출", "빅 토니 대출", _currentDay, dueDays, (int)repaymentAmount, CTonyLoanPenaltyRate);
+        BillRecord loanBill = new BillRecord(CTonyLoanBillTypeId, "대출", "빅 토니 대출", _currentDay, dueDays, (int)repaymentAmount, CTonyLoanPenaltyRate);
         _bills.Add(loanBill);
-        _hasTakenTonyLoan = true;
+        _tonyLoanState = ETonyLoanState.Outstanding;
         OnBillIssued?.Invoke(loanBill);
         OnBillChanged?.Invoke(loanBill);
         RefreshPayButtonImage();
@@ -330,7 +340,7 @@ public class BillManager : Singleton<BillManager>
         BillRunSaveData saveData = new BillRunSaveData
         {
             currentDay = _currentDay,
-            hasTakenTonyLoan = _hasTakenTonyLoan
+            tonyLoanState = _tonyLoanState
         };
 
         for (int i = 0; i < _bills.Count; i++)
@@ -358,7 +368,7 @@ public class BillManager : Singleton<BillManager>
         _issuedKeys.Clear();
         _dueSoonNotifiedIds.Clear();
         _currentDay = Mathf.Max(0, saveData.currentDay);
-        _hasTakenTonyLoan = saveData.hasTakenTonyLoan;
+        _tonyLoanState = saveData.tonyLoanState;
 
         if (saveData.bills != null)
         {
@@ -416,7 +426,7 @@ public class BillManager : Singleton<BillManager>
         _issuedKeys.Clear();
         _dueSoonNotifiedIds.Clear();
         _currentDay = 0;
-        _hasTakenTonyLoan = false;
+        _tonyLoanState = ETonyLoanState.Available;
         OnBillChanged?.Invoke(CurrentBill);
         RefreshPayButtonImage();
     }
