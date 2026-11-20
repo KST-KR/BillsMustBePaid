@@ -82,4 +82,12 @@ public class LoadingScreenController : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// 로딩 화면을 즉시 숨김
+    /// </summary>
+    public void HideImmediately()
+    {
+        _canvasGroup.alpha = 0f;
+        _canvasGroup.blocksRaycasts = false;
+    }
 }
