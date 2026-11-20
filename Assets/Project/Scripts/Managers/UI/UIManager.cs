@@ -754,7 +754,15 @@ public class UIManager : Singleton<UIManager>
             GameManager.Instance.ReturnToTitle();
         }
 
-        SceneManager.LoadScene(_titleSceneName);
+        SceneTransitionManager transitionManager = SceneTransitionManager.Instance;
+
+        if (transitionManager == null)
+        {
+            Debug.LogError("SceneTransitionManager를 찾을 수 없음.");
+            return;
+        }
+
+        transitionManager.LoadMainMenuScene();
     }
     
     /// <summary>
