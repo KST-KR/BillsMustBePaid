@@ -35,6 +35,17 @@ public class GameDataLoaderTester : MonoBehaviour
             yield break;
         }
 
+        // 이미 데이터가 로딩되어 있다면 로딩 화면만 숨기고 종료
+        if (dataLoader.IsLoaded)
+        {
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.HideImmediately();
+            }
+
+            yield break;
+        }
+
         // 데이터 로딩 시작
         StartCoroutine(LoadCatalog(dataLoader));
 
