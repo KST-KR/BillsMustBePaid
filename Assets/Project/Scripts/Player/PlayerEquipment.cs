@@ -162,6 +162,8 @@ public class PlayerEquipment : MonoBehaviour
         _currentEquipment = data;
         _currentEquipmentVisual = targetVisual;
 
+        AudioManager.Instance?.PlaySFX(EAudioType.ChangeHammer);
+
         // 플레이어 능력치에 장비 능력치 반영
         _playerStats.SetHammerEquipment(data);
 

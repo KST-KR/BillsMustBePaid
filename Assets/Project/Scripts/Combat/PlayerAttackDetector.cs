@@ -116,6 +116,7 @@ public class PlayerAttackDetector : MonoBehaviour
             // 책상에 적중한 경우 패배 기록
             if (hitTables.Count > 0)
             {
+                AudioManager.Instance?.PlaySFX(EAudioType.DeskHit);
                 _playerAccuracy?.RecordLose();
             }
         }

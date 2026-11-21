@@ -163,6 +163,7 @@ public class EquipmentManager : Singleton<EquipmentManager>
         if (!isPurchased)
         {
             Debug.Log("골드가 부족하여 장비를 구매할 수 없음.");
+            AudioManager.Instance?.PlaySFX(EAudioType.UnavailablePurchase);
             return false;
         }
 

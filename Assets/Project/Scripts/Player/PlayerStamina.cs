@@ -18,12 +18,16 @@ public class PlayerStamina : MonoBehaviour
 
     [Tooltip("스테이지 진행 중 초당 소모량")]
     [SerializeField, Min(0f)] private float _drainPerSecond = 5f;
+
+    [Tooltip("임계음 재생 비율 (현재 스태미나가 최대치의 이 비율 이하로 내려갈 때)")]
+    [SerializeField, Range(0f, 1f)] private float _thresholdRatio = 0.2f;
     #endregion
 
     #region 내부 변수
     private float _current;
     private float _lastMax;
     private bool _isExhausted;
+    private bool _hasPlayedThresholdSound;
     
     // 구독 시점의 참조를 보관하여, 파괴 순서와 상관없이 구독 해제
     private StageManager _stageManager;
@@ -190,6 +194,7 @@ public class PlayerStamina : MonoBehaviour
         float max = Max;
 
         _isExhausted = false;
+        _hasPlayedThresholdSound = false;
         _lastMax = max;
         _current = Mathf.Clamp(max * _initialRatio, 0f, max);
 
@@ -245,8 +250,16 @@ public class PlayerStamina : MonoBehaviour
             return;
         }
 
+        float previous = _current;
         _current = clamped;
         NotifyChanged();
+
+        float threshold = Max * _thresholdRatio;
+        if (!_hasPlayedThresholdSound && previous > threshold && _current <= threshold && _current > 0f)
+        {
+            _hasPlayedThresholdSound = true;
+            AudioManager.Instance?.PlaySFX(EAudioType.StaminaThreshold);
+        }
 
         if (_current <= 0f && !_isExhausted)
         {
