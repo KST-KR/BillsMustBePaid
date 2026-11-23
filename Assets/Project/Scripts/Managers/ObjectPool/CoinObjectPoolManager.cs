@@ -98,8 +98,14 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         coin.transform.position = position;
         coin.transform.rotation = rotation;
         coin.SetActive(true);
+
+        if (coin.TryGetComponent(out CoinBounce bounce))
+        {
+            bounce.Init(position);
+        }
+
         _activeCoins.Add(coin);
-        return coin;      
+        return coin;
     }
 
     /// <summary>
