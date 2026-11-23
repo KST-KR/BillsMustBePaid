@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -48,7 +48,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 이미 로딩된 경우 중복 로딩 방지
         if (IsLoaded)
         {
-            LoadProgress = 1f;
+            LoadProgress = 0.9f;
             yield break;
         }
 
@@ -63,10 +63,10 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // Addressables 초기화
         AsyncOperationHandle initHandle = Addressables.InitializeAsync(false);
 
-        // 초기화 진행률 반영 (전체 20%)
+        // 초기화 진행률 반영 (전체 18%)
         while (!initHandle.IsDone)
         {
-            LoadProgress = initHandle.PercentComplete * 0.2f;
+            LoadProgress = initHandle.PercentComplete * 0.18f;
             yield return null;
         }
 
@@ -83,10 +83,10 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 카탈로그 로딩
         _catalogHandle = Addressables.LoadAssetAsync<GameDataCatalog>(_catalogAddress);
 
-        // 카탈로그 로딩 진행률 반영 (전체 80%)
+        // 카탈로그 로딩 진행률 반영 (전체 72%)
         while (!_catalogHandle.IsDone)
         {
-            LoadProgress = 0.2f + (_catalogHandle.PercentComplete * 0.8f);
+            LoadProgress = 0.18f + (_catalogHandle.PercentComplete * 0.72f);
             yield return null;
         }
 
@@ -114,9 +114,29 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
             yield break;
         }
 
+        LoadProgress = 0.9f;
+
+        // 메인 메뉴 로딩 화면이 나타나는 동안 타이틀 곡을 준비
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            yield return audioManager.PrepareBGMAsync(EAudioType.TitleBGM, progress => ReportInitialPrefabPreparation(progress));
+        }
+
         LoadProgress = 1f;
 
         Debug.Log("게임 데이터 카탈로그 로딩 완료");
+    }
+
+    public void ReportInitialPrefabPreparation(float progress)
+    {
+        ReportInitialPrefabPreparation(progress, 0f, 1f);
+    }
+
+    public void ReportInitialPrefabPreparation(float progress, float start, float end)
+    {
+        float preparationProgress = Mathf.Lerp(Mathf.Clamp01(start), Mathf.Clamp01(end), Mathf.Clamp01(progress));
+        LoadProgress = Mathf.Lerp(0.9f, 1f, preparationProgress);
     }
     #endregion
 }

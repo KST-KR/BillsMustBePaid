@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Hammer Prefabs
+  m_EditorClassIdentifier: 
+  m_GroupName: Hammer Prefabs
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 33ab7456b85d5f54b97dbd184b0c96db
+  m_SerializeEntries:
+  - m_GUID: 6e6ae5a4085c636418eca93156a58057
+    m_Address: Assets/Project/Prefabs/Hammer_4.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8dba85d720979b2459cf3eac318581cb
+    m_Address: Assets/Project/Prefabs/Hammer_2.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bd922c7e4b618047a60efaf6e988708
+    m_Address: Assets/Project/Prefabs/Hammer_1.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d773dca8864b85d459a781700e89eadf
+    m_Address: Assets/Project/Prefabs/Hammer_3.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 387d702e91bed5041a78cdd857ca3280, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c4f35e59ed7a05c44b64fdbba32a8588, type: 2}

@@ -14,6 +14,20 @@ public class LoadingScreenUI : MonoBehaviour
     [SerializeField] private TMP_Text _loadingText;
     #endregion
 
+    private void Awake()
+    {
+        UpdateProgress(0f);
+    }
+
+    private void Update()
+    {
+        GameDataLoader dataLoader = GameDataLoader.Instance;
+        if (dataLoader != null)
+        {
+            UpdateProgress(dataLoader.LoadProgress);
+        }
+    }
+
     #region UI 갱신
     /// <summary>
     /// 로딩 진행률과 문구 갱신

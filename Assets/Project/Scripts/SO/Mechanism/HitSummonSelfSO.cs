@@ -3,44 +3,58 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "3D/Mechanism/Hit Summon Self")]
 public class HitSummonSelfSO : MechanismSO
 {
-    #region ÀÎ½ºÆåÅÍ
-    [Header("¼ÒÈ¯ ¼³Á¤")]
+    [Header("Summon settings")]
     [SerializeField] private int _summonCount = 1;
     [SerializeField] private float _spawnRadius = 1.5f;
-    [Tooltip("¼ÒÈ¯ È®·ü (0 = 0 %, 1 = 100 %")]
+    [Tooltip("Summon chance (0 = 0%, 1 = 100%)")]
     [Range(0f, 1f)]
-    [SerializeField] private float _summonChance = 1.0f;
+    [SerializeField] private float _summonChance = 1f;
 
-    [Header("ºÐ½Å µ¥ÀÌÅÍ")]
-    [SerializeField] private PigBankGameDataSO _cloneDate;
-    #endregion
+    [Header("Clone pig data")]
+    [SerializeField] private PigBankGameDataSO _cloneData;
 
     public override void Execute(GameObject target)
     {
-        if(_cloneDate == null || _cloneDate.PigPrefab == null)
+        bool hasPrefab = _cloneData != null &&
+            (_cloneData.PigPrefab != null ||
+             (_cloneData.PigPrefabReference != null && _cloneData.PigPrefabReference.RuntimeKeyIsValid()));
+
+        if (!hasPrefab)
         {
-            Debug.LogWarning($"{name} : ºÐ½Å µ¥ÀÌÅÍ(_cloneData) ¶Ç´Â ÇÁ¸®ÆÕÀÌ ¾ø½À´Ï´Ù. È®ÀÎ ÇÊ¿ä");
+            Debug.LogWarning($"{name}: ë³µì œí•  ë¼ì§€ ë°ì´í„°ë‚˜ í•´ë‹¹ í”„ë¦¬íŒ¹ì´ ëˆ„ë½");
             return;
         }
 
-        if(Random.value > _summonChance)
+        if (target == null || Random.value > _summonChance)
         {
             return;
         }
 
-        for(int i = 0; i < _summonCount; i++)
+        PigBankObjectPoolManager poolManager = PigBankObjectPoolManager.Instance;
+        if (poolManager == null || !poolManager.HasPool(_cloneData))
         {
-            Vector2 randomCircle = Random.insideUnitCircle.normalized * _spawnRadius;
-            Vector3 spawnPos = target.transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            Debug.LogWarning($"{name}: ì €ê¸ˆí†µ í’€ì´ ì¤€ë¹„ë˜ì§€ ì•Šì•„ ì†Œí™˜ì„ ê±´ë„ˆëœë‹ˆë‹¤.");
+            return;
+        }
 
-           if(PigBankObjectPoolManager.Instance != null )
+        for (int i = 0; i < _summonCount; i++)
+        {
+            Vector2 offset = Random.insideUnitCircle.normalized * _spawnRadius;
+            Vector3 position = target.transform.position + new Vector3(offset.x, 0f, offset.y);
+
+            if (PigBankObjectPoolManager.Instance == null)
             {
-                GameObject clone = PigBankObjectPoolManager.Instance.SpawnPigBank(_cloneDate.ID, spawnPos, target.transform.rotation);
+                continue;
+            }
 
-                if (clone != null && SpawnPigBankManager.Instance != null)
-                {
-                    SpawnPigBankManager.Instance.RegisterPigBank(clone);
-                }
+            GameObject clone = PigBankObjectPoolManager.Instance.SpawnPigBank(
+                _cloneData.ID,
+                position,
+                target.transform.rotation);
+
+            if (clone != null && SpawnPigBankManager.Instance != null)
+            {
+                SpawnPigBankManager.Instance.RegisterPigBank(clone);
             }
         }
     }

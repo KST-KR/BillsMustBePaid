@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Pig Bank Prefabs
+  m_EditorClassIdentifier: 
+  m_GroupName: Pig Bank Prefabs
+  m_Data:
+    m_SerializedData: []
+  m_GUID: a28b4e0a984f0db448c36f1b0caa322b
+  m_SerializeEntries:
+  - m_GUID: 06752822e65cf2e4c86bea240a2e32c9
+    m_Address: pigbank/PigBank_Stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1071b2888afd5644995117073d8ddf5e
+    m_Address: pigbank/PigBank_Witch_Clone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 124333d1b8c6341418dd9b9ff0fe16cc
+    m_Address: pigbank/PigBank_Dongpleon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 37c410a4bb53e6e42b5da9c3fdcb045d
+    m_Address: pigbank/PigBank_BlackHole
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e12c08a8be6596428cd8387529b68d9
+    m_Address: pigbank/PigBank_Pinata
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6391059b7c7c44042a6464940a140655
+    m_Address: pigbank/PigBank_Basic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96c9569073c57e34fb0594b33000c0b6
+    m_Address: pigbank/PigBank_Tourist
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a317a1c79db601c44bcf73e982397788
+    m_Address: pigbank/PigBank_Leprechaun
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf60bd9aa80fa2a4389c69a7c93d65d6
+    m_Address: pigbank/PigBank_Woody
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e71b891515ee9e045937ff429ce5547b
+    m_Address: pigbank/PigBank_Angry
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 387d702e91bed5041a78cdd857ca3280, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 885488a6cbd4a1b40be65c2b913bd228, type: 2}
+    - {fileID: 11400000, guid: 0781f0fb26e6d9142a8abc5697d44fca, type: 2}

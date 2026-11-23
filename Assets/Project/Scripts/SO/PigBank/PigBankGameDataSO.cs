@@ -13,6 +13,7 @@ public abstract class PigBankGameDataSO : ScriptableObject
     public float MoveSpeed => _moveSpeed;
 
     public GameObject PigPrefab => _pigPrefab;
+    public UnityEngine.AddressableAssets.AssetReferenceGameObject PigPrefabReference => _pigPrefabReference;
 
     public int RewardCoin => _rewardCoin;
 
@@ -44,6 +45,7 @@ public abstract class PigBankGameDataSO : ScriptableObject
 
     [Header("돼지 저금통 프리팹")]
     [SerializeField] protected GameObject _pigPrefab;
+    [SerializeField] private UnityEngine.AddressableAssets.AssetReferenceGameObject _pigPrefabReference;
 
     [Header("파괴 레벨")]
     [SerializeField] protected int _crashLevel;

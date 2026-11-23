@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 399ece62c56d7d54c80647167cb8e002, type: 3}
   m_Name: EquipmentData_MultiHammer
   m_EditorClassIdentifier: 
+  _hammerPrefabReference:
+    m_AssetGUID: 6e6ae5a4085c636418eca93156a58057
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _equipmentName: "\uD06C\uB85C\uC2A4\uD540 \uB9DD\uCE58"
   _description: "\uD6A8\uC728\uC801\uC778 \uD718\uB450\uB984\uC744 \uC704\uD574 \uB9CC\uB4E0
     \uB9DD\uCE58"
