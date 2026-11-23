@@ -66,15 +66,17 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 클릭 순간에도 현재 마우스 아래의 망치를 다시 확인
-        UpdateHoveredItem(eventData);
+        // 클릭 위치에서 항목을 다시 조회해 이전 hover 항목이 장착되는 일을 방지
+        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+        ShopItem clickedItem = FindShopItem(eventData.position, eventCamera);
+        SetHoveredItem(clickedItem);
 
-        if (_currentShopItem == null)
+        if (clickedItem == null)
         {
             return;
         }
 
-        OnShopItemClicked?.Invoke(_currentShopItem);
+        OnShopItemClicked?.Invoke(clickedItem);
     }
     #endregion
 
@@ -84,20 +86,18 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
     /// </summary>
     private void UpdateHoveredItem(PointerEventData eventData)
     {
+        SetHoveredItem(FindShopItem(eventData.position, eventData.enterEventCamera));
+    }
+
+    private ShopItem FindShopItem(Vector2 screenPosition, Camera eventCamera)
+    {
         if (_shopCamera == null || _rawImageRect == null)
-        {
-            return;
-        }
+            return null;
 
         // 화면 좌표를 RawImage 내부 좌표로 변환
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            _rawImageRect,
-            eventData.position,
-            eventData.enterEventCamera,
-            out Vector2 localPoint))
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rawImageRect, screenPosition, eventCamera, out Vector2 localPoint))
         {
-            ClearHoveredItem();
-            return;
+            return null;
         }
 
         Rect rect = _rawImageRect.rect;
@@ -108,8 +108,7 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (viewportX < 0f || viewportX > 1f || viewportY < 0f || viewportY > 1f)
         {
-            ClearHoveredItem();
-            return;
+            return null;
         }
 
         // ShopCamera에서 해당 위치로 Ray 발사
@@ -117,14 +116,10 @@ public class ShopDisplayInput : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         if (Physics.Raycast(ray, out RaycastHit hit, _shopCamera.farClipPlane,  _shopItemLayers))
         {
-            ShopItem shopItem = hit.collider.GetComponentInParent<ShopItem>();
+            return hit.collider.GetComponentInParent<ShopItem>();
+        }
 
-            SetHoveredItem(shopItem);
-        }
-        else
-        {
-            ClearHoveredItem();
-        }
+        return null;
     }
 
     /// <summary>

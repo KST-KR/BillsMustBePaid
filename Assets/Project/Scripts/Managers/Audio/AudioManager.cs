@@ -1,47 +1,36 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
-/// <summary>
-/// 게임의 BGM 및 효과음 재생을 관리합니다.
-/// 사전 매핑된 사운드를 외부 요청에 따라 재생합니다.
-/// </summary>
 public class AudioManager : PersistentSingleton<AudioManager>
 {
-    #region 속성
     public float BGMVolume => _bgmVolume;
     public float SFXVolume => _sfxVolume;
-    #endregion
-
-    #region 이벤트
 
     public event Action<EAudioType> OnAudioRequested;
 
-    #endregion
-
-    #region 인스펙터 변수
-
-    [Header("Audio Sources")]
+    [Header("오디오 소스")]
     [SerializeField] private AudioSource _bgmSource;
     [SerializeField] private AudioSource _sfxSource;
 
-    [Header("Audio Mapping")]
+    [Header("오디오 매핑")]
     [SerializeField] private AudioData[] _audioData;
 
-    [Header("Audio Volume")]
-    [SerializeField, Range(0f, 1f)]
-    private float _masterVolume = 1f;
+    [Header("오디오 볼륨")]
+    [SerializeField, Range(0f, 1f)] private float _masterVolume = 1f;
+    [SerializeField, Range(0f, 1f)] private float _bgmVolume = 1f;
+    [SerializeField, Range(0f, 1f)] private float _sfxVolume = 1f;
 
-    [SerializeField, Range(0f, 1f)]
-    private float _bgmVolume = 1f;
-
-    [SerializeField, Range(0f, 1f)]
-    private float _sfxVolume = 1f;
-
-    #endregion
-
-    #region 내부 변수
-    private bool _isBGMPlaying;    
-    #endregion
+    private readonly Dictionary<EAudioType, AsyncOperationHandle<AudioClip>> _bgmHandles = new Dictionary<EAudioType, AsyncOperationHandle<AudioClip>>();
+    private bool _isBGMPaused;
+    private bool _hasCurrentBGM;
+    private EAudioType _currentBGM;
+    private bool _hasPendingBGM;
+    private EAudioType _pendingBGM;
+    private int _bgmRequestVersion;
 
     protected override void OnSingletonAwake()
     {
@@ -49,6 +38,7 @@ public class AudioManager : PersistentSingleton<AudioManager>
         {
             SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
         }
+
         ApplySavedVolumes();
     }
 
@@ -58,101 +48,283 @@ public class AudioManager : PersistentSingleton<AudioManager>
         {
             SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
         }
+
+        foreach (AsyncOperationHandle<AudioClip> handle in _bgmHandles.Values)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+        }
+
+        _bgmHandles.Clear();
     }
 
-    #region 이벤트 함수
     private void Start()
     {
-        AudioManager.Instance?.PlayBGM(EAudioType.TitleBGM);
+        PlayBGM(EAudioType.TitleBGM);
     }
-    #endregion
 
-    #region 커스텀 메서드 (Public)
-
-    /// <summary>
-    /// 지정한 BGM을 재생합니다.
-    /// </summary>
     public void PlayBGM(EAudioType audioType)
     {
-        AudioClip clip = FindAudioClip(audioType);
+        if (_bgmSource == null)
+        {
+            Debug.LogError("AudioManager의 BGM AudioSource가 할당되지 않음.", this);
+            return;
+        }
 
-        if(clip == null)
+        if (_hasCurrentBGM && _currentBGM == audioType && _bgmSource.clip != null)
+        {
+            _bgmRequestVersion++;
+            _hasPendingBGM = false;
+
+            if (_isBGMPaused)
+            {
+                ResumeBGM();
+            }
+            else if (!_bgmSource.isPlaying)
+            {
+                _bgmSource.Play();
+            }
+
+            return;
+        }
+
+        if (_hasPendingBGM && _pendingBGM == audioType)
         {
             return;
         }
 
-        if (_isBGMPlaying && clip.name == _bgmSource.clip.name)
-        {
-            ResumeBGM();
-            return;
-        }
-
-        _bgmSource.clip = clip;
-        ApplyBGMVolume();
-        _bgmSource.loop = true;
-        _bgmSource.Play();
-        _isBGMPlaying = true;
+        _pendingBGM = audioType;
+        _hasPendingBGM = true;
+        int requestVersion = ++_bgmRequestVersion;
+        StartCoroutine(LoadAndPlayBGM(audioType, requestVersion));
     }
 
-    /// <summary>
-    /// 현재 BGM을 정지합니다.
-    /// </summary>
+    public IEnumerator PrepareBGMAsync(EAudioType audioType, Action<float> onProgress = null)
+    {
+        yield return LoadBGMClipAsync(audioType, onProgress, null);
+    }
+
+    private IEnumerator LoadAndPlayBGM(EAudioType audioType, int requestVersion)
+    {
+        AudioClip clip = null;
+
+        yield return LoadBGMClipAsync(audioType, null, loadedClip => clip = loadedClip);
+
+        if (requestVersion != _bgmRequestVersion)
+        {
+            if (!_hasCurrentBGM || _currentBGM != audioType)
+            {
+                ReleaseBGMHandle(audioType);
+            }
+
+            yield break;
+        }
+
+        _hasPendingBGM = false;
+
+        if (clip != null)
+        {
+            AssignAndPlayBGM(audioType, clip);
+        }
+    }
+
+    private IEnumerator LoadBGMClipAsync(EAudioType audioType, Action<float> onProgress, Action<AudioClip> onCompleted)
+    {
+        AudioData data = FindAudioData(audioType);
+
+        if (data == null)
+        {
+            Debug.LogError($"AudioType 매핑을 찾을 수 없음: {audioType}", this);
+            onProgress?.Invoke(1f);
+            onCompleted?.Invoke(null);
+
+            yield break;
+        }
+
+        if (data.AudioClip != null)
+        {
+            onProgress?.Invoke(1f);
+            onCompleted?.Invoke(data.AudioClip);
+
+            yield break;
+        }
+
+        if (data.AudioClipReference == null || !data.AudioClipReference.RuntimeKeyIsValid())
+        {
+            Debug.LogError($"BGM 주소 지정 참조가 누락: {audioType}", this);
+            onProgress?.Invoke(1f);
+            onCompleted?.Invoke(null);
+
+            yield break;
+        }
+
+        if (!_bgmHandles.TryGetValue(audioType, out AsyncOperationHandle<AudioClip> handle) || !handle.IsValid())
+        {
+            handle = Addressables.LoadAssetAsync<AudioClip>(data.AudioClipReference);
+            _bgmHandles[audioType] = handle;
+        }
+
+        while (!handle.IsDone)
+        {
+            onProgress?.Invoke(handle.PercentComplete * 0.9f);
+
+            yield return null;
+        }
+
+        if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+        {
+            Debug.LogError($"BGM 어드레서블(Addressable)을 불러오는 데 실패: {audioType}", this);
+            onProgress?.Invoke(1f);
+            onCompleted?.Invoke(null);
+
+            yield break;
+        }
+
+        AudioClip clipResult = handle.Result;
+
+        if (clipResult.loadState == AudioDataLoadState.Unloaded)
+        {
+            clipResult.LoadAudioData();
+        }
+
+        while (clipResult.loadState == AudioDataLoadState.Loading)
+        {
+            onProgress?.Invoke(0.95f);
+
+            yield return null;
+        }
+
+        if (clipResult.loadState != AudioDataLoadState.Loaded)
+        {
+            Debug.LogError($"BGM 오디오 데이터를 불러오지 못함: {audioType}", this);
+            onProgress?.Invoke(1f);
+            onCompleted?.Invoke(null);
+
+            yield break;
+        }
+
+        onProgress?.Invoke(1f);
+        onCompleted?.Invoke(clipResult);
+    }
+
+    private void AssignAndPlayBGM(EAudioType audioType, AudioClip clip)
+    {
+        _bgmSource.clip = clip;
+        _bgmSource.loop = true;
+        ApplyBGMVolume();
+        _bgmSource.Play();
+        _currentBGM = audioType;
+        _hasCurrentBGM = true;
+        _isBGMPaused = false;
+        _hasPendingBGM = false;
+        ReleaseUnusedBGMHandles(audioType);
+    }
+
+    private void ReleaseUnusedBGMHandles(EAudioType keepType)
+    {
+        List<EAudioType> releaseTypes = new List<EAudioType>();
+        foreach (KeyValuePair<EAudioType, AsyncOperationHandle<AudioClip>> pair in _bgmHandles)
+        {
+            if (pair.Key == keepType || !pair.Value.IsDone)
+            {
+                continue;
+            }
+
+            if (pair.Value.IsValid())
+            {
+                Addressables.Release(pair.Value);
+            }
+
+            releaseTypes.Add(pair.Key);
+        }
+
+        for (int i = 0; i < releaseTypes.Count; i++)
+        {
+            _bgmHandles.Remove(releaseTypes[i]);
+        }
+    }
+
+    private void ReleaseBGMHandle(EAudioType audioType)
+    {
+        if (!_bgmHandles.TryGetValue(audioType, out AsyncOperationHandle<AudioClip> handle) || !handle.IsDone)
+        {
+            return;
+        }
+
+        if (handle.IsValid())
+        {
+            Addressables.Release(handle);
+        }
+
+        _bgmHandles.Remove(audioType);
+    }
+
     public void StopBGM()
     {
+        _bgmRequestVersion++;
+        _hasPendingBGM = false;
 
-        _bgmSource.Stop();
+        if (_bgmSource != null)
+        {
+            _bgmSource.Stop();
+        }
+
+        _isBGMPaused = false;
     }
 
-    /// <summary>
-    /// 지정한 효과음을 재생합니다.
-    /// </summary>
+    public void PauseBGM()
+    {
+        if (_bgmSource != null)
+        {
+            _bgmSource.Pause();
+        }
+
+        _isBGMPaused = true;
+    }
+
+    public void ResumeBGM()
+    {
+        if (_bgmSource != null && _bgmSource.clip != null)
+        {
+            if (_isBGMPaused)
+            {
+                _bgmSource.UnPause();
+            }
+            else if (!_bgmSource.isPlaying)
+            {
+                _bgmSource.Play();
+            }
+
+            _isBGMPaused = false;
+        }
+    }
+
     public void PlaySFX(EAudioType audioType)
     {
-
-        AudioClip clip = FindAudioClip(audioType);
-
-        if( clip == null)
+        if (_sfxSource == null)
         {
+            Debug.LogError("AudioManager의 SFX AudioSource가 할당되지 않음.", this);
             return;
         }
 
-        _sfxSource.PlayOneShot(clip);
+        AudioClip clip = FindAudioClip(audioType);
+
+        if (clip != null)
+        {
+            _sfxSource.PlayOneShot(clip);
+        }
     }
 
-    /// <summary>
-    /// BGM을 일시정지합니다.
-    /// </summary>
-    public void PauseBGM()
-    {
-
-        _bgmSource.Pause();
-    }
-
-    /// <summary>
-    /// 일시정지된 BGM을 다시 재생합니다.
-    /// </summary>
-    public void ResumeBGM()
-    {
-
-        _bgmSource.UnPause();
-    }
-
-    /// <summary>
-    /// BGM 볼륨을 변경합니다.
-    /// </summary>
     public void SetBGMVolume(float volume)
     {
-
         _bgmVolume = Mathf.Clamp01(volume);
         ApplyBGMVolume();
     }
 
-    /// <summary>
-    /// 효과음 볼륨을 변경합니다.
-    /// </summary>
     public void SetSFXVolume(float volume)
     {
-
         _sfxVolume = Mathf.Clamp01(volume);
         ApplySFXVolume();
     }
@@ -164,21 +336,47 @@ public class AudioManager : PersistentSingleton<AudioManager>
         ApplySFXVolume();
     }
 
-    /// <summary>
-    /// 지정한 사운드의 재생을 요청합니다.
-    /// </summary>
     public void RequestAudio(EAudioType audioType)
     {
         OnAudioRequested?.Invoke(audioType);
     }
 
-    #endregion
+    private AudioData FindAudioData(EAudioType audioType)
+    {
+        if (_audioData == null)
+        {
+            return null;
+        }
 
-    #region 커스텀 메서드 (Private)
+        for (int i = 0; i < _audioData.Length; i++)
+        {
+            if (_audioData[i] != null && _audioData[i].AudioType == audioType)
+            {
+                return _audioData[i];
+            }
+        }
+
+        return null;
+    }
+
+    private AudioClip FindAudioClip(EAudioType audioType)
+    {
+        AudioData data = FindAudioData(audioType);
+
+        if (data != null && data.AudioClip != null)
+        {
+            return data.AudioClip;
+        }
+
+        Debug.LogError($"AudioType 클립을 찾을 수 없음: {audioType}", this);
+
+        return null;
+    }
 
     private void ApplySavedVolumes()
     {
         SettingsManager settingsManager = SettingsManager.Instance;
+
         if (settingsManager != null)
         {
             SaveSettingData settings = settingsManager.Settings;
@@ -211,25 +409,4 @@ public class AudioManager : PersistentSingleton<AudioManager>
             _sfxSource.volume = _sfxVolume * _masterVolume;
         }
     }
-
-    /// <summary>
-    /// 매핑된 사운드 클립을 검색합니다.
-    /// </summary>
-    private AudioClip FindAudioClip(EAudioType audioType)
-    {
-
-        foreach (var data in _audioData)
-        {
-            if(data.AudioType == audioType)
-            {
-                return data.AudioClip;
-            }
-        }
-
-        Debug.LogError($"AudioType을 찾을 수 없습니다 : {audioType}");
-        return null;
-    }
-
-    #endregion
 }
-

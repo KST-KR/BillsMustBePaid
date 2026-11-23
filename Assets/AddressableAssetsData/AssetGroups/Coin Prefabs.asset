@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Coin Prefabs
+  m_EditorClassIdentifier: 
+  m_GroupName: Coin Prefabs
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b84a7f2af92271d40b39d96312c44eec
+  m_SerializeEntries:
+  - m_GUID: f49d8908e36101e4e93e4a76876e9d97
+    m_Address: Assets/Project/Prefabs/MES_Gold_Coin.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd8ddabd7042da2438726fde5c4c8eec
+    m_Address: Assets/Project/Prefabs/MES_Silver_Coin .prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 387d702e91bed5041a78cdd857ca3280, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: a4190800e098eeb4e8a0baef2bcc4836, type: 2}
+    - {fileID: 11400000, guid: 929d9d444b25ddf4db109e44357577de, type: 2}

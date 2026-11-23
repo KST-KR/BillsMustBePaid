@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +6,11 @@ using UnityEngine;
 /// </summary>
 public class GameSceneBootstrap : MonoBehaviour
 {
+    #region 내부 변수
+    private bool _isManagersInitialized;
+    public bool IsInitializationComplete { get; private set; }
+    #endregion
+
     private IEnumerator Start()
     {
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
@@ -61,11 +66,87 @@ public class GameSceneBootstrap : MonoBehaviour
             }
 
             // Addressables 데이터 기반 Manager 초기화
-            if (!InitializeManagers(dataLoader.Catalog))
+            yield return InitializeManagers(dataLoader.Catalog);
+            if (!_isManagersInitialized)
             {
                 Debug.LogError("게임 데이터 초기화 실패");
                 yield break;
             }
+
+            float preparationStart = 0f;
+            if (launchMode == GameLaunchData.ELaunchMode.NewGame)
+            {
+                const float pigBankPreparationShare = 0.6f;
+                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, progress => dataLoader.ReportInitialPrefabPreparation(progress, 0f, pigBankPreparationShare));
+                preparationStart = pigBankPreparationShare;
+            }
+
+            PlayerEquipment playerEquipment = FindObjectOfType<PlayerEquipment>();
+            EquipmentData initialEquipment = ResolveInitialEquipment(playerEquipment, dataLoader.Catalog, launchMode, slotIndex);
+            bool prepareHammer = playerEquipment != null && initialEquipment != null;
+            bool hasAddressableHammer = prepareHammer && initialEquipment.HammerPrefabReference != null && initialEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
+            FragmentObjectPoolManager fragmentPool = FragmentObjectPoolManager.Instance;
+            bool prepareFragments = fragmentPool != null && fragmentPool.IsEnabled;
+            CoinObjectPoolManager coinPool = CoinObjectPoolManager.Instance;
+            bool prepareCoins = coinPool != null && coinPool.IsEnabled;
+            SpecialCoinPoolManager specialCoinPool = SpecialCoinPoolManager.Instance;
+            bool prepareSpecialCoins = specialCoinPool != null && specialCoinPool.IsEnabled && specialCoinPool.HasAvailablePrefabs;
+            AudioManager audioManager = AudioManager.Instance;
+            bool prepareGameBgm = audioManager != null;
+            float fragmentShareWeight = prepareFragments ? 5f : 0f;
+            float coinShareWeight = prepareCoins ? 2f : 0f;
+            float hammerShareWeight = hasAddressableHammer ? 2f : 0f;
+            float specialCoinShareWeight = prepareSpecialCoins ? 1f : 0f;
+            float gameBgmShareWeight = prepareGameBgm ? 2f : 0f;
+            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight + hammerShareWeight + specialCoinShareWeight + gameBgmShareWeight;
+
+            if (prepareFragments)
+            {
+                float fragmentPreparationEnd = preparationStart + ((1f - preparationStart) * fragmentShareWeight / optionalPreparationWeight);
+
+                yield return fragmentPool.PreparePoolsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, fragmentPreparationEnd));
+                preparationStart = fragmentPreparationEnd;
+            }
+
+            if (prepareCoins)
+            {
+                float coinPreparationEnd = preparationStart + ((1f - preparationStart) * coinShareWeight / optionalPreparationWeight);
+
+                yield return coinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, coinPreparationEnd));
+                preparationStart = coinPreparationEnd;
+            }
+
+            if (prepareHammer)
+            {
+                float hammerPreparationEnd = preparationStart;
+                if (hasAddressableHammer)
+                {
+                    hammerPreparationEnd += ((1f - preparationStart) * hammerShareWeight / optionalPreparationWeight);
+                }
+
+                yield return playerEquipment.PrepareInitialHammerAsync(initialEquipment, progress => dataLoader.ReportInitialPrefabPreparation(
+                    progress,
+                    preparationStart,
+                    hammerPreparationEnd));
+                preparationStart = hammerPreparationEnd;
+            }
+
+            if (prepareSpecialCoins)
+            {
+                float specialCoinPreparationEnd = preparationStart + ((1f - preparationStart) * specialCoinShareWeight / optionalPreparationWeight);
+
+                yield return specialCoinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, specialCoinPreparationEnd));
+                preparationStart = specialCoinPreparationEnd;
+            }
+
+            if (prepareGameBgm)
+            {
+                yield return audioManager.PrepareBGMAsync(EAudioType.GameBGM, progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
+            }
+
+            dataLoader.ReportInitialPrefabPreparation(1f);
+            audioManager?.PlayBGM(EAudioType.GameBGM);
 
             switch (launchMode)
             {
@@ -94,6 +175,7 @@ public class GameSceneBootstrap : MonoBehaviour
         {
             // 실행 성공 여부와 관계없이 진입 데이터 정리
             GameLaunchData.Clear();
+            IsInitializationComplete = true;
         }
     }
 
@@ -102,19 +184,20 @@ public class GameSceneBootstrap : MonoBehaviour
     /// </summary>
     /// <param name="catalog"></param>
     /// <returns></returns>
-    private bool InitializeManagers(GameDataCatalog catalog)
+    private IEnumerator InitializeManagers(GameDataCatalog catalog)
     {
+        _isManagersInitialized = false;
         if (catalog == null)
         {
             Debug.LogError("GameDataCatalog가 전달되지 않음.");
-            return false;
+            yield break;
         }
-        
+
         // 카탈로그 내부 데이터 검증
         if (!catalog.Validate())
         {
             Debug.LogError("GameDataCatalog 데이터 검증 실패");
-            return false;
+            yield break;
         }
 
         // 필요한 Manager 확인
@@ -129,7 +212,7 @@ public class GameSceneBootstrap : MonoBehaviour
             SpawnPigBankManager.Instance == null)
         {
             Debug.LogError("게임 데이터 초기화에 필요한 Manager가 없습니다.");
-            return false;
+            yield break;
         }
 
         // 성장 데이터
@@ -156,7 +239,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!StageRewardManager.Instance.IsInitialized)
         {
             Debug.LogError("StageRewardManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         // 저금통 데이터베이스 및 오브젝트 풀
@@ -165,7 +248,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!PigBankObjectPoolManager.Instance.IsInitialized)
         {
             Debug.LogError("PigBankObjectPoolManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         // 저금통 스폰 데이터
@@ -174,12 +257,32 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!SpawnPigBankManager.Instance.IsInitialized)
         {
             Debug.LogError("SpawnPigBankManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         Debug.Log("모든 Manager 데이터 초기화 완료");
 
-        return true;
+        _isManagersInitialized = true;
+    }
+
+    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, int slotIndex)
+    {
+        EquipmentData initialEquipment = playerEquipment != null ? playerEquipment.StartingEquipment : null;
+
+        if (launchMode != GameLaunchData.ELaunchMode.LoadGame && launchMode != GameLaunchData.ELaunchMode.OpenSkillTree)
+        {
+            return initialEquipment;
+        }
+
+        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
+
+        string equipmentId = saveData != null && saveData.runData != null && saveData.runData.equipmentData != null ? saveData.runData.equipmentData.equippedEquipmentId : null;
+
+        EquipmentData savedEquipment = catalog != null && catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
+
+        bool savedHammerIsAddressable = savedEquipment != null && savedEquipment.HammerPrefabReference != null && savedEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
+        return savedHammerIsAddressable ? savedEquipment : initialEquipment;
     }
 
     /// <summary>
@@ -319,9 +422,7 @@ public class GameSceneBootstrap : MonoBehaviour
         try
         {
             // 재화 복원
-            if (!currencyManager.RestoreBalances(
-                saveData.runData.currentGold,
-                saveData.playerData.legacyPoints))
+            if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
             {
                 Debug.LogError("재화 데이터 복원에 실패.");
                 return;
@@ -445,8 +546,7 @@ public class GameSceneBootstrap : MonoBehaviour
             // 파산 사이클 수 복원
             if (RoguelikeManager.Instance != null)
             {
-                RoguelikeManager.Instance.RestoreCycleCount(
-                    saveData.playerData.bankruptcyCycle);
+                RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
             }
 
             // 성장 및 장비 데이터 복원

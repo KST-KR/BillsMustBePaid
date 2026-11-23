@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: BGM Audio
+  m_EditorClassIdentifier: 
+  m_GroupName: BGM Audio
+  m_Data:
+    m_SerializedData: []
+  m_GUID: c7af6c7678c54fcc96ab0ffb1351ce27
+  m_SerializeEntries:
+  - m_GUID: ac27e9e7e54f681489857a9b32da892f
+    m_Address: Assets/Project/Audio/BGM_Esperanza_Outro.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32a21457482b4944b866c9e7ae2a8fbe
+    m_Address: Assets/Project/Audio/BGM_everything_will_be_fine.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 387d702e91bed5041a78cdd857ca3280, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3e16d213c6454b3ba9571d87be9ca6a5, type: 2}
+    - {fileID: 11400000, guid: ae68d006988b47d990766e69c60c1cef, type: 2}
