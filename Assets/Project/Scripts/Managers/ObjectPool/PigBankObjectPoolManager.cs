@@ -6,19 +6,15 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
-/// Keeps pools only for pig bank types eligible in the current stage.
+/// 현재 단계에서 저금통 유형에 해당하는 풀만 유효하게 유지
 /// </summary>
 public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 {
     private PigBankDataBaseSO _pigDatabase;
-    private readonly Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDictionary =
-        new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
-    private readonly Dictionary<PigBankGameDataSO, Transform> _rootDictionary =
-        new Dictionary<PigBankGameDataSO, Transform>();
-    private readonly Dictionary<PigBankGameDataSO, GameObject> _prefabDictionary =
-        new Dictionary<PigBankGameDataSO, GameObject>();
-    private readonly Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>> _prefabHandles =
-        new Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>>();
+    private readonly Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDictionary = new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
+    private readonly Dictionary<PigBankGameDataSO, Transform> _rootDictionary = new Dictionary<PigBankGameDataSO, Transform>();
+    private readonly Dictionary<PigBankGameDataSO, GameObject> _prefabDictionary = new Dictionary<PigBankGameDataSO, GameObject>();
+    private readonly Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>> _prefabHandles = new Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>>();
     private readonly List<GameObject> _activePigs = new List<GameObject>();
     private bool _isPreparingPools;
 
@@ -29,6 +25,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         if (database == null || database.Datas == null || database.Datas.Count == 0)
         {
             Debug.LogError("돼지 저금통 데이터베이스가 없거나 비어 있음.", this);
+
             return;
         }
 
@@ -50,6 +47,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         if (_pigDatabase == null || requestedPigData == null || prewarmCountPerType <= 0)
         {
             Debug.LogError("Pig bank pool이 구성되어 있지 않거나, 요청한 데이터가 누락", this);
+
             yield break;
         }
 
@@ -81,6 +79,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             {
                 completedTypes++;
                 onProgress?.Invoke(totalTypes == 0 ? 1f : (float)completedTypes / totalTypes);
+
                 continue;
             }
 
@@ -92,10 +91,12 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             {
                 handle = Addressables.LoadAssetAsync<GameObject>(prefabReference);
                 _prefabHandles[pigData] = handle;
+
                 while (!handle.IsDone)
                 {
                     float typeProgress = handle.PercentComplete * 0.8f;
                     onProgress?.Invoke(totalTypes == 0 ? 1f : (completedTypes + typeProgress) / totalTypes);
+
                     yield return null;
                 }
 
@@ -109,6 +110,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 
                     Debug.LogError($"돼지 프리팹을 불러오지 못함: {pigData.ID}", this);
                     _isPreparingPools = false;
+
                     yield break;
                 }
 
@@ -119,6 +121,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             {
                 Debug.LogError($"돼지 데이터에 할당된 프리팹이 없음: {pigData.ID}", this);
                 _isPreparingPools = false;
+
                 yield break;
             }
 
@@ -128,6 +131,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             _rootDictionary[pigData] = root.transform;
 
             Queue<GameObject> queue = new Queue<GameObject>();
+
             for (int i = 0; i < prewarmCountPerType; i++)
             {
                 GameObject pig = Instantiate(prefab, root.transform);
@@ -206,6 +210,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         if (pigData == null || !_poolDictionary.TryGetValue(pigData, out Queue<GameObject> queue))
         {
             Destroy(pig);
+
             return;
         }
 
@@ -237,6 +242,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             if (pig == null)
             {
                 _activePigs.RemoveAt(i);
+
                 continue;
             }
 
@@ -275,6 +281,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             if (pig == null)
             {
                 _activePigs.RemoveAt(i);
+
                 continue;
             }
 
@@ -318,6 +325,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         }
 
         List<PigBankGameDataSO> pigData = new List<PigBankGameDataSO>(_poolDictionary.Keys);
+
         for (int i = 0; i < pigData.Count; i++)
         {
             ReleasePool(pigData[i]);

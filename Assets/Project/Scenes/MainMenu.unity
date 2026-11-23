@@ -9601,9 +9601,19 @@ MonoBehaviour:
   _sfxSource: {fileID: 1839181393}
   _audioData:
   - _audioType: 0
-    _audioClip: {fileID: 8300000, guid: ac27e9e7e54f681489857a9b32da892f, type: 3}
+    _audioClip: {fileID: 0}
+    _audioClipReference:
+      m_AssetGUID: ac27e9e7e54f681489857a9b32da892f
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 1
-    _audioClip: {fileID: 8300000, guid: 32a21457482b4944b866c9e7ae2a8fbe, type: 3}
+    _audioClip: {fileID: 0}
+    _audioClipReference:
+      m_AssetGUID: 32a21457482b4944b866c9e7ae2a8fbe
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 2
     _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
   - _audioType: 3

@@ -43,10 +43,14 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     public GameObject SpawnFragment(EFragmentType type, Vector3 spawnPosition)
     {
         if (SettingsManager.Instance != null && SettingsManager.Instance.FragmentAmount == 0)
+        {
             return null;
+        }
 
         if (!_poolsReady || !_poolDictionary.TryGetValue(type, out Queue<GameObject> queue) || !_prefabDictionary.TryGetValue(type, out GameObject prefab))
+        {
             return null;
+        }
 
         GameObject fragment = queue.Count > 0 ? queue.Dequeue() : Instantiate(prefab, _poolRoot);
         fragment.transform.SetParent(null);
@@ -54,22 +58,34 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         fragment.SetActive(true);
         ApplyExplosionPhysics(fragment);
         StartCoroutine(AfterTimeCoReturn(fragment, type, _removeTime));
+
         return fragment;
     }
 
     public void SpawnRandomFragments(Vector3 spawnPosition, int spawnCount = -1, float spawnInterval = 0.03f)
     {
         int fragmentOption = SettingsManager.Instance != null ? SettingsManager.Instance.FragmentAmount : 3;
+
         if (fragmentOption == 0)
+        {
             return;
+        }
 
         if (spawnCount < 0)
         {
             switch (fragmentOption)
             {
-                case 1: spawnCount = 1; break;
-                case 2: spawnCount = 3; break;
-                default: spawnCount = 5; break;
+                case 1: 
+                    spawnCount = 1; 
+                    break;
+
+                case 2: 
+                    spawnCount = 3; 
+                    break;
+
+                default: 
+                    spawnCount = 5;
+                    break;
             }
         }
 
@@ -81,7 +97,9 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         for (int i = 0; i < _loadedHandles.Count; i++)
         {
             if (_loadedHandles[i].IsValid())
+            {
                 Addressables.Release(_loadedHandles[i]);
+            }
         }
         _loadedHandles.Clear();
     }
@@ -89,10 +107,14 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     private IEnumerator PrepareAndSpawnFragments(Vector3 spawnPosition, int spawnCount, float spawnInterval)
     {
         while (_isPreparingPools)
+        {
             yield return null;
+        }
 
         if (!_poolsReady)
+        {
             yield return PreparePoolsAsync();
+        }
 
         if (!_poolsReady)
         {
@@ -112,14 +134,19 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         }
 
         while (_isPreparingPools)
+        {
             yield return null;
+        }
 
         if (_poolsReady)
         {
             onProgress?.Invoke(1f);
+
             yield break;
         }
+
         _isPreparingPools = true;
+
         if (_poolRoot == null)
         {
             GameObject root = new GameObject("FragmentPool_Root");
@@ -128,6 +155,7 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         }
 
         EFragmentType[] types = { EFragmentType.A, EFragmentType.B, EFragmentType.C, EFragmentType.D, EFragmentType.E };
+
         for (int i = 0; i < types.Length; i++)
         {
             EFragmentType type = types[i];
@@ -137,12 +165,15 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
             if (reference != null && reference.RuntimeKeyIsValid())
             {
                 AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(reference);
+
                 while (!handle.IsDone)
                 {
                     float typeProgress = handle.PercentComplete * 0.8f;
                     onProgress?.Invoke((i + typeProgress) / types.Length);
+
                     yield return null;
                 }
+
                 if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
                 {
                     prefab = handle.Result;
@@ -150,28 +181,37 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
                 }
                 else
                 {
-                    if (handle.IsValid()) Addressables.Release(handle);
+                    if (handle.IsValid())
+                    {
+                        Addressables.Release(handle);
+                    }
+
                     Debug.LogError($"Addressable 프래그먼트를 로드하지 못함: {type}", this);
                 }
             }
 
             if (prefab == null)
+            {
                 prefab = GetLegacyPrefabByType(type);
+            }
 
             if (prefab == null)
             {
                 Debug.LogWarning($"해당 유형에 할당된 프래그먼트 프리팹이 없음: {type}.", this);
+
                 continue;
             }
 
             _prefabDictionary[type] = prefab;
             Queue<GameObject> queue = new Queue<GameObject>();
+
             for (int j = 0; j < Mathf.Max(0, _fragmentCount); j++)
             {
                 GameObject fragment = Instantiate(prefab, _poolRoot);
                 fragment.SetActive(false);
                 queue.Enqueue(fragment);
             }
+
             _poolDictionary[type] = queue;
             onProgress?.Invoke((float)(i + 1) / types.Length);
         }
@@ -184,11 +224,21 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     {
         switch (type)
         {
-            case EFragmentType.A: return _fragmentPrefabAReference;
-            case EFragmentType.B: return _fragmentPrefabBReference;
-            case EFragmentType.C: return _fragmentPrefabCReference;
-            case EFragmentType.D: return _fragmentPrefabDReference;
-            case EFragmentType.E: return _fragmentPrefabEReference;
+            case EFragmentType.A: 
+                return _fragmentPrefabAReference;
+
+            case EFragmentType.B: 
+                return _fragmentPrefabBReference;
+
+            case EFragmentType.C: 
+                return _fragmentPrefabCReference;
+
+            case EFragmentType.D: 
+                return _fragmentPrefabDReference;
+
+            case EFragmentType.E: 
+                return _fragmentPrefabEReference;
+
             default: return null;
         }
     }
@@ -197,11 +247,21 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     {
         switch (type)
         {
-            case EFragmentType.A: return _fragmentPrefabA;
-            case EFragmentType.B: return _fragmentPrefabB;
-            case EFragmentType.C: return _fragmentPrefabC;
-            case EFragmentType.D: return _fragmentPrefabD;
-            case EFragmentType.E: return _fragmentPrefabE;
+            case EFragmentType.A: 
+                return _fragmentPrefabA;
+
+            case EFragmentType.B: 
+                return _fragmentPrefabB;
+
+            case EFragmentType.C: 
+                return _fragmentPrefabC;
+
+            case EFragmentType.D: 
+                return _fragmentPrefabD;
+
+            case EFragmentType.E:
+                return _fragmentPrefabE;
+
             default: return null;
         }
     }
@@ -209,7 +269,11 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
     private void ApplyExplosionPhysics(GameObject fragment)
     {
         Rigidbody rb = fragment.GetComponent<Rigidbody>();
-        if (rb == null) return;
+
+        if (rb == null)
+        {
+            return;
+        }
 
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
@@ -219,25 +283,27 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         randomDir.y = Mathf.Abs(randomDir.y) + _upModifier;
         randomDir.Normalize();
         rb.AddForce(randomDir * Random.Range(_minDistance, _maxDistance), ForceMode.Impulse);
-        rb.AddTorque(new Vector3(
-            Random.Range(_torqueMin, _torqueMax),
-            Random.Range(_torqueMin, _torqueMax),
-            Random.Range(_torqueMin, _torqueMax)), ForceMode.Impulse);
+        rb.AddTorque(new Vector3(Random.Range(_torqueMin, _torqueMax), Random.Range(_torqueMin, _torqueMax), Random.Range(_torqueMin, _torqueMax)), ForceMode.Impulse);
     }
 
     private IEnumerator AfterTimeCoReturn(GameObject fragment, EFragmentType type, float delay)
     {
         yield return new WaitForSeconds(delay);
+
         if (fragment != null && fragment.activeSelf)
+        {
             ReturnToPool(fragment, type);
+        }
     }
 
     private IEnumerator RandomFragmentsCoroutine(Vector3 spawnPosition, int spawnCount, float spawnInterval)
     {
         EFragmentType[] types = { EFragmentType.A, EFragmentType.B, EFragmentType.C, EFragmentType.D, EFragmentType.E };
+
         for (int i = 0; i < spawnCount; i++)
         {
             SpawnFragment(types[Random.Range(0, types.Length)], spawnPosition);
+
             yield return new WaitForSeconds(spawnInterval);
         }
     }
@@ -247,6 +313,7 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         fragment.SetActive(false);
         fragment.transform.SetParent(_poolRoot);
         Rigidbody rb = fragment.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
             rb.velocity = Vector3.zero;
@@ -254,6 +321,8 @@ public class FragmentObjectPoolManager : Singleton<FragmentObjectPoolManager>
         }
 
         if (_poolDictionary.TryGetValue(type, out Queue<GameObject> queue))
+        {
             queue.Enqueue(fragment);
+        }
     }
 }

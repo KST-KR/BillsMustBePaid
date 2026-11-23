@@ -116,6 +116,15 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
 
         LoadProgress = 0.9f;
 
+        // 메인 메뉴 로딩 화면이 나타나는 동안 타이틀 곡을 준비
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            yield return audioManager.PrepareBGMAsync(EAudioType.TitleBGM, progress => ReportInitialPrefabPreparation(progress));
+        }
+
+        LoadProgress = 1f;
+
         Debug.Log("게임 데이터 카탈로그 로딩 완료");
     }
 
@@ -126,10 +135,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
 
     public void ReportInitialPrefabPreparation(float progress, float start, float end)
     {
-        float preparationProgress = Mathf.Lerp(
-            Mathf.Clamp01(start),
-            Mathf.Clamp01(end),
-            Mathf.Clamp01(progress));
+        float preparationProgress = Mathf.Lerp(Mathf.Clamp01(start), Mathf.Clamp01(end), Mathf.Clamp01(progress));
         LoadProgress = Mathf.Lerp(0.9f, 1f, preparationProgress);
     }
     #endregion

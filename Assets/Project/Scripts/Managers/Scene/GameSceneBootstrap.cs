@@ -6,7 +6,9 @@ using UnityEngine;
 /// </summary>
 public class GameSceneBootstrap : MonoBehaviour
 {
+    #region 내부 변수
     private bool _isManagersInitialized;
+    #endregion
 
     private IEnumerator Start()
     {
@@ -89,11 +91,14 @@ public class GameSceneBootstrap : MonoBehaviour
             bool prepareCoins = coinPool != null && coinPool.IsEnabled;
             SpecialCoinPoolManager specialCoinPool = SpecialCoinPoolManager.Instance;
             bool prepareSpecialCoins = specialCoinPool != null && specialCoinPool.IsEnabled && specialCoinPool.HasAvailablePrefabs;
+            AudioManager audioManager = AudioManager.Instance;
+            bool prepareGameBgm = audioManager != null;
             float fragmentShareWeight = prepareFragments ? 5f : 0f;
             float coinShareWeight = prepareCoins ? 2f : 0f;
             float hammerShareWeight = hasAddressableHammer ? 2f : 0f;
             float specialCoinShareWeight = prepareSpecialCoins ? 1f : 0f;
-            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight + hammerShareWeight + specialCoinShareWeight;
+            float gameBgmShareWeight = prepareGameBgm ? 2f : 0f;
+            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight + hammerShareWeight + specialCoinShareWeight + gameBgmShareWeight;
 
             if (prepareFragments)
             {
@@ -120,18 +125,27 @@ public class GameSceneBootstrap : MonoBehaviour
                 }
 
                 yield return playerEquipment.PrepareInitialHammerAsync(initialEquipment, progress => dataLoader.ReportInitialPrefabPreparation(
-                        progress,
-                        preparationStart,
-                        hammerPreparationEnd));
+                    progress,
+                    preparationStart,
+                    hammerPreparationEnd));
                 preparationStart = hammerPreparationEnd;
             }
 
             if (prepareSpecialCoins)
             {
-                yield return specialCoinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
+                float specialCoinPreparationEnd = preparationStart + ((1f - preparationStart) * specialCoinShareWeight / optionalPreparationWeight);
+
+                yield return specialCoinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, specialCoinPreparationEnd));
+                preparationStart = specialCoinPreparationEnd;
+            }
+
+            if (prepareGameBgm)
+            {
+                yield return audioManager.PrepareBGMAsync(EAudioType.GameBGM, progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
             }
 
             dataLoader.ReportInitialPrefabPreparation(1f);
+            audioManager?.PlayBGM(EAudioType.GameBGM);
 
             switch (launchMode)
             {
@@ -161,26 +175,6 @@ public class GameSceneBootstrap : MonoBehaviour
             // 실행 성공 여부와 관계없이 진입 데이터 정리
             GameLaunchData.Clear();
         }
-    }
-
-    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, int slotIndex)
-    {
-        EquipmentData initialEquipment = playerEquipment != null ? playerEquipment.StartingEquipment : null;
-
-        if (launchMode != GameLaunchData.ELaunchMode.LoadGame && launchMode != GameLaunchData.ELaunchMode.OpenSkillTree)
-        {
-            return initialEquipment;
-        }
-
-        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
-
-        string equipmentId = saveData != null && saveData.runData != null && saveData.runData.equipmentData != null ? saveData.runData.equipmentData.equippedEquipmentId : null;
-
-        EquipmentData savedEquipment = catalog != null && catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
-
-        bool savedHammerIsAddressable = savedEquipment != null && savedEquipment.HammerPrefabReference != null && savedEquipment.HammerPrefabReference.RuntimeKeyIsValid();
-
-        return savedHammerIsAddressable ? savedEquipment : initialEquipment;
     }
 
     /// <summary>
@@ -267,6 +261,26 @@ public class GameSceneBootstrap : MonoBehaviour
         Debug.Log("모든 Manager 데이터 초기화 완료");
 
         _isManagersInitialized = true;
+    }
+
+    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, int slotIndex)
+    {
+        EquipmentData initialEquipment = playerEquipment != null ? playerEquipment.StartingEquipment : null;
+
+        if (launchMode != GameLaunchData.ELaunchMode.LoadGame && launchMode != GameLaunchData.ELaunchMode.OpenSkillTree)
+        {
+            return initialEquipment;
+        }
+
+        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
+
+        string equipmentId = saveData != null && saveData.runData != null && saveData.runData.equipmentData != null ? saveData.runData.equipmentData.equippedEquipmentId : null;
+
+        EquipmentData savedEquipment = catalog != null && catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
+
+        bool savedHammerIsAddressable = savedEquipment != null && savedEquipment.HammerPrefabReference != null && savedEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
+        return savedHammerIsAddressable ? savedEquipment : initialEquipment;
     }
 
     /// <summary>
@@ -406,9 +420,7 @@ public class GameSceneBootstrap : MonoBehaviour
         try
         {
             // 재화 복원
-            if (!currencyManager.RestoreBalances(
-                saveData.runData.currentGold,
-                saveData.playerData.legacyPoints))
+            if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
             {
                 Debug.LogError("재화 데이터 복원에 실패.");
                 return;

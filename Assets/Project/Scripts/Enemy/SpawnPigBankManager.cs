@@ -113,6 +113,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     {
         int step = Mathf.Max(1, _stageStep);
         int count = _baseSpawnCount + ((stageNumber - 1) / step) * _addCountPerStep;
+
         return Mathf.Min(count, _maxSpawnCount);
     }
 
@@ -129,6 +130,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (!_isInitialized || _pigDatabase == null)
         {
             Debug.LogError("SpawnPigBankManager가 초기화되지 않음.", this);
+
             yield break;
         }
 
@@ -137,10 +139,12 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (eligiblePigs.Count == 0)
         {
             Debug.LogError("저금통 데이터는 초기 단계의 대상이 아님.", this);
+
             yield break;
         }
 
         int prewarmCountPerType = Mathf.Max(1, Mathf.CeilToInt((float)GetTargetSpawnCount(stageNumber) / eligiblePigs.Count));
+
         yield return PigBankObjectPoolManager.Instance.PreparePoolsAsync(eligiblePigs, prewarmCountPerType, onProgress);
     }
 
@@ -150,6 +154,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (pool == null || _pigDatabase == null)
         {
             Debug.LogError("단계별 돼지 풀(pig pool)을 준비할 수 없음.", this);
+
             yield break;
         }
 
@@ -157,13 +162,16 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (eligiblePigs.Count == 0)
         {
             Debug.LogError("이 단계에 해당하는 저금통 데이터를 찾을 수 없음.", this);
+
             yield break;
         }
 
         int prewarmCountPerType = Mathf.Max(1, Mathf.CeilToInt((float)GetTargetSpawnCount(stageNumber) / eligiblePigs.Count));
+
         yield return pool.PreparePoolsAsync(eligiblePigs, prewarmCountPerType);
 
         StageManager stageManager = StageManager.Instance;
+
         if (stageManager == null || !stageManager.IsStageActive || stageManager.CurrentStage != stageNumber)
         {
             yield break;
@@ -174,6 +182,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             if (!pool.HasPool(eligiblePigs[i]))
             {
                 Debug.LogError($"풀(pool) 준비 실패: {eligiblePigs[i].ID}.", this);
+
                 yield break;
             }
         }
@@ -199,6 +208,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (pool == null)
         {
             Debug.LogError("PigBankObjectPoolManager가 없음.", this);
+
             return;
         }
 
@@ -224,6 +234,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         while (true)
         {
             yield return new WaitForSeconds(checkInterval);
+
             _spawnedPigBanks.RemoveAll(pig => pig == null || !pig.activeInHierarchy);
 
             if (_spawnedPigBanks.Count == 0)
@@ -266,6 +277,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         Vector3 center = _spawnPoint != null ? _spawnPoint.position : transform.position;
         float x = Random.Range(-_spawnAreaSize.x * 0.5f, _spawnAreaSize.x * 0.5f);
         float z = Random.Range(-_spawnAreaSize.y * 0.5f, _spawnAreaSize.y * 0.5f);
+
         return new Vector3(center.x + x, center.y, center.z + z);
     }
 
@@ -355,6 +367,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         float roll = Random.Range(0f, totalWeight);
         float cumulative = 0f;
+
         for (int i = 0; i < available.Count; i++)
         {
             cumulative += weights[i];
@@ -372,6 +385,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (StageManager.Instance == null)
         {
             Debug.LogError("SpawnPigBankManager: StageManager가 없음.", this);
+
             return false;
         }
 
@@ -381,6 +395,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         StageManager.Instance.OnStageCleared += HandleStageCleared;
         StageManager.Instance.OnStageFailed -= HandleStageFailed;
         StageManager.Instance.OnStageFailed += HandleStageFailed;
+
         return true;
     }
 }

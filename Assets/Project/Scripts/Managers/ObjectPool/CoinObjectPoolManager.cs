@@ -41,23 +41,33 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     protected override void OnSingletonAwake()
     {
         if (_coinTable == null)
+        {
             _coinTable = Array.Empty<CoinInfo>();
+        }
 
         InitializePool();
+
         if (SettingsManager.Instance != null)
+        {
             SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
+        }
     }
 
     protected override void OnSingletonDestroy()
     {
         if (SettingsManager.Instance != null)
+        {
             SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
+        }
 
         for (int i = 0; i < _loadedHandles.Count; i++)
         {
             if (_loadedHandles[i].IsValid())
+            {
                 Addressables.Release(_loadedHandles[i]);
+            }
         }
+
         _loadedHandles.Clear();
     }
 
@@ -66,20 +76,25 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         if (!IsEnabled)
         {
             onProgress?.Invoke(1f);
+
             yield break;
         }
 
         while (_isPreparingPrefabs)
+        {
             yield return null;
+        }
 
         if (_prefabsReady)
         {
             onProgress?.Invoke(1f);
+
             yield break;
         }
 
         _isPreparingPrefabs = true;
         int total = _coinTable != null ? _coinTable.Length : 0;
+
         for (int i = 0; i < total; i++)
         {
             CoinType type = (CoinType)i;
@@ -90,10 +105,12 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
             if (reference != null && reference.RuntimeKeyIsValid())
             {
                 AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(reference);
+
                 while (!handle.IsDone)
                 {
                     float typeProgress = handle.PercentComplete * 0.8f;
                     onProgress?.Invoke(total == 0 ? 1f : (i + typeProgress) / total);
+
                     yield return null;
                 }
 
@@ -105,18 +122,27 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
                 else
                 {
                     if (handle.IsValid())
+                    {
                         Addressables.Release(handle);
+                    }
+
                     Debug.LogError($"Addressable 코인 프리팹을 불러오는 데 실패: {type}", this);
                 }
             }
 
             if (prefab == null)
+            {
                 prefab = info._coinPrefab;
+            }
 
             if (prefab != null)
+            {
                 _prefabLookup[type] = prefab;
+            }
             else
+            {
                 Debug.LogError($"해당 유형에 할당된 코인 프리팹이 없음 {type}.", this);
+            }
 
             onProgress?.Invoke(total == 0 ? 1f : (float)(i + 1) / total);
         }
@@ -128,10 +154,14 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
     public GameObject GetCoin(CoinType type, Vector3 position, Quaternion rotation)
     {
         if (!IsEnabled)
+        {
             return null;
+        }
 
         if (!_prefabsReady || !_prefabLookup.TryGetValue(type, out GameObject prefab))
+        {
             return null;
+        }
 
         if (!_coinPools.TryGetValue(type, out Queue<GameObject> pool))
         {
@@ -144,44 +174,61 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         coin.SetActive(true);
 
         if (coin.TryGetComponent(out CoinBounce bounce))
+        {
             bounce.Init(position);
+        }
 
         _activeCoins.Add(coin);
+
         return coin;
     }
 
     public void ReturnCoin(CoinType type, GameObject coin)
     {
         if (coin == null)
+        {
             return;
+        }
 
         _activeCoins.Remove(coin);
+
         if (!IsEnabled)
         {
             coin.SetActive(false);
             Destroy(coin);
+
             return;
         }
 
         coin.SetActive(false);
         coin.transform.SetParent(transform);
+
         if (_coinPools.TryGetValue(type, out Queue<GameObject> pool))
+        {
             pool.Enqueue(coin);
+        }
     }
 
     public CoinInfo GetCoinInfo(CoinType type)
     {
         int index = (int)type;
+
         if (_coinTable != null && index >= 0 && index < _coinTable.Length)
+        {
             return _coinTable[index];
+        }
+
         return default;
     }
 
     private void InitializePool()
     {
         _coinPools.Clear();
+
         foreach (CoinType type in Enum.GetValues(typeof(CoinType)))
+        {
             _coinPools[type] = new Queue<GameObject>();
+        }
     }
 
     private void HandleSettingsChanged()
@@ -189,7 +236,10 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
         if (IsEnabled)
         {
             if (!_prefabsReady && !_isPreparingPrefabs)
+            {
                 StartCoroutine(PreparePrefabsAsync());
+            }
+
             return;
         }
 
@@ -201,6 +251,7 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
                 Destroy(coin);
             }
         }
+
         _activeCoins.Clear();
 
         foreach (Queue<GameObject> pool in _coinPools.Values)
@@ -208,7 +259,9 @@ public class CoinObjectPoolManager : Singleton<CoinObjectPoolManager>
             foreach (GameObject coin in pool)
             {
                 if (coin != null)
+                {
                     Destroy(coin);
+                }
             }
             pool.Clear();
         }

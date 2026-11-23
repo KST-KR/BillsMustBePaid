@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
-/// 플레이어가 장착한 망치 모델과 능력치를 관리합니다.
+/// 플레이어가 장착한 망치 모델과 능력치를 관리
 /// </summary>
 public class PlayerEquipment : MonoBehaviour
 {
@@ -38,6 +38,7 @@ public class PlayerEquipment : MonoBehaviour
         {
             Debug.LogError("PlayerEquipment의 HammerMount, EquipmentManager 또는 PlayerStats가 연결되지 않음.", this);
             onProgress?.Invoke(1f);
+
             yield break;
         }
 
@@ -45,23 +46,29 @@ public class PlayerEquipment : MonoBehaviour
         {
             Debug.LogError("PlayerEquipment의 기본 장비 또는 초기 장비가 연결되지 않음.", this);
             onProgress?.Invoke(1f);
+
             yield break;
         }
 
         _equipmentManager.RegisterStartingEquipment(_startingEquipment);
+
         yield return EquipHammerAsync(equipment, false, onProgress);
     }
 
     private void OnEnable()
     {
         if (_equipmentManager != null)
+        {
             _equipmentManager.OnEquipmentEquipped += HandleEquipmentEquipped;
+        }
     }
 
     private void OnDisable()
     {
         if (_equipmentManager != null)
+        {
             _equipmentManager.OnEquipmentEquipped -= HandleEquipmentEquipped;
+        }
     }
 
     private void OnDestroy()
@@ -79,12 +86,16 @@ public class PlayerEquipment : MonoBehaviour
         }
 
         if (_currentEquipment == data && _currentHammerTransform != null)
+        {
             return;
+        }
 
         // 구매 직후 Addressables 로딩 중 같은 아이템을 다시 클릭해도
         // 진행 중인 첫 장착 요청을 취소하지 않음.
         if (_pendingEquipment == data)
+        {
             return;
+        }
 
         StartCoroutine(EquipHammerAsync(data, _currentEquipment != null && _currentEquipment != data));
     }
@@ -94,32 +105,40 @@ public class PlayerEquipment : MonoBehaviour
         if (data.HammerPrefabReference == null || !data.HammerPrefabReference.RuntimeKeyIsValid())
         {
             if (_pendingEquipment == data)
+            {
                 _pendingEquipment = null;
+            }
+
             Debug.LogError($"{data.EquipmentName}: Addressable 해머 프리팹 참조가 설정되지 않음.", this);
             onProgress?.Invoke(1f);
+
             yield break;
         }
 
         int requestVersion = ++_equipRequestVersion;
         _pendingEquipment = data;
-        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(
-            data.HammerPrefabReference,
-            _hammerMount,
-            false);
+        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(data.HammerPrefabReference, _hammerMount, false);
 
         while (!handle.IsDone)
         {
             onProgress?.Invoke(handle.PercentComplete);
+
             yield return null;
         }
+
         onProgress?.Invoke(1f);
 
         if (requestVersion != _equipRequestVersion)
         {
             if (handle.IsValid() && handle.Status == AsyncOperationStatus.Succeeded)
+            {
                 Addressables.ReleaseInstance(handle);
+            }
             else if (handle.IsValid())
+            {
                 Addressables.Release(handle);
+            }
+            
             yield break;
         }
 
@@ -128,8 +147,12 @@ public class PlayerEquipment : MonoBehaviour
         if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
         {
             if (handle.IsValid())
+            {
                 Addressables.Release(handle);
+            }
+
             Debug.LogError($"Addressable 해머 프리팹을 생성하지 못함: {data.EquipmentName}", this);
+
             yield break;
         }
 
@@ -144,7 +167,9 @@ public class PlayerEquipment : MonoBehaviour
         OnEquipmentChanged?.Invoke(data);
 
         if (playChangeSound)
+        {
             AudioManager.Instance?.PlaySFX(EAudioType.ChangeHammer);
+        }
     }
 
     private void ReleaseCurrentHammer()
@@ -152,10 +177,14 @@ public class PlayerEquipment : MonoBehaviour
         _currentHammerTransform = null;
 
         if (!_hasCurrentHammerHandle)
+        {
             return;
+        }
 
         if (_currentHammerHandle.IsValid())
+        {
             Addressables.ReleaseInstance(_currentHammerHandle);
+        }
 
         _hasCurrentHammerHandle = false;
     }
@@ -167,21 +196,30 @@ public class PlayerEquipment : MonoBehaviour
         hammer.SetActive(true);
 
         Rigidbody body = hammer.GetComponent<Rigidbody>();
+
         if (body == null)
+        {
             body = hammer.AddComponent<Rigidbody>();
+        }
 
         body.isKinematic = true;
         body.useGravity = false;
 
         Collider[] colliders = hammer.GetComponentsInChildren<Collider>(true);
+
         for (int i = 0; i < colliders.Length; i++)
+        {
             colliders[i].enabled = false;
+        }
     }
 
     private static void SetLayerRecursively(Transform root, int layer)
     {
         root.gameObject.layer = layer;
+
         for (int i = 0; i < root.childCount; i++)
+        {
             SetLayerRecursively(root.GetChild(i), layer);
+        }
     }
 }
