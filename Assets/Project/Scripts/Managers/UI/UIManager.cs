@@ -47,6 +47,9 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject _comboPanel;
     [SerializeField] private TMP_Text _comboText;
 
+    [Header("스테이지 기간 UI")]
+    [SerializeField] private TMP_Text _periodStageText;
+
     [Header("추가 공격 UI")]
     [SerializeField] private Canvas _canvas;
     [SerializeField] private TMP_Text _extraAttackText;
@@ -222,6 +225,7 @@ public class UIManager : Singleton<UIManager>
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted += HandleStageStarted;
+            _stageManager.OnStageChanged += HandleStageChanged;
             _stageManager.OnStageFailed += HandleStageFailed;
         }
 
@@ -292,6 +296,7 @@ public class UIManager : Singleton<UIManager>
         if (_stageManager != null)
         {
             _stageManager.OnStageStarted -= HandleStageStarted;
+            _stageManager.OnStageChanged -= HandleStageChanged;
             _stageManager.OnStageFailed -= HandleStageFailed;
         }
 
@@ -404,6 +409,11 @@ public class UIManager : Singleton<UIManager>
         {
             UpdateStaminaUI(_playerStamina.Current, _playerStamina.Max);
         }
+    }
+
+    private void HandleStageChanged(int stageNumber)
+    {
+        UpdateStageUI(stageNumber);
     }
 
     /// <summary>
@@ -903,6 +913,11 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void RefreshCurrentUI()
     {
+        if (_stageManager != null)
+        {
+            UpdateStageUI(_stageManager.CurrentStage);
+        }
+
         if (_gameManager != null)
         {
             ApplyState(_gameManager.State);
@@ -1132,6 +1147,11 @@ public class UIManager : Singleton<UIManager>
         }
 
         _currentStage = stageNumber;
+
+        if (_periodStageText != null)
+        {
+            _periodStageText.text = stageNumber.ToString();
+        }
     }
 
     /// <summary>

@@ -193,9 +193,15 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         {
             Debug.LogError("레거시 포인트 저장 오류");
             return;
+        } 
+        else
+        {
+            // 실제 사이클 추가 (후처리로 저장하는 이유는 레거시 화면에서 종료된 경우 사이클이 증가하지 않도록 하기 위함)
+            savedData.playerData.bankruptcyCycle++;
+            SaveManager.Instance.SaveGame(savedData);
         }
 
-        GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.StartNextCycle, _saveManager.CurrentSlotIndex);
+            GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.StartNextCycle, _saveManager.CurrentSlotIndex);
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySFX(EAudioType.NextCycleStarted);
