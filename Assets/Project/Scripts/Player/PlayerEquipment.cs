@@ -1,54 +1,58 @@
-﻿using UnityEngine;
+using System.Collections;
+using System;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
 /// 플레이어가 장착한 망치 모델과 능력치를 관리
 /// </summary>
 public class PlayerEquipment : MonoBehaviour
 {
-    #region 인스펙터
     [Header("망치 장착 위치")]
     [SerializeField] private Transform _hammerMount;
+
+    [Header("기본 장비")]
+    [SerializeField] private EquipmentData _startingEquipment;
 
     [Header("장비 관리")]
     [SerializeField] private EquipmentManager _equipmentManager;
     [SerializeField] private PlayerStats _playerStats;
-    #endregion
 
-    #region 내부 변수
-    private EquipmentVisual[] _equipmentVisuals;
     private EquipmentData _currentEquipment;
-    private EquipmentVisual _currentEquipmentVisual;
-    #endregion
+    private Transform _currentHammerTransform;
+    private AsyncOperationHandle<GameObject> _currentHammerHandle;
+    private bool _hasCurrentHammerHandle;
+    private int _equipRequestVersion;
+    private EquipmentData _pendingEquipment;
 
-    #region 프로퍼티
+    public event Action<EquipmentData> OnEquipmentChanged;
+
     public EquipmentData CurrentEquipment => _currentEquipment;
+    public Transform CurrentHammerTransform => _currentHammerTransform;
+    public EquipmentData StartingEquipment => _startingEquipment;
 
-    public Transform CurrentHammerTransform => _currentEquipmentVisual != null ? _currentEquipmentVisual.transform : null;
-    #endregion
-
-    #region 이벤트 함수
-    private void Awake()
+    public IEnumerator PrepareInitialHammerAsync(EquipmentData equipment, Action<float> onProgress = null)
     {
-        if (_hammerMount == null)
+        if (_hammerMount == null || _equipmentManager == null || _playerStats == null)
         {
-            Debug.LogError("HammerMount가 연결되지 않음.", this);
-            return;
+            Debug.LogError("PlayerEquipment의 HammerMount, EquipmentManager 또는 PlayerStats가 연결되지 않음.", this);
+            onProgress?.Invoke(1f);
+
+            yield break;
         }
 
-        // 비활성화된 망치도 포함해서 가져오기
-        _equipmentVisuals = _hammerMount.GetComponentsInChildren<EquipmentVisual>(true);
-    }
-
-    void Start()
-    {
-        if (_equipmentManager == null || _playerStats == null)
+        if (_startingEquipment == null || equipment == null)
         {
-            Debug.LogError("EquipmentManager 또는 PlayerStats가 연결되지 않음.", this);
-            return;
+            Debug.LogError("PlayerEquipment의 기본 장비 또는 초기 장비가 연결되지 않음.", this);
+            onProgress?.Invoke(1f);
+
+            yield break;
         }
 
-        // 현재 활성화된 망치를 기본 장비로 설정
-        InitializeCurrentEquipment();
+        _equipmentManager.RegisterStartingEquipment(_startingEquipment);
+
+        yield return EquipHammerAsync(equipment, false, onProgress);
     }
 
     private void OnEnable()
@@ -66,108 +70,156 @@ public class PlayerEquipment : MonoBehaviour
             _equipmentManager.OnEquipmentEquipped -= HandleEquipmentEquipped;
         }
     }
-    #endregion
 
-    #region 커스텀 (private)
-    /// <summary>
-    /// 현재 활성화된 망치를 기본 장비로 설정
-    /// </summary>
-    private void InitializeCurrentEquipment()
+    private void OnDestroy()
     {
-        if (_equipmentVisuals == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < _equipmentVisuals.Length; i++)
-        {
-            EquipmentVisual visual = _equipmentVisuals[i];
-
-            if (visual == null || !visual.gameObject.activeSelf)
-            {
-                continue;
-            }
-
-            if (visual.EquipmentData == null)
-            {
-                Debug.LogWarning($"{visual.name}: EquipmentData가 연결되지 않음.", visual);
-                return;
-            }
-
-            _currentEquipment = visual.EquipmentData;
-            _currentEquipmentVisual = visual;
-
-            // 기본 장비를 보유 목록에 등록
-            _equipmentManager.RegisterStartingEquipment(_currentEquipment);
-
-            // 플레이어 능력치에 장비 능력치 반영
-            _playerStats.SetHammerEquipment(_currentEquipment);
-
-            return;
-        }
-
-        Debug.LogWarning("활성화된 망치 모델을 찾을 수 없음.", this);
+        _equipRequestVersion++;
+        ReleaseCurrentHammer();
     }
 
-    /// <summary>
-    /// 장비 구매 성공 이벤트 처리
-    /// </summary>
-    /// <param name="data"></param>
     private void HandleEquipmentEquipped(EquipmentData data)
     {
-        if (data == null || _equipmentVisuals == null || _playerStats == null)
+        if (data == null || _hammerMount == null || _playerStats == null)
         {
-            Debug.LogWarning("장착할 장비 또는 플레이어 참조가 올바르지 않음.", this);
+            Debug.LogWarning("장착할 장비 또는 PlayerEquipment 참조가 올바르지 않음.", this);
             return;
         }
 
-        // 이미 장착된 장비라면 중복 처리하지 않음
-        if (_currentEquipment == data)
+        if (_currentEquipment == data && _currentHammerTransform != null)
         {
             return;
         }
 
-        // 요청한 장비와 일치하는 플레이어 망치 탐색
-        EquipmentVisual targetVisual = null;
-
-        for (int i = 0; i < _equipmentVisuals.Length; i++)
+        // 구매 직후 Addressables 로딩 중 같은 아이템을 다시 클릭해도
+        // 진행 중인 첫 장착 요청을 취소하지 않음.
+        if (_pendingEquipment == data)
         {
-            EquipmentVisual visual = _equipmentVisuals[i];
-
-            if (visual != null && visual.EquipmentData == data)
-            {
-                targetVisual = visual;
-                break;
-            }
-        }
-
-        // 일치하는 모델이 없으면 기존 장착 상태 유지
-        if (targetVisual == null)
-        {
-            Debug.LogWarning($"{data.EquipmentName}에 해당하는 플레이어 장착 모델을 찾을 수 없음.", this);
             return;
         }
 
-        // 찾은 모델만 활성화하고 나머지는 비활성화
-        for (int i = 0; i < _equipmentVisuals.Length; i++)
-        {
-            EquipmentVisual visual = _equipmentVisuals[i];
-
-            if (visual != null)
-            {
-                visual.gameObject.SetActive(visual == targetVisual);
-            }
-        }
-
-        _currentEquipment = data;
-        _currentEquipmentVisual = targetVisual;
-
-        AudioManager.Instance?.PlaySFX(EAudioType.ChangeHammer);
-
-        // 플레이어 능력치에 장비 능력치 반영
-        _playerStats.SetHammerEquipment(data);
-
-        Debug.Log($"{data.EquipmentName} 장착 완료!");
+        StartCoroutine(EquipHammerAsync(data, _currentEquipment != null && _currentEquipment != data));
     }
-    #endregion
+
+    private IEnumerator EquipHammerAsync(EquipmentData data, bool playChangeSound, Action<float> onProgress = null)
+    {
+        if (data.HammerPrefabReference == null || !data.HammerPrefabReference.RuntimeKeyIsValid())
+        {
+            if (_pendingEquipment == data)
+            {
+                _pendingEquipment = null;
+            }
+
+            Debug.LogError($"{data.EquipmentName}: Addressable 해머 프리팹 참조가 설정되지 않음.", this);
+            onProgress?.Invoke(1f);
+
+            yield break;
+        }
+
+        int requestVersion = ++_equipRequestVersion;
+        _pendingEquipment = data;
+        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(data.HammerPrefabReference, _hammerMount, false);
+
+        while (!handle.IsDone)
+        {
+            onProgress?.Invoke(handle.PercentComplete);
+
+            yield return null;
+        }
+
+        onProgress?.Invoke(1f);
+
+        if (requestVersion != _equipRequestVersion)
+        {
+            if (handle.IsValid() && handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                Addressables.ReleaseInstance(handle);
+            }
+            else if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+            
+            yield break;
+        }
+
+        _pendingEquipment = null;
+
+        if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+
+            Debug.LogError($"Addressable 해머 프리팹을 생성하지 못함: {data.EquipmentName}", this);
+
+            yield break;
+        }
+
+        ReleaseCurrentHammer();
+        _currentHammerHandle = handle;
+        _hasCurrentHammerHandle = true;
+        _currentHammerTransform = handle.Result.transform;
+        PrepareHammerForAttachment(handle.Result);
+        SetLayerRecursively(handle.Result.transform, _hammerMount.gameObject.layer);
+        _currentEquipment = data;
+        _playerStats.SetHammerEquipment(data);
+        OnEquipmentChanged?.Invoke(data);
+
+        if (playChangeSound)
+        {
+            AudioManager.Instance?.PlaySFX(EAudioType.ChangeHammer);
+        }
+    }
+
+    private void ReleaseCurrentHammer()
+    {
+        _currentHammerTransform = null;
+
+        if (!_hasCurrentHammerHandle)
+        {
+            return;
+        }
+
+        if (_currentHammerHandle.IsValid())
+        {
+            Addressables.ReleaseInstance(_currentHammerHandle);
+        }
+
+        _hasCurrentHammerHandle = false;
+    }
+
+    private static void PrepareHammerForAttachment(GameObject hammer)
+    {
+        // Addressable 프리팹 중 일부는 풀 용도로 루트가 비활성화된 상태로 저장되어 있음.
+        // 플레이어 손에 장착할 때는 루트를 활성화해야 렌더러도 표시됨.
+        hammer.SetActive(true);
+
+        Rigidbody body = hammer.GetComponent<Rigidbody>();
+
+        if (body == null)
+        {
+            body = hammer.AddComponent<Rigidbody>();
+        }
+
+        body.isKinematic = true;
+        body.useGravity = false;
+
+        Collider[] colliders = hammer.GetComponentsInChildren<Collider>(true);
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = false;
+        }
+    }
+
+    private static void SetLayerRecursively(Transform root, int layer)
+    {
+        root.gameObject.layer = layer;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            SetLayerRecursively(root.GetChild(i), layer);
+        }
+    }
 }

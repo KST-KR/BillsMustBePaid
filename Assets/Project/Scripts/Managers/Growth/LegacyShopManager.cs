@@ -85,6 +85,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         }
 
         GameObject managerObject = new GameObject("LegacyShopManager");
+
         return managerObject.AddComponent<LegacyShopManager>();
     }
 
@@ -107,16 +108,14 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     public bool TryPurchase(LegacyShopItemData item)
     {
-        if (item == null || string.IsNullOrEmpty(item.ItemId) || IsOwned(item) ||
-            CurrencyManager.Instance == null ||
-            !CurrencyManager.Instance.TrySpend(ECurrencyType.LegacyPoint, item.Price,
-                ECurrencyTransactionType.Purchase))
+        if (item == null || string.IsNullOrEmpty(item.ItemId) || IsOwned(item) || CurrencyManager.Instance == null || !CurrencyManager.Instance.TrySpend(ECurrencyType.LegacyPoint, item.Price, ECurrencyTransactionType.Purchase))
         {
             return false;
         }
 
         _purchasedItemIds.Add(item.ItemId);
         SaveCurrentSlotData();
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySFX(EAudioType.LegacyShopPurchase);
@@ -124,6 +123,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
         OnOwnershipChanged?.Invoke(item.ItemId);
         OnOwnershipDataChanged?.Invoke();
+
         return true;
     }
 
@@ -134,28 +134,32 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     {
         CacheManagers();
         int refundAmount = 0;
+
         foreach (string itemId in _purchasedItemIds)
         {
             LegacyShopItemData item = FindItem(itemId);
+
             if (item == null)
             {
-                Debug.LogError($"Item Not Found: {itemId}");
+                Debug.LogError($"아이템을 찾을 수 없음: {itemId}");
                 return 0;
             }
 
             long nextRefundAmount = (long)refundAmount + item.Price;
+
             if (nextRefundAmount > int.MaxValue)
             {
                 Debug.LogWarning("환불 포인트 최대치 초과");
                 nextRefundAmount = int.MaxValue;                
             }
+
             refundAmount = (int)nextRefundAmount;
         }
 
-        if (refundAmount > 0 && (_currencyManager == null ||
-            !_currencyManager.TryAdd(ECurrencyType.LegacyPoint, refundAmount)))
+        if (refundAmount > 0 && (_currencyManager == null || !_currencyManager.TryAdd(ECurrencyType.LegacyPoint, refundAmount)))
         {
             Debug.LogError("레거시 포인트 환불에 실패");
+
             return 0;
         }
 
@@ -163,12 +167,14 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         _purchasedItemIds.Clear();
         SaveCurrentSlotData();
         OnOwnershipDataChanged?.Invoke();
+
         if (refundAmount > 0 && AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySFX(EAudioType.LegacyPointsReset);
         }
 
         Debug.Log("구매한 레거시 아이템 " + purchasedItemIds.Count + "개 초기화, " + refundAmount + " 포인트 환불");
+
         return refundAmount;
     }
 
@@ -178,24 +184,26 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     public void StartNextCycle()
     {
         CacheManagers();
-        if (_saveManager == null || _currencyManager == null || _saveManager.CurrentSlotIndex < 1 ||
-            _saveManager.CurrentSlotIndex > 3 || SceneTransitionManager.Instance == null)
+
+        if (_saveManager == null || _currencyManager == null || _saveManager.CurrentSlotIndex < 1 || _saveManager.CurrentSlotIndex > 3 || SceneTransitionManager.Instance == null)
         {
             Debug.LogError("매니저 누락 확인");
+
             return;
         }
 
         SaveCurrentSlotData();
         SaveSlotData savedData = _saveManager.LoadGame(_saveManager.CurrentSlotIndex);
-        if (savedData == null || savedData.playerData == null ||
-            savedData.playerData.legacyPoints != _currencyManager.LegacyPoints ||
-            !HasAllPurchasedItems(savedData.playerData.permanentGrowth))
+
+        if (savedData == null || savedData.playerData == null || savedData.playerData.legacyPoints != _currencyManager.LegacyPoints || !HasAllPurchasedItems(savedData.playerData.permanentGrowth))
         {
             Debug.LogError("레거시 포인트 저장 오류");
+
             return;
         }
 
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.StartNextCycle, _saveManager.CurrentSlotIndex);
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySFX(EAudioType.NextCycleStarted);
@@ -206,11 +214,19 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
     private bool HasAllPurchasedItems(PermanentGrowthSaveData saveData)
     {
-        if (saveData == null || saveData.purchasedItemIds == null) return _purchasedItemIds.Count == 0;
+        if (saveData == null || saveData.purchasedItemIds == null)
+        {
+            return _purchasedItemIds.Count == 0;
+        }
+
         foreach (string itemId in _purchasedItemIds)
         {
-            if (!saveData.purchasedItemIds.Contains(itemId)) return false;
+            if (!saveData.purchasedItemIds.Contains(itemId))
+            {
+                return false;
+            }
         }
+
         return true;
     }
 
@@ -223,12 +239,14 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         {
             saveData = new PermanentGrowthSaveData();
         }
+
         if (saveData.purchasedItemIds == null)
         {
             saveData.purchasedItemIds = new List<string>();
         }
 
         saveData.purchasedItemIds.RemoveAll(IsConfiguredItemId);
+
         foreach (string itemId in _purchasedItemIds)
         {
             if (!saveData.purchasedItemIds.Contains(itemId))
@@ -236,6 +254,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
                 saveData.purchasedItemIds.Add(itemId);
             }
         }
+
         return saveData;
     }
 
@@ -244,7 +263,10 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     public void ResetOwnershipToDataDefault(LegacyShopItemData item)
     {
-        if (item == null) return;
+        if (item == null)
+        {
+            return;
+        }
 
         _purchasedItemIds.Remove(item.ItemId);
         SaveCurrentSlotData();
@@ -268,11 +290,13 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     public void ImportSaveData(PermanentGrowthSaveData saveData)
     {
         _purchasedItemIds.Clear();
+
         if (saveData != null && saveData.purchasedItemIds != null)
         {
             for (int i = 0; i < saveData.purchasedItemIds.Count; i++)
             {
                 string itemId = saveData.purchasedItemIds[i];
+
                 if (IsConfiguredItemId(itemId))
                 {
                     _purchasedItemIds.Add(itemId);
@@ -288,9 +312,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     public float GetStatBonus(EUpgradeStat stat)
     {
         float totalBonus = 0.0f;
+
         for (int i = 0; i < _items.Length; i++)
         {
             LegacyShopItemData item = _items[i];
+
             if (item == null || item.TargetStat != stat ||
                 (!item.InitiallyOwned && !_purchasedItemIds.Contains(item.ItemId)))
             {
@@ -299,6 +325,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
             totalBonus += item.StatValue;
         }
+
         return totalBonus;
     }
 
@@ -309,9 +336,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     public List<LegacyShopItemData> GetOwnedItems()
     {
         List<LegacyShopItemData> ownedItems = new List<LegacyShopItemData>();
+
         for (int i = 0; i < _items.Length; i++)
         {
             LegacyShopItemData item = _items[i];
+
             if (item != null && (item.InitiallyOwned || _purchasedItemIds.Contains(item.ItemId)))
             {
                 ownedItems.Add(item);
@@ -329,6 +358,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         if (items == null)
         {
             Debug.LogError("LegacyShopManager: LegacyShopItemData가 전달되지 않았습니다.");
+
             return;
         }
 
@@ -348,7 +378,10 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name != "GameLegacyShop") return;
+        if (scene.name != "GameLegacyShop")
+        {
+            return;
+        }
 
         _refundAndResetButton = null;
         _startNextCycleButton = null;
@@ -362,12 +395,21 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         if (_refundAndResetButton == null)
         {
             GameObject buttonObject = GameObject.Find("Reset Points");
-            if (buttonObject != null) _refundAndResetButton = buttonObject.GetComponent<Button>();
+
+            if (buttonObject != null)
+            {
+                _refundAndResetButton = buttonObject.GetComponent<Button>();
+            }
         }
+
         if (_startNextCycleButton == null)
         {
             GameObject buttonObject = GameObject.Find("Start Cycle");
-            if (buttonObject != null) _startNextCycleButton = buttonObject.GetComponent<Button>();
+
+            if (buttonObject != null)
+            {
+                _startNextCycleButton = buttonObject.GetComponent<Button>();
+            }
         }
 
         if (_refundAndResetButton != null)
@@ -375,6 +417,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
             _refundAndResetButton.onClick.RemoveListener(HandleRefundAndResetButtonClicked);
             _refundAndResetButton.onClick.AddListener(HandleRefundAndResetButtonClicked);
         }
+
         if (_startNextCycleButton != null)
         {
             _startNextCycleButton.onClick.RemoveListener(StartNextCycle);
@@ -388,6 +431,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         {
             _refundAndResetButton.onClick.RemoveListener(HandleRefundAndResetButtonClicked);
         }
+
         if (_startNextCycleButton != null)
         {
             _startNextCycleButton.onClick.RemoveListener(StartNextCycle);
@@ -424,13 +468,19 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private void SubscribeEvents()
     {
-        if (_isSubscribed) return;
+        if (_isSubscribed)
+        {
+            return;
+        }
+
         CacheManagers();
+
         if (_saveManager != null)
         {
             _saveManager.OnGameLoaded += HandleGameLoaded;
             _isSubscribed = true;
         }
+
         if (_currencyManager != null)
         {
             _currencyManager.OnBalanceChanged -= HandleBalanceChanged;
@@ -443,7 +493,11 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private void UnsubscribeEvents()
     {
-        if (!_isSubscribed || _saveManager == null) return;
+        if (!_isSubscribed || _saveManager == null)
+        {
+            return;
+        }
+
         _saveManager.OnGameLoaded -= HandleGameLoaded;
         _isSubscribed = false;
     }
@@ -459,14 +513,16 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
         }
 
         CacheManagers();
-        if (_saveManager == null || _saveManager.CurrentSlotIndex < 1 || _saveManager.CurrentSlotIndex > 3 ||
-            !_saveManager.HasSaveData(_saveManager.CurrentSlotIndex))
+
+        if (_saveManager == null || _saveManager.CurrentSlotIndex < 1 || _saveManager.CurrentSlotIndex > 3 || !_saveManager.HasSaveData(_saveManager.CurrentSlotIndex))
         {
             OnOwnershipDataChanged?.Invoke();
+
             return;
         }
 
         SaveSlotData saveData = _saveManager.LoadGame(_saveManager.CurrentSlotIndex);
+
         if (saveData != null && saveData.playerData != null)
         {
             ImportSaveData(saveData.playerData.permanentGrowth);
@@ -478,15 +534,24 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private void HandleGameLoaded(SaveSlotData saveData)
     {
-        if (saveData == null || saveData.playerData == null) return;
+        if (saveData == null || saveData.playerData == null)
+        {
+            return;
+        }
+
         ImportSaveData(saveData.playerData.permanentGrowth);
         UpdateNextCycleButtonLabel(saveData.playerData.bankruptcyCycle);
     }
 
     private void UpdateNextCycleButtonLabel()
     {
-        if (_saveManager == null || _saveManager.CurrentSlotIndex < 1) return;
+        if (_saveManager == null || _saveManager.CurrentSlotIndex < 1)
+        {
+            return;
+        }
+
         SaveSlotData saveData = _saveManager.LoadGame(_saveManager.CurrentSlotIndex);
+
         if (saveData != null && saveData.playerData != null)
         {
             UpdateNextCycleButtonLabel(saveData.playerData.bankruptcyCycle);
@@ -495,9 +560,14 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
 
     private void UpdateNextCycleButtonLabel(int cycle)
     {
-        if (_startNextCycleButton == null) return;
+        if (_startNextCycleButton == null)
+        {
+            return;
+        }
+
         Transform labelTransform = _startNextCycleButton.transform.Find("Button Label");
         TMP_Text label = labelTransform != null ? labelTransform.GetComponent<TMP_Text>() : null;
+
         if (label != null)
         {
             label.text = "사이클 " + Mathf.Max(1, cycle) + " 시작";
@@ -529,11 +599,16 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
             saveData.slotIndex = slotIndex;
         }
 
-        if (saveData.playerData == null) saveData.playerData = new PlayerSaveData();
+        if (saveData.playerData == null)
+        {
+            saveData.playerData = new PlayerSaveData();
+        }
+
         if (CurrencyManager.Instance != null)
         {
             saveData.playerData.legacyPoints = CurrencyManager.Instance.LegacyPoints;
         }
+
         saveData.playerData.permanentGrowth = ExportSaveData(saveData.playerData.permanentGrowth);
         _saveManager.SaveGame(saveData);
     }
@@ -547,6 +622,7 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
                 return _items[i];
             }
         }
+
         return null;
     }
 
@@ -555,11 +631,19 @@ public sealed class LegacyShopManager : PersistentSingleton<LegacyShopManager>
     /// </summary>
     private bool IsConfiguredItemId(string itemId)
     {
-        if (string.IsNullOrEmpty(itemId)) return false;
+        if (string.IsNullOrEmpty(itemId))
+        {
+            return false;
+        }
+
         for (int i = 0; i < _items.Length; i++)
         {
-            if (_items[i] != null && _items[i].ItemId == itemId) return true;
+            if (_items[i] != null && _items[i].ItemId == itemId)
+            {
+                return true;
+            }
         }
+
         return false;
     }
     #endregion

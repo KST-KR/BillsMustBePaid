@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 399ece62c56d7d54c80647167cb8e002, type: 3}
   m_Name: EquipmentData_HeavyHammer
   m_EditorClassIdentifier: 
+  _hammerPrefabReference:
+    m_AssetGUID: d773dca8864b85d459a781700e89eadf
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _equipmentName: "\uBB34\uAC70\uC6B4 \uB9DD\uCE58"
   _description: "\uAC15\uB825\uD55C \uD53C\uD574\uB97C \uC8FC\uB294 \uB9DD\uCE58"
   _price: 4000

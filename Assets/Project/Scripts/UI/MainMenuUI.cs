@@ -236,7 +236,6 @@ public class MainMenuUI : MonoBehaviour
         }
 
         AudioManager.Instance?.PlaySFX(EAudioType.MenuSelect);
-        AudioManager.Instance?.PlayBGM(EAudioType.GameBGM);
 
         // 일반 이어하기 모드로 게임 씬에 전달
         GameLaunchData.SetLaunchData(GameLaunchData.ELaunchMode.LoadGame, slotIndex);

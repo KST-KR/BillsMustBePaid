@@ -17,7 +17,12 @@ MonoBehaviour:
   _pigBankHP: 30
   _moveSpeed: 7
   PigIndex: 1
-  _pigPrefab: {fileID: 2085024267059949473, guid: 96c9569073c57e34fb0594b33000c0b6, type: 3}
+  _pigPrefab: {fileID: 0}
+  _pigPrefabReference:
+    m_AssetGUID: 96c9569073c57e34fb0594b33000c0b6
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _crashLevel: 2
   _rewardCoin: 150
   _jackpotChance: 0.1
