@@ -321,15 +321,15 @@ public class SaveManager : PersistentSingleton<SaveManager>
         }
 
         EnsureValidData(saveData);
-        saveData.playerData.bankruptcyCycle = cycle;
+        // StartNextCycle 에서 실제 증가 저장 수행
+        saveData.playerData.bankruptcyCycle = cycle - 1;
         if (CurrencyManager.Instance != null)
         {
             saveData.playerData.legacyPoints = CurrencyManager.Instance.LegacyPoints;
         }
-        saveData.runData.isRunActive = false;
-        saveData.runData.currentStage = 0;
+        saveData.runData.isRunActive = true;        
         saveData.runData.currentGold = 0;
-        saveData.runData.currentStamina = 0.0f;
+        saveData.runData.currentStamina = 0.0f;        
         saveData.runData.runGrowth = new RunGrowthSaveData();
         saveData.runData.runPerks = new RunPerkSaveData();
         saveData.runData.equipmentData = new EquipmentSaveData();
@@ -341,7 +341,7 @@ public class SaveManager : PersistentSingleton<SaveManager>
 
         SaveSlotData savedData = LoadGame(CurrentSlotIndex);
 
-        return savedData != null && savedData.playerData.bankruptcyCycle == cycle && !savedData.runData.isRunActive;
+        return savedData != null && savedData.playerData.bankruptcyCycle == cycle - 1 && savedData.runData.isRunActive;        
     }
 
     /// <summary>

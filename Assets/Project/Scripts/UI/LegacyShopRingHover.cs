@@ -20,6 +20,7 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
     private Renderer[] _renderers;
     private MaterialPropertyBlock[] _originalPropertyBlocks;
     private bool _hovering;
+    private bool _interactionEnabled = true;
     private bool _isOwned;
     private bool _initialized;
     private LegacyShopManager _legacyShopManager;
@@ -92,6 +93,7 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        if (!_interactionEnabled) return;
         ShowTooltip();
     }
 
@@ -102,11 +104,31 @@ public sealed class LegacyShopRingHover : MonoBehaviour, IPointerEnterHandler, I
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (!_interactionEnabled) return;
         RequestPurchase();
+    }
+
+    public void SetInteractionEnabled(bool isEnabled)
+    {
+        if (_interactionEnabled == isEnabled)
+        {
+            return;
+        }
+
+        _interactionEnabled = isEnabled;
+        if (!isEnabled)
+        {
+            HideTooltip();
+        }
     }
 
     private void ShowTooltip()
     {
+        if (!_interactionEnabled)
+        {
+            return;
+        }
+
         if (_purchaseConfirmPopup != null && _purchaseConfirmPopup.IsOpen)
         {
             return;
