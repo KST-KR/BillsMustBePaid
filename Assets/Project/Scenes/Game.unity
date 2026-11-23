@@ -1251,8 +1251,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 632182f7f9cc4784fb9d0705a5995c87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pigDatabase: {fileID: 11400000, guid: 1146dbb6c457d5142ba7ae7d976df772, type: 2}
-  _generationCount: 30
 --- !u!4 &60649174
 Transform:
   m_ObjectHideFlags: 0
@@ -36694,6 +36692,7 @@ GameObject:
   - component: {fileID: 1682921585}
   - component: {fileID: 1682921584}
   - component: {fileID: 1682921583}
+  - component: {fileID: 1682921586}
   m_Layer: 5
   m_Name: LateFeeAmount (TMP)
   m_TagString: Untagged
@@ -36817,6 +36816,21 @@ RectTransform:
   m_AnchoredPosition: {x: 184.73, y: 0.000021458}
   m_SizeDelta: {x: 187.5468, y: 72.942}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1682921586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682921582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23ed8b9d731f6242923eed81ac0de65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _minFontSize: 30
+  _maxFontSize: 52
+  _maxIterations: 12
 --- !u!1 &1684245403
 GameObject:
   m_ObjectHideFlags: 0
@@ -56999,6 +57013,7 @@ MonoBehaviour:
   _playerStats: {fileID: 5489345558399541583}
   _initialRatio: 1
   _drainPerSecond: 5
+  _thresholdRatio: 0.2
 --- !u!114 &5489345558399541583
 MonoBehaviour:
   m_ObjectHideFlags: 0

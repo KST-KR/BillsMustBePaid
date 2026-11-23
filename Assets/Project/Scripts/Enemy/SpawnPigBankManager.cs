@@ -3,37 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 필드위 돼지 저금통 스폰 관리
+/// 각 단계마다 대상이 되는 저금통들을 생성하고, 해당 저금통들의 풀(pool)만을 준비
 /// </summary>
 public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
-{ 
-    #region 인스펙터
-    [Header("데이터 베이스 참조")]
+{
+    [Header("Pig bank database")]
     [SerializeField] private PigBankDataBaseSO _pigDatabase;
 
-    [Header("돼지 저금통 스폰 설정")]
+    [Header("Stage spawn settings")]
     [SerializeField] private Transform _spawnPoint;
     [SerializeField] private int _baseSpawnCount = 5;
     [SerializeField] private int _stageStep = 2;
     [SerializeField] private int _addCountPerStep = 1;
-    [Tooltip("필드에 스폰될 최대 갯수 설정")]
     [SerializeField] private int _maxSpawnCount = 15;
-    [SerializeField] private float _respawnTime = 3.0f;
-    [SerializeField] private Vector2 _spawnAreaSize = new Vector2(4.0f, 3.0f);
-    #endregion
+    [SerializeField] private float _respawnTime = 3f;
+    [SerializeField] private Vector2 _spawnAreaSize = new Vector2(4f, 3f);
 
-    #region 내부 변수
-    private List<GameObject> _spawnedPigBanks = new List<GameObject>();
-    private float _currentRespawnTimer = 0f;
+    private readonly List<GameObject> _spawnedPigBanks = new List<GameObject>();
+    private float _currentRespawnTimer;
     private int _stageSpawnUnlockLevel = 1;
     private bool _isInitialized;
-    #endregion
 
-    #region 프로퍼티
     public bool IsInitialized => _isInitialized;
-    #endregion
 
-    #region 이벤트 함수
     private void Start()
     {
         StartCoroutine(WaitForInitialization());
@@ -52,14 +44,11 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         if (StageManager.Instance != null)
         {
             StageManager.Instance.OnStageStarted -= HandleStageStarted;
-            StageManager.Instance.OnStageCleared -= HandleStageCleared; 
-            StageManager.Instance.OnStageFailed -= HandleStageFailed;   
+            StageManager.Instance.OnStageCleared -= HandleStageCleared;
+            StageManager.Instance.OnStageFailed -= HandleStageFailed;
         }
     }
 
-    /// <summary>
-    /// 에디터에서 스폰 범위를 그리기 위한 기즈모
-    /// </summary>
     private void OnDrawGizmos()
     {
         if (_spawnPoint == null)
@@ -68,12 +57,9 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         }
 
         Gizmos.color = Color.green;
-        Vector3 boxSize = new Vector3(_spawnAreaSize.x, 0.1f, _spawnAreaSize.y);
-        Gizmos.DrawCube(_spawnPoint.position, boxSize);
+        Gizmos.DrawCube(_spawnPoint.position, new Vector3(_spawnAreaSize.x, 0.1f, _spawnAreaSize.y));
     }
-    #endregion
 
-    #region 커스텀 메소드 (public)
     public void RegisterPigBank(GameObject pig)
     {
         if (pig != null && !_spawnedPigBanks.Contains(pig))
@@ -91,7 +77,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         if (database == null)
         {
-            Debug.LogError("SpawnPigBankManager: PigBankDataBaseSO가 전달되지 않았습니다.");
+            Debug.LogError("SpawnPigBankManager: 돼지 저금통 데이터베이스가 없음", this);
             return;
         }
 
@@ -104,15 +90,11 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         }
 
         _isInitialized = true;
-
-        Debug.Log("SpawnPigBankManager 초기화 완료");
+        Debug.Log("SpawnPigBankManager가 초기화");
     }
-    #endregion
 
-    #region 커스텀 메소드 (Private)
     private IEnumerator WaitForInitialization()
     {
-        // 데이터 초기화가 완료될 때까지 대기
         while (!_isInitialized)
         {
             yield return null;
@@ -120,37 +102,80 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         if (_spawnPoint == null)
         {
-            Debug.LogError("SpawnPoint가 존재 하지 않습니다. 확인 필요");
+            Debug.LogError("스폰 포인트가 지정되지 않음.", this);
             yield break;
         }
 
         StartCoroutine(CheckPigBankRoutine());
     }
 
-    /// <summary>
-    /// 스테이지 넘버를 받고 스테이지에서 스폰할 총 마리 수를 반환
-    /// </summary>
     private int GetTargetSpawnCount(int stageNumber)
     {
         int step = Mathf.Max(1, _stageStep);
-
-        int calculatedCount = _baseSpawnCount + ((stageNumber - 1) / step) * _addCountPerStep;
-
-        return Mathf.Min(calculatedCount, _maxSpawnCount);
+        int count = _baseSpawnCount + ((stageNumber - 1) / step) * _addCountPerStep;
+        return Mathf.Min(count, _maxSpawnCount);
     }
 
-    /// <summary>
-    /// 이벤트와 타입을 맞춰주기 위해 int stageNumber를 인자로 받습니다.
-    /// </summary>
     private void HandleStageStarted(int stageNumber)
     {
-        if (PigBankUnlock.Instance != null)
+        _stageSpawnUnlockLevel = PigBankUnlock.Instance != null ? PigBankUnlock.Instance.UnlockLevel : 1;
+
+        ReturnToPool();
+        StartCoroutine(PrepareAndSpawnForStage(stageNumber));
+    }
+
+    public IEnumerator PrepareStagePoolsAsync(int stageNumber, System.Action<float> onProgress = null)
+    {
+        if (!_isInitialized || _pigDatabase == null)
         {
-            _stageSpawnUnlockLevel = PigBankUnlock.Instance.UnlockLevel; 
+            Debug.LogError("SpawnPigBankManager가 초기화되지 않음.", this);
+            yield break;
         }
-        else
+
+        _stageSpawnUnlockLevel = PigBankUnlock.Instance != null ? PigBankUnlock.Instance.UnlockLevel : 1;
+        List<PigBankGameDataSO> eligiblePigs = GetAvailablePigData();
+        if (eligiblePigs.Count == 0)
         {
-            _stageSpawnUnlockLevel = 1;
+            Debug.LogError("저금통 데이터는 초기 단계의 대상이 아님.", this);
+            yield break;
+        }
+
+        int prewarmCountPerType = Mathf.Max(1, Mathf.CeilToInt((float)GetTargetSpawnCount(stageNumber) / eligiblePigs.Count));
+        yield return PigBankObjectPoolManager.Instance.PreparePoolsAsync(eligiblePigs, prewarmCountPerType, onProgress);
+    }
+
+    private IEnumerator PrepareAndSpawnForStage(int stageNumber)
+    {
+        PigBankObjectPoolManager pool = PigBankObjectPoolManager.Instance;
+        if (pool == null || _pigDatabase == null)
+        {
+            Debug.LogError("단계별 돼지 풀(pig pool)을 준비할 수 없음.", this);
+            yield break;
+        }
+
+        List<PigBankGameDataSO> eligiblePigs = GetAvailablePigData();
+        if (eligiblePigs.Count == 0)
+        {
+            Debug.LogError("이 단계에 해당하는 저금통 데이터를 찾을 수 없음.", this);
+            yield break;
+        }
+
+        int prewarmCountPerType = Mathf.Max(1, Mathf.CeilToInt((float)GetTargetSpawnCount(stageNumber) / eligiblePigs.Count));
+        yield return pool.PreparePoolsAsync(eligiblePigs, prewarmCountPerType);
+
+        StageManager stageManager = StageManager.Instance;
+        if (stageManager == null || !stageManager.IsStageActive || stageManager.CurrentStage != stageNumber)
+        {
+            yield break;
+        }
+
+        for (int i = 0; i < eligiblePigs.Count; i++)
+        {
+            if (!pool.HasPool(eligiblePigs[i]))
+            {
+                Debug.LogError($"풀(pool) 준비 실패: {eligiblePigs[i].ID}.", this);
+                yield break;
+            }
         }
 
         SpawnPigForStage(stageNumber);
@@ -168,65 +193,45 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
     private void SpawnPigForStage(int stageNumber)
     {
-        ReturnToPool();       
-        
         int targetCount = GetTargetSpawnCount(stageNumber);
+        PigBankObjectPoolManager pool = PigBankObjectPoolManager.Instance;
 
-        if (PigBankObjectPoolManager.Instance != null)
+        if (pool == null)
         {
-            for (int i = 0; i < targetCount; i++)
+            Debug.LogError("PigBankObjectPoolManager가 없음.", this);
+            return;
+        }
+
+        for (int i = 0; i < targetCount; i++)
+        {
+            string pigID = GetRandomPigID();
+            Vector3 position = RandomSpawnPoint();
+            GameObject pig = pool.SpawnPigBank(pigID, position, Quaternion.identity);
+
+            if (pig != null)
             {
-                string pigID = GetRandomPigID();
-
-                if (!_pigDatabase.TryGet(pigID, out var spawnedPigData))
-                {
-                    continue;
-                }
-
-                Vector3 spawnPosition = RandomSpawnPoint();
-                GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
-
-                if (pig != null)
-                {
-                    _spawnedPigBanks.Add(pig);
-                }
+                _spawnedPigBanks.Add(pig);
             }
-            Debug.Log($"성공적으로 돼지를 {targetCount}마리 스폰했습니다.");
         }
-        else
-        {
-            Debug.LogError("PigBankObjectPoolManager Instance가 Null입니다!");
-        }
+
+        Debug.Log($"스테이지 {stageNumber}를 위해 돼지 저금통 {targetCount}개를 생성");
     }
 
-    /// <summary>
-    /// 일정 주기마다 검사
-    /// </summary>
     private IEnumerator CheckPigBankRoutine()
     {
-        float checkInterval = 0.5f; // 0.5초 마다 검사
+        const float checkInterval = 0.5f;
 
         while (true)
         {
-            float timer = 0f;
-
-            while (timer < checkInterval)
-            {
-                timer += Time.deltaTime;
-                yield return null;
-            }
-
-            // 오브젝트 풀로 돌아가 비활성화된 돼지들을 리스트에서 정리
+            yield return new WaitForSeconds(checkInterval);
             _spawnedPigBanks.RemoveAll(pig => pig == null || !pig.activeInHierarchy);
 
-            // 돼지가 모두 사라졌고, 리스폰 코루틴이 돌고 있지 않다면 실행
             if (_spawnedPigBanks.Count == 0)
             {
                 if (StageManager.Instance != null && StageManager.Instance.IsStageActive)
                 {
                     _currentRespawnTimer += checkInterval;
-
-                    if(_currentRespawnTimer >= _respawnTime)
+                    if (_currentRespawnTimer >= _respawnTime)
                     {
                         RespawnSinglePig();
                         _currentRespawnTimer = 0f;
@@ -235,7 +240,6 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             }
             else
             {
-                // 돼지가 살아있다면 타이머 초기화
                 _currentRespawnTimer = 0f;
             }
         }
@@ -244,60 +248,50 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private void RespawnSinglePig()
     {
         string pigID = GetRandomPigID();
-
-        if (PigBankObjectPoolManager.Instance != null)
+        if (PigBankObjectPoolManager.Instance == null)
         {
-            Vector3 spawnPosition = RandomSpawnPoint();
-            GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, spawnPosition, Quaternion.identity);
+            return;
+        }
 
-            if (pig != null)
-            {
-                _spawnedPigBanks.Add(pig);
+        GameObject pig = PigBankObjectPoolManager.Instance.SpawnPigBank(pigID, RandomSpawnPoint(), Quaternion.identity);
 
-                Debug.Log($"필드에 돼지가 없어 1마리를 리스폰했습니다.)");
-            }
+        if (pig != null)
+        {
+            _spawnedPigBanks.Add(pig);
         }
     }
 
-    /// <summary>
-    /// 기준 위치를 중심으로 스폰 범위 내의 무작위 3D 좌표를 반환
-    /// </summary>
     private Vector3 RandomSpawnPoint()
     {
-        Vector3 basePosition = (_spawnPoint != null) ? _spawnPoint.position : transform.position;
-
-        float halfWidth = _spawnAreaSize.x * 0.5f;
-        float halfDepth = _spawnAreaSize.y * 0.5f;
-
-        float randomX = Random.Range(-halfWidth,halfWidth);
-        float randomZ = Random.Range(-halfDepth,halfDepth);
-
-        return new Vector3(basePosition.x + randomX, basePosition.y, basePosition.z + randomZ);
+        Vector3 center = _spawnPoint != null ? _spawnPoint.position : transform.position;
+        float x = Random.Range(-_spawnAreaSize.x * 0.5f, _spawnAreaSize.x * 0.5f);
+        float z = Random.Range(-_spawnAreaSize.y * 0.5f, _spawnAreaSize.y * 0.5f);
+        return new Vector3(center.x + x, center.y, center.z + z);
     }
 
-    /// <summary>
-    /// 현재 필드에 있는 돼지를 오브젝트 풀로 반환합니다.
-    /// </summary>
     private void ReturnToPool()
-    { 
-        _currentRespawnTimer = 0;
+    {
+        _currentRespawnTimer = 0f;
+        PigBankObjectPoolManager pool = PigBankObjectPoolManager.Instance;
 
-        if (PigBankObjectPoolManager.Instance != null)
+        if (pool != null)
         {
-            foreach (var pig in _spawnedPigBanks)
+            foreach (GameObject pig in _spawnedPigBanks)
             {
-                if (pig != null && pig.activeInHierarchy)
+                if (pig == null || !pig.activeInHierarchy)
                 {
-                    PigBankHealth health = pig.GetComponent<PigBankHealth>();
-                    if (health != null && health.GameData != null)
-                    {
-                        PigBankObjectPoolManager.Instance.ReturnPigBank(health.GameData, pig);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("반환하려는 돼지에 PigBankHealth 또는 GameData가 없습니다.", pig);
-                        pig.SetActive(false);
-                    }
+                    continue;
+                }
+
+                PigBankHealth health = pig.GetComponent<PigBankHealth>();
+                if (health != null && health.GameData != null)
+                {
+                    pool.ReturnPigBank(health.GameData, pig);
+                }
+                else
+                {
+                    Debug.LogWarning("PigBankHealth 또는 GameData가 없으면 돼지를 반환할 수 없음.", pig);
+                    pig.SetActive(false);
                 }
             }
         }
@@ -305,85 +299,88 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         _spawnedPigBanks.Clear();
     }
 
-    /// <summary>
-    /// 스테이지를 진행함에 따라 돼지 저금통 스폰 증가
-    /// </summary>
-    private string GetRandomPigID()
+    private List<PigBankGameDataSO> GetAvailablePigData()
     {
-        List<PigBankGameDataSO> availablePigs = new List<PigBankGameDataSO>();
-        List<float> probability = new List<float>();
-        float totalProbability = 0f;
-
-        if (_pigDatabase != null && _pigDatabase.Datas != null)
+        List<PigBankGameDataSO> available = new List<PigBankGameDataSO>();
+        if (_pigDatabase == null || _pigDatabase.Datas == null)
         {
-            int currentUnlockLevel = _stageSpawnUnlockLevel;
+            return available;
+        }
 
-            foreach(var pigData in _pigDatabase.Datas)
+        foreach (PigBankGameDataSO pigData in _pigDatabase.Datas)
+        {
+            if (pigData != null && pigData.CrashLevel <= _stageSpawnUnlockLevel)
             {
-                if(pigData == null)
-                {
-                    continue;
-                }
-
-                if(pigData.CrashLevel <=  currentUnlockLevel)
-                {
-                    availablePigs.Add(pigData);
-
-                    float currentProbability = pigData.SpawnProbability;
-
-                    // 레벨이 1오를때마다 스폰확률 15씩 감소 (최소 10은 유지)
-                    if (pigData.ID == "PigBank_Basic")
-                    {
-                        currentProbability = Mathf.Max(10f, pigData.SpawnProbability - ((currentUnlockLevel - 1) * 15f));
-                    }
-
-                    probability.Add(currentProbability);
-                    totalProbability += currentProbability;
-                }
+                available.Add(pigData);
             }
         }
-        // 리스트가 비어있다면 기본 돼지 저금통 반환
-        if(availablePigs.Count == 0)
+
+        if (available.Count == 0 && _pigDatabase.TryGet("PigBank_Basic", out PigBankGameDataSO basic))
+        {
+            available.Add(basic);
+        }
+
+        return available;
+    }
+
+    private string GetRandomPigID()
+    {
+        List<PigBankGameDataSO> available = GetAvailablePigData();
+        if (available.Count == 0)
         {
             return "PigBank_Basic";
         }
 
-        float randomValue = Random.Range(0f, totalProbability);
-        float currentProbabilitySum = 0f;
-
-        for(int i = 0; i < availablePigs.Count; i++)
+        List<float> weights = new List<float>(available.Count);
+        float totalWeight = 0f;
+        for (int i = 0; i < available.Count; i++)
         {
-            currentProbabilitySum += probability[i];
+            PigBankGameDataSO pigData = available[i];
+            float weight = pigData.SpawnProbability;
 
-            if(randomValue <= currentProbabilitySum)
+            if (pigData.ID == "PigBank_Basic")
             {
-                return availablePigs[i].ID;
+                weight = Mathf.Max(10f, weight - ((_stageSpawnUnlockLevel - 1) * 15f));
             }
 
+            weight = Mathf.Max(0f, weight);
+            weights.Add(weight);
+            totalWeight += weight;
         }
 
-        return availablePigs[availablePigs.Count - 1].ID;
+        if (totalWeight <= 0f)
+        {
+            return available[0].ID;
+        }
 
+        float roll = Random.Range(0f, totalWeight);
+        float cumulative = 0f;
+        for (int i = 0; i < available.Count; i++)
+        {
+            cumulative += weights[i];
+            if (roll <= cumulative)
+            {
+                return available[i].ID;
+            }
+        }
+
+        return available[available.Count - 1].ID;
     }
 
     private bool SubscribeStageEvents()
     {
         if (StageManager.Instance == null)
         {
-            Debug.LogError("SpawnPigBankManager: StageManager를 찾을 수 없습니다.");
+            Debug.LogError("SpawnPigBankManager: StageManager가 없음.", this);
             return false;
         }
 
         StageManager.Instance.OnStageStarted -= HandleStageStarted;
         StageManager.Instance.OnStageStarted += HandleStageStarted;
-
         StageManager.Instance.OnStageCleared -= HandleStageCleared;
         StageManager.Instance.OnStageCleared += HandleStageCleared;
-
         StageManager.Instance.OnStageFailed -= HandleStageFailed;
         StageManager.Instance.OnStageFailed += HandleStageFailed;
-
         return true;
     }
-    #endregion
 }

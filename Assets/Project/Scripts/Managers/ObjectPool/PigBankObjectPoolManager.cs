@@ -1,70 +1,168 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
-/// [OBJECT-02-01] 돼지 저금통 오브젝트 풀 매니저
+/// Keeps pools only for pig bank types eligible in the current stage.
 /// </summary>
 public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 {
-    #region 인스펙터
-    [Header("등록된 돼지 저금통 리스트")]
-    [SerializeField] private PigBankDataBaseSO _pigDatabase;
+    private PigBankDataBaseSO _pigDatabase;
+    private readonly Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDictionary =
+        new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
+    private readonly Dictionary<PigBankGameDataSO, Transform> _rootDictionary =
+        new Dictionary<PigBankGameDataSO, Transform>();
+    private readonly Dictionary<PigBankGameDataSO, GameObject> _prefabDictionary =
+        new Dictionary<PigBankGameDataSO, GameObject>();
+    private readonly Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>> _prefabHandles =
+        new Dictionary<PigBankGameDataSO, AsyncOperationHandle<GameObject>>();
+    private readonly List<GameObject> _activePigs = new List<GameObject>();
+    private bool _isPreparingPools;
 
-    [Header("생성 개수")]
-    [SerializeField] private int _generationCount = 30;
-    #endregion
+    public bool IsInitialized => _pigDatabase != null;
 
-    #region 내부 변수
-    private Dictionary<PigBankGameDataSO, Queue<GameObject>> _poolDistionary = new Dictionary<PigBankGameDataSO, Queue<GameObject>>();
-    private Dictionary<PigBankGameDataSO, Transform> _rootDistionary = new Dictionary<PigBankGameDataSO, Transform>();
-    private List<GameObject> _activePigs = new List<GameObject>();
-
-    private bool _isInitialized;
-    #endregion
-
-    #region 프로퍼티
-    public bool IsInitialized => _isInitialized;
-    #endregion
-
-    #region 이벤트
-    protected override void OnSingletonAwake()
+    public void Initialize(PigBankDataBaseSO database)
     {
-        // Addressables 데이터 로딩 이후 Initialize()에서 풀 생성
-        // InitPools();
+        if (database == null || database.Datas == null || database.Datas.Count == 0)
+        {
+            Debug.LogError("돼지 저금통 데이터베이스가 없거나 비어 있음.", this);
+            return;
+        }
+
+        _pigDatabase = database;
     }
 
-    #endregion
+    public bool HasPool(PigBankGameDataSO pigData)
+    {
+        return pigData != null && _poolDictionary.ContainsKey(pigData);
+    }
 
-    #region 커스텀 메소드 (Public)
+    public IEnumerator PreparePoolsAsync(IReadOnlyList<PigBankGameDataSO> requestedPigData, int prewarmCountPerType, Action<float> onProgress = null)
+    {
+        while (_isPreparingPools)
+        {
+            yield return null;
+        }
+
+        if (_pigDatabase == null || requestedPigData == null || prewarmCountPerType <= 0)
+        {
+            Debug.LogError("Pig bank pool이 구성되어 있지 않거나, 요청한 데이터가 누락", this);
+            yield break;
+        }
+
+        _isPreparingPools = true;
+
+        HashSet<PigBankGameDataSO> requested = new HashSet<PigBankGameDataSO>();
+        for (int i = 0; i < requestedPigData.Count; i++)
+        {
+            if (requestedPigData[i] != null)
+            {
+                requested.Add(requestedPigData[i]);
+            }
+        }
+
+        List<PigBankGameDataSO> existing = new List<PigBankGameDataSO>(_poolDictionary.Keys);
+        for (int i = 0; i < existing.Count; i++)
+        {
+            if (!requested.Contains(existing[i]))
+            {
+                yield return ReleasePoolAsync(existing[i]);
+            }
+        }
+
+        int completedTypes = 0;
+        int totalTypes = requested.Count;
+        foreach (PigBankGameDataSO pigData in requested)
+        {
+            if (_poolDictionary.ContainsKey(pigData))
+            {
+                completedTypes++;
+                onProgress?.Invoke(totalTypes == 0 ? 1f : (float)completedTypes / totalTypes);
+                continue;
+            }
+
+            GameObject prefab = pigData.PigPrefab;
+            AssetReferenceGameObject prefabReference = pigData.PigPrefabReference;
+            AsyncOperationHandle<GameObject> handle = default;
+
+            if (prefabReference != null && prefabReference.RuntimeKeyIsValid())
+            {
+                handle = Addressables.LoadAssetAsync<GameObject>(prefabReference);
+                _prefabHandles[pigData] = handle;
+                while (!handle.IsDone)
+                {
+                    float typeProgress = handle.PercentComplete * 0.8f;
+                    onProgress?.Invoke(totalTypes == 0 ? 1f : (completedTypes + typeProgress) / totalTypes);
+                    yield return null;
+                }
+
+                if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+                {
+                    if (handle.IsValid())
+                    {
+                        Addressables.Release(handle);
+                    }
+                    _prefabHandles.Remove(pigData);
+
+                    Debug.LogError($"돼지 프리팹을 불러오지 못함: {pigData.ID}", this);
+                    _isPreparingPools = false;
+                    yield break;
+                }
+
+                prefab = handle.Result;
+            }
+
+            if (prefab == null)
+            {
+                Debug.LogError($"돼지 데이터에 할당된 프리팹이 없음: {pigData.ID}", this);
+                _isPreparingPools = false;
+                yield break;
+            }
+
+            _prefabDictionary[pigData] = prefab;
+            GameObject root = new GameObject($"PoolRoot_{pigData.ID}");
+            root.transform.SetParent(transform);
+            _rootDictionary[pigData] = root.transform;
+
+            Queue<GameObject> queue = new Queue<GameObject>();
+            for (int i = 0; i < prewarmCountPerType; i++)
+            {
+                GameObject pig = Instantiate(prefab, root.transform);
+                pig.SetActive(false);
+                queue.Enqueue(pig);
+            }
+
+            _poolDictionary[pigData] = queue;
+            completedTypes++;
+            onProgress?.Invoke(totalTypes == 0 ? 1f : (float)completedTypes / totalTypes);
+        }
+
+        _isPreparingPools = false;
+    }
+
     public GameObject SpawnPigBank(string pigID, Vector3 position, Quaternion rotation)
     {
-        if (!_isInitialized)
+        if (_pigDatabase == null || !_pigDatabase.TryGet(pigID, out PigBankGameDataSO pigData))
         {
-            Debug.LogError("PigBankObjectPoolManager가 초기화되지 않았습니다.");
+            Debug.LogError($"ID에 해당하는 돼지 데이터를 찾을 수 없음: {pigID}");
             return null;
         }
 
-        if (!_pigDatabase.TryGet(pigID, out PigBankGameDataSO pigData))
+        if (!_poolDictionary.TryGetValue(pigData, out Queue<GameObject> queue))
         {
-            Debug.LogError($"ID에 해당하는 돼지 데이터를 찾을 수 없습니다 : {pigID}");
-
+            Debug.LogError($"ID에 대한 저금통 풀(piggy bank pool)이 준비되지 않음: {pigID}");
             return null;
         }
 
-        if(!_poolDistionary.ContainsKey(pigData))
-        {
-            Debug.LogError($"해당 돼지 저금통{pigID}의 풀이 생성되지 않았다.");
+        GameObject pig = queue.Count > 0
+            ? queue.Dequeue()
+            : Instantiate(_prefabDictionary[pigData], _rootDictionary[pigData]);
 
-            return null;
-        }
-
-        Queue<GameObject> queue = _poolDistionary[pigData];
-        GameObject pig = (queue.Count > 0) ? queue.Dequeue() : Instantiate(pigData.PigPrefab, _rootDistionary[pigData]);
-
-        pig.transform.position = position;
-        pig.transform.rotation = rotation;
         pig.transform.SetParent(null);
+        pig.transform.SetPositionAndRotation(position, rotation);
         pig.SetActive(true);
 
         if (!_activePigs.Contains(pig))
@@ -72,9 +170,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
             _activePigs.Add(pig);
         }
 
-        // 돼지 저금통 체력 초기화
         PigBankHealth health = pig.GetComponent<PigBankHealth>();
-
         if (health != null)
         {
             health.Initialize(pigData);
@@ -82,10 +178,9 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         }
         else
         {
-            Debug.LogWarning($"돼지 프리팹에 PigBankHealth가 없음: {pig.name}", pig);
+            Debug.LogWarning($"돼지 프리팹에 PigBankHealth가 누락: {pig.name}", pig);
         }
 
-        // 기존 보상 시스템 초기화
         RandomRewardManager rewardManager = pig.GetComponent<RandomRewardManager>();
         if (rewardManager != null)
         {
@@ -93,7 +188,7 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         }
         else
         {
-            Debug.LogWarning($"돼지 프리팹에 RandomRewardManager가 없습니다: {pig.name}");
+            Debug.LogWarning($"돼지 프리팹에 RandomRewardManager가 누락: {pig.name}", pig);
         }
 
         return pig;
@@ -101,10 +196,16 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
 
     public void ReturnPigBank(PigBankGameDataSO pigData, GameObject pig)
     {
+        if (pig == null)
+        {
+            return;
+        }
+
         _activePigs.Remove(pig);
 
-        if (!_poolDistionary.ContainsKey(pigData))
+        if (pigData == null || !_poolDictionary.TryGetValue(pigData, out Queue<GameObject> queue))
         {
+            Destroy(pig);
             return;
         }
 
@@ -115,110 +216,113 @@ public class PigBankObjectPoolManager : Singleton<PigBankObjectPoolManager>
         }
         else
         {
-            Debug.LogError("돼지 저금통에 HitEffect가 없습니다!", this);
+            Debug.LogError("돼지 프리팹에 HitEffect가 누락", this);
         }
 
         pig.SetActive(false);
-        pig.transform.SetParent(_rootDistionary[pigData]);
-        _poolDistionary[pigData].Enqueue(pig);
+        pig.transform.SetParent(_rootDictionary[pigData]);
+        queue.Enqueue(pig);
     }
 
-    /// <summary>
-    /// Addressables에서 로딩한 저금통 데이터베이스 적용 및 오브젝트 풀 생성
-    /// </summary>
-    public void Initialize(PigBankDataBaseSO database)
+    private void OnDestroy()
     {
-        if (_isInitialized)
-        {
-            return;
-        }
-
-        if (_generationCount <= 0)
-        {
-            Debug.LogError("PigBankObjectPoolManager: 생성 개수는 1 이상이어야 합니다.");
-            return;
-        }
-
-        if (database == null)
-        {
-            Debug.LogError("PigBankObjectPoolManager: PigBankDataBaseSO가 전달되지 않았습니다.");
-            return;
-        }
-
-        _pigDatabase = database;
-
-        if (!InitPools())
-        {
-            Debug.LogError("PigBankObjectPoolManager: 오브젝트 풀 생성에 실패했습니다.");
-
-            ClearPools();
-            _pigDatabase = null;
-
-            return;
-        }
-
-        _isInitialized = true;
-
-        Debug.Log("PigBankObjectPoolManager 초기화 완료");
-    }
-    #endregion
-
-    #region 커스텀 메소드 (Private)
-    private bool InitPools()
-    {
-        if (_pigDatabase == null || _pigDatabase.Datas == null || _pigDatabase.Datas.Count == 0)
-        {
-            Debug.LogError("PigBankDataBaseSO 또는 Datas가 존재하지 않습니다.");
-            return false;
-        }
-
-        foreach (var pigData in _pigDatabase.Datas)
-        {
-            if (pigData == null || pigData.PigPrefab == null)
-            {
-                Debug.LogError("PigData가 없거나 PigPrefab이 존재하지 않습니다.");
-                return false;
-            }
-
-            if (_poolDistionary.ContainsKey(pigData))
-            {
-                Debug.LogError($"중복된 PigData가 등록되어 있습니다: {pigData.ID}");
-                return false;
-            }
-
-            GameObject rootObj = new GameObject($"PoolRoot_{pigData.ID}");
-            rootObj.transform.SetParent(transform);
-            _rootDistionary[pigData] = rootObj.transform;
-
-            Queue<GameObject> queue = new Queue<GameObject>();
-
-            for (int i = 0; i < _generationCount; i++)
-            {
-                GameObject pig = Instantiate(pigData.PigPrefab, rootObj.transform);
-                pig.SetActive(false);
-                queue.Enqueue(pig);
-            }
-
-            _poolDistionary[pigData] = queue;
-        }
-
-        return true;
+        ClearAllPools();
     }
 
-    private void ClearPools()
+    private void ReleasePool(PigBankGameDataSO pigData)
     {
-        foreach (Transform root in _rootDistionary.Values)
+        for (int i = _activePigs.Count - 1; i >= 0; i--)
         {
-            if (root != null)
+            GameObject pig = _activePigs[i];
+            if (pig == null)
             {
-                Destroy(root.gameObject);
+                _activePigs.RemoveAt(i);
+                continue;
+            }
+
+            PigBankHealth health = pig.GetComponent<PigBankHealth>();
+            if (health != null && health.GameData == pigData)
+            {
+                ReturnPigBank(pigData, pig);
             }
         }
 
-        _poolDistionary.Clear();
-        _rootDistionary.Clear();
+        if (_rootDictionary.TryGetValue(pigData, out Transform root) && root != null)
+        {
+            Destroy(root.gameObject);
+        }
+
+        _poolDictionary.Remove(pigData);
+        _rootDictionary.Remove(pigData);
+        _prefabDictionary.Remove(pigData);
+
+        if (_prefabHandles.TryGetValue(pigData, out AsyncOperationHandle<GameObject> handle))
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+
+            _prefabHandles.Remove(pigData);
+        }
+    }
+
+    private IEnumerator ReleasePoolAsync(PigBankGameDataSO pigData)
+    {
+        for (int i = _activePigs.Count - 1; i >= 0; i--)
+        {
+            GameObject pig = _activePigs[i];
+            if (pig == null)
+            {
+                _activePigs.RemoveAt(i);
+                continue;
+            }
+
+            PigBankHealth health = pig.GetComponent<PigBankHealth>();
+            if (health != null && health.GameData == pigData)
+            {
+                ReturnPigBank(pigData, pig);
+            }
+        }
+
+        if (_rootDictionary.TryGetValue(pigData, out Transform root) && root != null)
+        {
+            Destroy(root.gameObject);
+        }
+
+        _poolDictionary.Remove(pigData);
+        _rootDictionary.Remove(pigData);
+        _prefabDictionary.Remove(pigData);
+
+        AsyncOperationHandle<GameObject> handle = default;
+        bool hasHandle = _prefabHandles.TryGetValue(pigData, out handle);
+        _prefabHandles.Remove(pigData);
+
+        // 번들을 해제하기 전에, Unity가 인스턴스화된 풀 객체들을 파괴하도록 허용
+        yield return null;
+
+        if (hasHandle && handle.IsValid())
+        {
+            Addressables.Release(handle);
+        }
+    }
+
+    private void ClearAllPools()
+    {
+        for (int i = 0; i < _activePigs.Count; i++)
+        {
+            if (_activePigs[i] != null)
+            {
+                Destroy(_activePigs[i]);
+            }
+        }
+
+        List<PigBankGameDataSO> pigData = new List<PigBankGameDataSO>(_poolDictionary.Keys);
+        for (int i = 0; i < pigData.Count; i++)
+        {
+            ReleasePool(pigData[i]);
+        }
+
         _activePigs.Clear();
     }
-    #endregion
-
 }

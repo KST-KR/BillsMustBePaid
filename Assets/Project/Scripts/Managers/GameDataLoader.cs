@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -66,7 +66,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 초기화 진행률 반영 (전체 20%)
         while (!initHandle.IsDone)
         {
-            LoadProgress = initHandle.PercentComplete * 0.2f;
+            LoadProgress = initHandle.PercentComplete * 0.18f;
             yield return null;
         }
 
@@ -86,7 +86,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 카탈로그 로딩 진행률 반영 (전체 80%)
         while (!_catalogHandle.IsDone)
         {
-            LoadProgress = 0.2f + (_catalogHandle.PercentComplete * 0.8f);
+            LoadProgress = 0.18f + (_catalogHandle.PercentComplete * 0.72f);
             yield return null;
         }
 
@@ -114,9 +114,14 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
             yield break;
         }
 
-        LoadProgress = 1f;
+        LoadProgress = 0.9f;
 
         Debug.Log("게임 데이터 카탈로그 로딩 완료");
+    }
+
+    public void ReportInitialPrefabPreparation(float progress)
+    {
+        LoadProgress = Mathf.Lerp(0.9f, 1f, Mathf.Clamp01(progress));
     }
     #endregion
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public class GameSceneBootstrap : MonoBehaviour
 {
+    private bool _isManagersInitialized;
+
     private IEnumerator Start()
     {
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
@@ -61,11 +63,18 @@ public class GameSceneBootstrap : MonoBehaviour
             }
 
             // Addressables 데이터 기반 Manager 초기화
-            if (!InitializeManagers(dataLoader.Catalog))
+            yield return InitializeManagers(dataLoader.Catalog);
+            if (!_isManagersInitialized)
             {
                 Debug.LogError("게임 데이터 초기화 실패");
                 yield break;
             }
+
+            if (launchMode == GameLaunchData.ELaunchMode.NewGame)
+            {
+                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, dataLoader.ReportInitialPrefabPreparation);
+            }
+            dataLoader.ReportInitialPrefabPreparation(1f);
 
             switch (launchMode)
             {
@@ -102,19 +111,20 @@ public class GameSceneBootstrap : MonoBehaviour
     /// </summary>
     /// <param name="catalog"></param>
     /// <returns></returns>
-    private bool InitializeManagers(GameDataCatalog catalog)
+    private IEnumerator InitializeManagers(GameDataCatalog catalog)
     {
+        _isManagersInitialized = false;
         if (catalog == null)
         {
             Debug.LogError("GameDataCatalog가 전달되지 않음.");
-            return false;
+            yield break;
         }
         
         // 카탈로그 내부 데이터 검증
         if (!catalog.Validate())
         {
             Debug.LogError("GameDataCatalog 데이터 검증 실패");
-            return false;
+            yield break;
         }
 
         // 필요한 Manager 확인
@@ -129,7 +139,7 @@ public class GameSceneBootstrap : MonoBehaviour
             SpawnPigBankManager.Instance == null)
         {
             Debug.LogError("게임 데이터 초기화에 필요한 Manager가 없습니다.");
-            return false;
+            yield break;
         }
 
         // 성장 데이터
@@ -156,7 +166,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!StageRewardManager.Instance.IsInitialized)
         {
             Debug.LogError("StageRewardManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         // 저금통 데이터베이스 및 오브젝트 풀
@@ -165,7 +175,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!PigBankObjectPoolManager.Instance.IsInitialized)
         {
             Debug.LogError("PigBankObjectPoolManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         // 저금통 스폰 데이터
@@ -174,12 +184,12 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!SpawnPigBankManager.Instance.IsInitialized)
         {
             Debug.LogError("SpawnPigBankManager 초기화 실패.");
-            return false;
+            yield break;
         }
 
         Debug.Log("모든 Manager 데이터 초기화 완료");
 
-        return true;
+        _isManagersInitialized = true;
     }
 
     /// <summary>
