@@ -159,6 +159,7 @@ public class CoinBounce : MonoBehaviour
         if (StageRewardManager.Instance != null && _coinItem != null)
         {
             StageRewardManager.Instance.AddEarnedCoinCount(_coinItem._coinType, 1);
+            AudioManager.Instance.PlaySFX(EAudioType.CoinGet);
         }
 
         ReturnToPool();

@@ -52,6 +52,8 @@ public class RandomRewardManager : MonoBehaviour
 
         _isDead = true;
 
+        AudioManager.Instance.PlaySFX(EAudioType.PigDestroy);
+
         Debug.Log("돼지 저금통 파괴");
 
         DropCoins(sender);
@@ -63,8 +65,6 @@ public class RandomRewardManager : MonoBehaviour
         }
 
         PigBankUnlock.Instance.UnlockPigBank();
-
-
 
         if (PigBankObjectPoolManager.Instance != null)
         {
@@ -120,6 +120,11 @@ public class RandomRewardManager : MonoBehaviour
 
         if (CoinObjectPoolManager.Instance != null)
         {
+            if(coinCount > 0)
+            {
+                AudioManager.Instance.PlaySFXDelayed(EAudioType.CoinDrop, 0.21f, 1.5f);
+            }
+
             Vector3 spawnPosition = transform.position;
 
             // 코인 테이블 정보 가져오기 
