@@ -172,9 +172,38 @@ public class AudioManager : PersistentSingleton<AudioManager>
         OnAudioRequested?.Invoke(audioType);
     }
 
+    public void PlaySFX(EAudioType audioType, float volumeScale)
+    {
+        AudioClip clip = FindAudioClip(audioType);
+
+        if (clip == null)
+        {
+            return;
+        }
+
+        _sfxSource.PlayOneShot(clip, volumeScale);
+    }
+
+    public void PlaySFXDelayed(EAudioType audioType, float delay, float volumeScale = 1.0f)
+    {
+        StartCoroutine(CoPlaySFXDelayed(audioType, delay, volumeScale));
+    }
     #endregion
 
     #region 커스텀 메서드 (Private)
+
+    private System.Collections.IEnumerator CoPlaySFXDelayed(EAudioType audioType, float delay, float volumeScale)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < delay)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        PlaySFX(audioType, volumeScale);
+    }
 
     private void ApplySavedVolumes()
     {

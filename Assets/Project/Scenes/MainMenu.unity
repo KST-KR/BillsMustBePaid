@@ -9607,11 +9607,11 @@ MonoBehaviour:
   - _audioType: 2
     _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
   - _audioType: 3
-    _audioClip: {fileID: 8300000, guid: 66cf50a26fd5a2941a244e15942f90c2, type: 3}
+    _audioClip: {fileID: 8300000, guid: 75592b0d78ac0534f83f815deb8419dc, type: 3}
   - _audioType: 4
-    _audioClip: {fileID: 8300000, guid: 93f998e0ec585cc408ecd2687e15306c, type: 3}
+    _audioClip: {fileID: 8300000, guid: 8aa51eb46cad7814abdbef380a7dbc5f, type: 3}
   - _audioType: 5
-    _audioClip: {fileID: 8300000, guid: 93f998e0ec585cc408ecd2687e15306c, type: 3}
+    _audioClip: {fileID: 8300000, guid: 3bc7a4af623da334ab8708d2d8139f4a, type: 3}
   - _audioType: 6
     _audioClip: {fileID: 8300000, guid: a374e1b780b593148b7767616b81d716, type: 3}
   - _audioType: 7
@@ -9664,6 +9664,8 @@ MonoBehaviour:
     _audioClip: {fileID: 8300000, guid: d89b864ca7370074c909b0c72f6e9bdd, type: 3}
   - _audioType: 31
     _audioClip: {fileID: 8300000, guid: 860c361fae2e1324abbc224e85778f18, type: 3}
+  - _audioType: 32
+    _audioClip: {fileID: 8300000, guid: 731b3231fce21034e9e1ef6e2a2a88a3, type: 3}
   _masterVolume: 1
   _bgmVolume: 1
   _sfxVolume: 1
