@@ -25366,6 +25366,7 @@ MonoBehaviour:
   _playerComboManager: {fileID: 5489345558399541591}
   _comboPanel: {fileID: 882146637}
   _comboText: {fileID: 928637834}
+  _periodStageText: {fileID: 973629894}
   _canvas: {fileID: 2063766405}
   _extraAttackText: {fileID: 2081648355}
   _extraAttackTextDuration: 0.6
