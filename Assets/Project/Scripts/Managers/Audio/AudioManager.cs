@@ -356,6 +356,9 @@ public class AudioManager : PersistentSingleton<AudioManager>
             }
         }
 
+        return null;
+    }
+
     public void PlaySFX(EAudioType audioType, float volumeScale)
     {
         AudioClip clip = FindAudioClip(audioType);
@@ -372,7 +375,6 @@ public class AudioManager : PersistentSingleton<AudioManager>
     {
         StartCoroutine(CoPlaySFXDelayed(audioType, delay, volumeScale));
     }
-    #endregion
 
     private AudioClip FindAudioClip(EAudioType audioType)
     {
