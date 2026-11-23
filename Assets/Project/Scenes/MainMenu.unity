@@ -9601,83 +9601,243 @@ MonoBehaviour:
   _sfxSource: {fileID: 1839181393}
   _audioData:
   - _audioType: 0
-    _audioClip: {fileID: 0}
+    _audioClip: {fileID: 8300000, guid: ac27e9e7e54f681489857a9b32da892f, type: 3}
     _audioClipReference:
-      m_AssetGUID: ac27e9e7e54f681489857a9b32da892f
+      m_AssetGUID: 
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
   - _audioType: 1
-    _audioClip: {fileID: 0}
+    _audioClip: {fileID: 8300000, guid: 32a21457482b4944b866c9e7ae2a8fbe, type: 3}
     _audioClipReference:
-      m_AssetGUID: 32a21457482b4944b866c9e7ae2a8fbe
+      m_AssetGUID: 
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
   - _audioType: 2
     _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 3
     _audioClip: {fileID: 8300000, guid: 75592b0d78ac0534f83f815deb8419dc, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 4
     _audioClip: {fileID: 8300000, guid: 8aa51eb46cad7814abdbef380a7dbc5f, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 5
     _audioClip: {fileID: 8300000, guid: 3bc7a4af623da334ab8708d2d8139f4a, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 6
     _audioClip: {fileID: 8300000, guid: a374e1b780b593148b7767616b81d716, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 7
     _audioClip: {fileID: 8300000, guid: 2f64dd97d8d2b7d49b487c7e95eb5cd4, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 8
     _audioClip: {fileID: 8300000, guid: 938a9d260b5d8324188c71a4449aaf12, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 9
     _audioClip: {fileID: 8300000, guid: df87bd2ef81f8ff42b53a397ac396375, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 10
     _audioClip: {fileID: 8300000, guid: fd42443c2d21fdb42a4bc31932185942, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 11
     _audioClip: {fileID: 8300000, guid: 5d0683cd13dcc8744a3f567f3244caf3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 12
     _audioClip: {fileID: 8300000, guid: b95f84e9c89686e4397b1bd39c0ded4a, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 13
     _audioClip: {fileID: 8300000, guid: 2213d5d5e2588f54b9e01c0cb3893011, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 14
     _audioClip: {fileID: 8300000, guid: af9bbc5735621e24e81921ee2f058900, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 15
     _audioClip: {fileID: 8300000, guid: a81b98f069fdf074a8bd6679ca66f1f4, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 16
     _audioClip: {fileID: 8300000, guid: a588a8642c3b9274a92d025915fb679b, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 17
     _audioClip: {fileID: 8300000, guid: 536eb848ca167144582d49de5ea8362b, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 18
     _audioClip: {fileID: 8300000, guid: 0880216514eb5d04186498632b7baca3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 19
     _audioClip: {fileID: 8300000, guid: b472e3ca3f18bbf4ca228b7ae1a4b478, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 20
     _audioClip: {fileID: 8300000, guid: 9318b63f2994121488d658ed0050f7e3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 21
     _audioClip: {fileID: 8300000, guid: 9476fbe247f2f814786ed30eb40ae193, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 22
     _audioClip: {fileID: 8300000, guid: 0751f4b4bf0f97047bc79b5f1678b762, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 23
     _audioClip: {fileID: 8300000, guid: 124f266dd35ef5f4fa4c196e29a34426, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 24
     _audioClip: {fileID: 8300000, guid: e6ddada0a7db3234781225c6eb746075, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 25
     _audioClip: {fileID: 8300000, guid: 01f34cbc04ae1c14595cadd7ea2093a3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 26
     _audioClip: {fileID: 8300000, guid: 43f6b9b84c0663b4ba40e61884f7a9c3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 27
     _audioClip: {fileID: 8300000, guid: 56201fab426ef4a4eb72a708b8e91fb5, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 28
     _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 29
     _audioClip: {fileID: 8300000, guid: 99ba71a1c11a4b74a9e1b4b22420b240, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 30
     _audioClip: {fileID: 8300000, guid: d89b864ca7370074c909b0c72f6e9bdd, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 31
     _audioClip: {fileID: 8300000, guid: 860c361fae2e1324abbc224e85778f18, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 32
     _audioClip: {fileID: 8300000, guid: 731b3231fce21034e9e1ef6e2a2a88a3, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   - _audioType: 33
     _audioClip: {fileID: 8300000, guid: 82b6fd23332c97e498e5aac2824a13e4, type: 3}
+    _audioClipReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
   _masterVolume: 1
   _bgmVolume: 1
   _sfxVolume: 1
