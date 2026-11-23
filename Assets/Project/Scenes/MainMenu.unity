@@ -9658,6 +9658,12 @@ MonoBehaviour:
     _audioClip: {fileID: 8300000, guid: 56201fab426ef4a4eb72a708b8e91fb5, type: 3}
   - _audioType: 28
     _audioClip: {fileID: 8300000, guid: ac9d159e457b2e7468c490c621041567, type: 3}
+  - _audioType: 29
+    _audioClip: {fileID: 8300000, guid: 99ba71a1c11a4b74a9e1b4b22420b240, type: 3}
+  - _audioType: 30
+    _audioClip: {fileID: 8300000, guid: d89b864ca7370074c909b0c72f6e9bdd, type: 3}
+  - _audioType: 31
+    _audioClip: {fileID: 8300000, guid: 860c361fae2e1324abbc224e85778f18, type: 3}
   _masterVolume: 1
   _bgmVolume: 1
   _sfxVolume: 1

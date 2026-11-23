@@ -49,5 +49,14 @@ public enum EAudioType
 
     // 책상 타격
     DeskHit,
+
+    // 스태미나 임계음
+    StaminaThreshold,
+
+    // 상점 망치 변경
+    ChangeHammer,
+    // 망치 구매 불가
+    UnavailablePurchase,
+
 }
 
