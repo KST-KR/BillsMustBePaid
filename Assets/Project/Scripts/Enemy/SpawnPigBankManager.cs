@@ -23,6 +23,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     private float _currentRespawnTimer;
     private int _stageSpawnUnlockLevel = 1;
     private bool _isInitialized;
+    private bool _isPreparingStagePools;
 
     public bool IsInitialized => _isInitialized;
 
@@ -121,6 +122,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
     {
         _stageSpawnUnlockLevel = PigBankUnlock.Instance != null ? PigBankUnlock.Instance.UnlockLevel : 1;
 
+        _isPreparingStagePools = true;
         ReturnToPool();
         StartCoroutine(PrepareAndSpawnForStage(stageNumber));
     }
@@ -155,6 +157,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         {
             Debug.LogError("단계별 돼지 풀(pig pool)을 준비할 수 없음.", this);
 
+            _isPreparingStagePools = false;
             yield break;
         }
 
@@ -163,6 +166,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
         {
             Debug.LogError("이 단계에 해당하는 저금통 데이터를 찾을 수 없음.", this);
 
+            _isPreparingStagePools = false;
             yield break;
         }
 
@@ -174,6 +178,7 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
 
         if (stageManager == null || !stageManager.IsStageActive || stageManager.CurrentStage != stageNumber)
         {
+            _isPreparingStagePools = false;
             yield break;
         }
 
@@ -183,20 +188,24 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             {
                 Debug.LogError($"풀(pool) 준비 실패: {eligiblePigs[i].ID}.", this);
 
+                _isPreparingStagePools = false;
                 yield break;
             }
         }
 
         SpawnPigForStage(stageNumber);
+        _isPreparingStagePools = false;
     }
 
     private void HandleStageCleared(int stageNumber)
     {
+        _isPreparingStagePools = false;
         ReturnToPool();
     }
 
     private void HandleStageFailed()
     {
+        _isPreparingStagePools = false;
         ReturnToPool();
     }
 
@@ -236,6 +245,12 @@ public class SpawnPigBankManager : Singleton<SpawnPigBankManager>
             yield return new WaitForSeconds(checkInterval);
 
             _spawnedPigBanks.RemoveAll(pig => pig == null || !pig.activeInHierarchy);
+
+            if (_isPreparingStagePools)
+            {
+                _currentRespawnTimer = 0f;
+                continue;
+            }
 
             if (_spawnedPigBanks.Count == 0)
             {

@@ -21,12 +21,19 @@ public class HitSummonSelfSO : MechanismSO
 
         if (!hasPrefab)
         {
-            Debug.LogWarning($"{name}: clone pig data or its prefab is missing.");
+            Debug.LogWarning($"{name}: 복제할 돼지 데이터나 해당 프리팹이 누락");
             return;
         }
 
         if (target == null || Random.value > _summonChance)
         {
+            return;
+        }
+
+        PigBankObjectPoolManager poolManager = PigBankObjectPoolManager.Instance;
+        if (poolManager == null || !poolManager.HasPool(_cloneData))
+        {
+            Debug.LogWarning($"{name}: 저금통 풀이 준비되지 않아 소환을 건너뜁니다.");
             return;
         }
 
