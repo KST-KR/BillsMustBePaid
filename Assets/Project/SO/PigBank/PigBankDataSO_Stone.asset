@@ -20,9 +20,9 @@ MonoBehaviour:
   _pigPrefab: {fileID: 4924951498414643570, guid: 06752822e65cf2e4c86bea240a2e32c9, type: 3}
   _crashLevel: 6
   _rewardCoin: 350
-  _jackpotChance: 0.05
-  _shinePigBankChance: 0.01
-  _specialCoinChance: 0.02
+  _jackpotChance: 0.1
+  _shinePigBankChance: 0
+  _specialCoinChance: 0.1
   _spawnProbability: 20
   _hitMechanism: {fileID: 0}
   _dieMechanism: {fileID: 0}
