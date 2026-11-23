@@ -6,6 +6,7 @@
 [CreateAssetMenu(fileName = "EquipmentData", menuName = "Shop/Equipment Data")]
 public class EquipmentData : ScriptableObject
 {
+    [SerializeField] private UnityEngine.AddressableAssets.AssetReferenceGameObject _hammerPrefabReference;
     #region 인스펙터
     [Header("장비 정보")]
     [SerializeField] private string _equipmentName;
@@ -41,5 +42,6 @@ public class EquipmentData : ScriptableObject
     public float StaminaDrainMultiplier => _staminaDrainMultiplier;
 
     public string EquipmentId => _equipmentId;
+    public UnityEngine.AddressableAssets.AssetReferenceGameObject HammerPrefabReference => _hammerPrefabReference;
     #endregion
 }

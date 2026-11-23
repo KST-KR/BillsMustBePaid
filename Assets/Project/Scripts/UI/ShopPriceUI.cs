@@ -24,7 +24,11 @@ public class ShopPriceUI : MonoBehaviour
         if (_equipmentManager != null)
         {
             _equipmentManager.OnEquipmentPurchased += HandleEquipmentStateChanged;
-            _equipmentManager.OnEquipmentEquipped += HandleEquipmentStateChanged;
+        }
+
+        if (_playerEquipment != null)
+        {
+            _playerEquipment.OnEquipmentChanged += HandleEquipmentStateChanged;
         }
 
         UpdateAllPriceTexts();
@@ -35,7 +39,11 @@ public class ShopPriceUI : MonoBehaviour
         if (_equipmentManager != null)
         {
             _equipmentManager.OnEquipmentPurchased -= HandleEquipmentStateChanged;
-            _equipmentManager.OnEquipmentEquipped -= HandleEquipmentStateChanged;
+        }
+
+        if (_playerEquipment != null)
+        {
+            _playerEquipment.OnEquipmentChanged -= HandleEquipmentStateChanged;
         }
     }
     #endregion

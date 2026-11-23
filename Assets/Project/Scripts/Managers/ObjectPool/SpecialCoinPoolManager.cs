@@ -1,100 +1,96 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 [Serializable]
 public struct SpecialCoinInfo
 {
-    [Tooltip("특수 코인 종류")]
+    [Tooltip("Special coin type")]
     public SpecialCoinType _coinType;
 
-    [Tooltip("특수 코인 프리팹")]
-    public SpecialCoin _coinPrefab;
+    [Tooltip("Addressable special coin prefab")]
+    public AssetReferenceGameObject _coinPrefabReference;
 }
 
 public class SpecialCoinPoolManager : Singleton<SpecialCoinPoolManager>
 {
-    #region 인스펙터
-    [Header("특수 코인 데이터 설정")]
+    [Header("Special coin prefab references")]
     [SerializeField] private SpecialCoinInfo[] _specialCoinTable;
-    #endregion
 
-    #region 내부 변수
     private readonly Dictionary<SpecialCoinType, Queue<SpecialCoin>> _coinPools = new Dictionary<SpecialCoinType, Queue<SpecialCoin>>();
-    private readonly Dictionary<SpecialCoinType, SpecialCoin> _prefabLookup = new Dictionary<SpecialCoinType, SpecialCoin>();
-    private readonly List<SpecialCoinType> _availableTypes = new List<SpecialCoinType>();
+    private readonly Dictionary<SpecialCoinType, AssetReferenceGameObject> _referenceLookup = new Dictionary<SpecialCoinType, AssetReferenceGameObject>();
+    private readonly Dictionary<SpecialCoinType, AsyncOperationHandle<GameObject>> _prefabHandles = new Dictionary<SpecialCoinType, AsyncOperationHandle<GameObject>>();
+    private readonly Dictionary<SpecialCoinType, List<Vector3>> _pendingSpawnPositions = new Dictionary<SpecialCoinType, List<Vector3>>();
+    private readonly HashSet<SpecialCoinType> _loadingTypes = new HashSet<SpecialCoinType>();
     private readonly HashSet<SpecialCoin> _activeCoins = new HashSet<SpecialCoin>();
+    private readonly List<SpecialCoinType> _availableTypes = new List<SpecialCoinType>();
+    private bool _isPreparingPrefabs;
+    private bool _prefabsPrepared;
 
     public bool IsEnabled => SettingsManager.Instance == null || SettingsManager.Instance.CoinEnabled;
-    #endregion
+    public bool HasAvailablePrefabs => _availableTypes.Count > 0;
 
-    #region 이벤트 함수
     protected override void OnSingletonAwake()
     {
-        if(_specialCoinTable == null)
-        {
-            _specialCoinTable = Array.Empty<SpecialCoinInfo>();
-        }
+        _specialCoinTable ??= Array.Empty<SpecialCoinInfo>();
+        InitializePools();
 
-        InitPools();
-
-        if(SettingsManager.Instance != null)
-        {
+        if (SettingsManager.Instance != null)
             SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
-        }
     }
 
     protected override void OnSingletonDestroy()
     {
         if (SettingsManager.Instance != null)
-        {
             SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
-        }
-    }
-    #endregion
 
-    #region 커스텀 함수(private)
-    private void InitPools()
+        StopAllCoroutines();
+        foreach (AsyncOperationHandle<GameObject> handle in _prefabHandles.Values)
+        {
+            if (handle.IsValid())
+                Addressables.Release(handle);
+        }
+        _prefabHandles.Clear();
+        _loadingTypes.Clear();
+        _pendingSpawnPositions.Clear();
+    }
+
+    private void InitializePools()
     {
         _coinPools.Clear();
-        _prefabLookup.Clear();
+        _referenceLookup.Clear();
         _availableTypes.Clear();
 
         foreach (SpecialCoinType type in Enum.GetValues(typeof(SpecialCoinType)))
-        {
             _coinPools[type] = new Queue<SpecialCoin>();
-        }
 
         for (int i = 0; i < _specialCoinTable.Length; i++)
         {
             SpecialCoinInfo info = _specialCoinTable[i];
-            if (info._coinPrefab == null)
+            if (info._coinPrefabReference == null || !info._coinPrefabReference.RuntimeKeyIsValid())
             {
+                Debug.LogWarning($"Missing special coin Addressable reference: {info._coinType}", this);
                 continue;
             }
 
-            _prefabLookup[info._coinType] = info._coinPrefab;
+            _referenceLookup[info._coinType] = info._coinPrefabReference;
             if (!_availableTypes.Contains(info._coinType))
-            {
                 _availableTypes.Add(info._coinType);
-            }
         }
     }
 
     private void HandleSettingsChanged()
     {
         if (IsEnabled)
-        {
             return;
-        }
 
         foreach (SpecialCoin coin in _activeCoins)
         {
             if (coin != null)
-            {
-                coin.gameObject.SetActive(false);
                 Destroy(coin.gameObject);
-            }
         }
         _activeCoins.Clear();
 
@@ -103,95 +99,223 @@ public class SpecialCoinPoolManager : Singleton<SpecialCoinPoolManager>
             foreach (SpecialCoin coin in pool)
             {
                 if (coin != null)
-                {
                     Destroy(coin.gameObject);
-                }
             }
             pool.Clear();
         }
-    }
-    #endregion
 
-    #region 커스텀 함수(public)
-    /// <summary>
-    /// 확률 체크 후 등록된 프리팹 배열 중 랜덤하게 1개를 풀에서 꺼내 배치
-    /// </summary>
+        _pendingSpawnPositions.Clear();
+        ReleaseLoadedPrefabs();
+        _prefabsPrepared = false;
+    }
+
+    private void ReleaseLoadedPrefabs()
+    {
+        List<SpecialCoinType> releaseTypes = new List<SpecialCoinType>();
+        foreach (KeyValuePair<SpecialCoinType, AsyncOperationHandle<GameObject>> pair in _prefabHandles)
+        {
+            if (_loadingTypes.Contains(pair.Key))
+                continue;
+
+            if (pair.Value.IsValid())
+                Addressables.Release(pair.Value);
+            releaseTypes.Add(pair.Key);
+        }
+
+        for (int i = 0; i < releaseTypes.Count; i++)
+            _prefabHandles.Remove(releaseTypes[i]);
+    }
+
     public void TrySpawnRandomCoin(Vector3 spawnPos, float spawnChance)
     {
-        if (!IsEnabled || _availableTypes.Count == 0)
-        {
+        if (!IsEnabled || _availableTypes.Count == 0 || UnityEngine.Random.value > spawnChance)
             return;
-        }
 
-        if (UnityEngine.Random.value > spawnChance)
-        {
-            return;
-        }
-
-        int randomIndex = UnityEngine.Random.Range(0, _availableTypes.Count);
-        SpecialCoinType selectedType = _availableTypes[randomIndex];
-
+        SpecialCoinType selectedType = _availableTypes[UnityEngine.Random.Range(0, _availableTypes.Count)];
         SpawnCoin(selectedType, spawnPos);
     }
 
-    /// <summary>
-    /// 풀에서 비활성화된 코인을 꺼내거나 없으면 새로 생성
-    /// </summary>
-    public SpecialCoin SpawnCoin(SpecialCoinType type, Vector3 spawnPos)
+    public IEnumerator PreparePrefabsAsync(Action<float> onProgress = null)
     {
-        if (!IsEnabled || !_prefabLookup.TryGetValue(type, out SpecialCoin prefab) || prefab == null)
+        if (!IsEnabled || _availableTypes.Count == 0)
         {
-            return null;
+            onProgress?.Invoke(1f);
+            yield break;
         }
 
+        while (_isPreparingPrefabs)
+            yield return null;
+
+        if (_prefabsPrepared)
+        {
+            onProgress?.Invoke(1f);
+            yield break;
+        }
+
+        _isPreparingPrefabs = true;
+        bool allPrefabsLoaded = true;
+        int total = _availableTypes.Count;
+
+        for (int i = 0; i < total; i++)
+        {
+            SpecialCoinType type = _availableTypes[i];
+            if (TryGetLoadedPrefab(type, out GameObject loadedPrefab) && loadedPrefab.GetComponent<SpecialCoin>() != null)
+            {
+                onProgress?.Invoke((float)(i + 1) / total);
+                continue;
+            }
+
+            _loadingTypes.Add(type);
+            AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(_referenceLookup[type]);
+            _prefabHandles[type] = handle;
+
+            while (!handle.IsDone)
+            {
+                onProgress?.Invoke((i + handle.PercentComplete) / total);
+                yield return null;
+            }
+
+            _loadingTypes.Remove(type);
+            if (!IsEnabled)
+            {
+                if (handle.IsValid())
+                    Addressables.Release(handle);
+                _prefabHandles.Remove(type);
+                _isPreparingPrefabs = false;
+                onProgress?.Invoke(1f);
+                yield break;
+            }
+
+            if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null || handle.Result.GetComponent<SpecialCoin>() == null)
+            {
+                Debug.LogError($"Failed to preload special coin Addressable: {type}", this);
+                if (handle.IsValid())
+                    Addressables.Release(handle);
+                _prefabHandles.Remove(type);
+                allPrefabsLoaded = false;
+            }
+
+            onProgress?.Invoke((float)(i + 1) / total);
+        }
+
+        _prefabsPrepared = allPrefabsLoaded;
+        _isPreparingPrefabs = false;
+        onProgress?.Invoke(1f);
+    }
+
+    public SpecialCoin SpawnCoin(SpecialCoinType type, Vector3 spawnPos)
+    {
+        if (!IsEnabled || !_referenceLookup.ContainsKey(type))
+            return null;
+
+        if (TryGetLoadedPrefab(type, out GameObject prefab))
+            return SpawnLoadedCoin(type, prefab, spawnPos);
+
+        if (!_pendingSpawnPositions.TryGetValue(type, out List<Vector3> positions))
+        {
+            positions = new List<Vector3>();
+            _pendingSpawnPositions[type] = positions;
+        }
+        positions.Add(spawnPos);
+
+        if (_loadingTypes.Add(type))
+            StartCoroutine(LoadPrefabAndSpawn(type));
+
+        return null;
+    }
+
+    private IEnumerator LoadPrefabAndSpawn(SpecialCoinType type)
+    {
+        AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(_referenceLookup[type]);
+        _prefabHandles[type] = handle;
+
+        while (!handle.IsDone)
+            yield return null;
+
+        _loadingTypes.Remove(type);
+
+        if (!IsEnabled)
+        {
+            if (handle.IsValid())
+                Addressables.Release(handle);
+            _prefabHandles.Remove(type);
+            _pendingSpawnPositions.Remove(type);
+            yield break;
+        }
+
+        if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null || handle.Result.GetComponent<SpecialCoin>() == null)
+        {
+            Debug.LogError($"Failed to load special coin Addressable: {type}", this);
+            if (handle.IsValid())
+                Addressables.Release(handle);
+            _prefabHandles.Remove(type);
+            _pendingSpawnPositions.Remove(type);
+            yield break;
+        }
+
+        if (_pendingSpawnPositions.TryGetValue(type, out List<Vector3> positions))
+        {
+            _pendingSpawnPositions.Remove(type);
+            for (int i = 0; i < positions.Count; i++)
+            {
+                if (!IsEnabled)
+                    break;
+                SpawnLoadedCoin(type, handle.Result, positions[i]);
+            }
+        }
+    }
+
+    private bool TryGetLoadedPrefab(SpecialCoinType type, out GameObject prefab)
+    {
+        prefab = null;
+        return _prefabHandles.TryGetValue(type, out AsyncOperationHandle<GameObject> handle) &&
+            handle.IsValid() && handle.Status == AsyncOperationStatus.Succeeded &&
+            (prefab = handle.Result) != null;
+    }
+
+    private SpecialCoin SpawnLoadedCoin(SpecialCoinType type, GameObject prefab, Vector3 spawnPos)
+    {
         Queue<SpecialCoin> pool = _coinPools[type];
         SpecialCoin coin = null;
 
         while (pool.Count > 0 && coin == null)
-        {
             coin = pool.Dequeue();
-        }
+
+        if (coin == null)
+            coin = Instantiate(prefab, transform).GetComponent<SpecialCoin>();
 
         if (coin == null)
         {
-            coin = Instantiate(prefab, transform);
+            Debug.LogError($"Loaded special coin has no SpecialCoin component: {type}", this);
+            return null;
         }
 
         coin.transform.position = spawnPos;
         coin.transform.rotation = prefab.transform.rotation;
         coin.gameObject.SetActive(true);
         coin.Init(spawnPos);
-
         _activeCoins.Add(coin);
         return coin;
     }
 
-    /// <summary>
-    /// 사용이 끝난 코인을 풀로 반환
-    /// </summary>
     public void ReturnCoin(SpecialCoin coin)
     {
         if (coin == null)
-        {
             return;
-        }
 
         _activeCoins.Remove(coin);
+        coin.gameObject.SetActive(false);
 
         if (!IsEnabled)
         {
-            coin.gameObject.SetActive(false);
             Destroy(coin.gameObject);
             return;
         }
 
-        coin.gameObject.SetActive(false);
         coin.transform.SetParent(transform);
-
         if (_coinPools.TryGetValue(coin.CoinType, out Queue<SpecialCoin> pool))
-        {
             pool.Enqueue(coin);
-        }
+        else
+            Destroy(coin.gameObject);
     }
-    #endregion
 }

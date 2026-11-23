@@ -78,18 +78,26 @@ public class GameSceneBootstrap : MonoBehaviour
                 preparationStart = pigBankPreparationShare;
             }
 
+            PlayerEquipment playerEquipment = FindObjectOfType<PlayerEquipment>();
+            EquipmentData initialEquipment = ResolveInitialEquipment(playerEquipment, dataLoader.Catalog, launchMode, slotIndex);
+            bool prepareHammer = playerEquipment != null && initialEquipment != null;
+            bool hasAddressableHammer = prepareHammer && initialEquipment.HammerPrefabReference != null && initialEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
             FragmentObjectPoolManager fragmentPool = FragmentObjectPoolManager.Instance;
             bool prepareFragments = fragmentPool != null && fragmentPool.IsEnabled;
             CoinObjectPoolManager coinPool = CoinObjectPoolManager.Instance;
             bool prepareCoins = coinPool != null && coinPool.IsEnabled;
+            SpecialCoinPoolManager specialCoinPool = SpecialCoinPoolManager.Instance;
+            bool prepareSpecialCoins = specialCoinPool != null && specialCoinPool.IsEnabled && specialCoinPool.HasAvailablePrefabs;
             float fragmentShareWeight = prepareFragments ? 5f : 0f;
             float coinShareWeight = prepareCoins ? 2f : 0f;
-            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight;
+            float hammerShareWeight = hasAddressableHammer ? 2f : 0f;
+            float specialCoinShareWeight = prepareSpecialCoins ? 1f : 0f;
+            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight + hammerShareWeight + specialCoinShareWeight;
 
             if (prepareFragments)
             {
-                float fragmentPreparationEnd = preparationStart +
-                    ((1f - preparationStart) * fragmentShareWeight / optionalPreparationWeight);
+                float fragmentPreparationEnd = preparationStart + ((1f - preparationStart) * fragmentShareWeight / optionalPreparationWeight);
 
                 yield return fragmentPool.PreparePoolsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, fragmentPreparationEnd));
                 preparationStart = fragmentPreparationEnd;
@@ -97,7 +105,30 @@ public class GameSceneBootstrap : MonoBehaviour
 
             if (prepareCoins)
             {
-                yield return coinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
+                float coinPreparationEnd = preparationStart + ((1f - preparationStart) * coinShareWeight / optionalPreparationWeight);
+
+                yield return coinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, coinPreparationEnd));
+                preparationStart = coinPreparationEnd;
+            }
+
+            if (prepareHammer)
+            {
+                float hammerPreparationEnd = preparationStart;
+                if (hasAddressableHammer)
+                {
+                    hammerPreparationEnd += ((1f - preparationStart) * hammerShareWeight / optionalPreparationWeight);
+                }
+
+                yield return playerEquipment.PrepareInitialHammerAsync(initialEquipment, progress => dataLoader.ReportInitialPrefabPreparation(
+                        progress,
+                        preparationStart,
+                        hammerPreparationEnd));
+                preparationStart = hammerPreparationEnd;
+            }
+
+            if (prepareSpecialCoins)
+            {
+                yield return specialCoinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
             }
 
             dataLoader.ReportInitialPrefabPreparation(1f);
@@ -130,6 +161,26 @@ public class GameSceneBootstrap : MonoBehaviour
             // 실행 성공 여부와 관계없이 진입 데이터 정리
             GameLaunchData.Clear();
         }
+    }
+
+    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, int slotIndex)
+    {
+        EquipmentData initialEquipment = playerEquipment != null ? playerEquipment.StartingEquipment : null;
+
+        if (launchMode != GameLaunchData.ELaunchMode.LoadGame && launchMode != GameLaunchData.ELaunchMode.OpenSkillTree)
+        {
+            return initialEquipment;
+        }
+
+        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
+
+        string equipmentId = saveData != null && saveData.runData != null && saveData.runData.equipmentData != null ? saveData.runData.equipmentData.equippedEquipmentId : null;
+
+        EquipmentData savedEquipment = catalog != null && catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
+
+        bool savedHammerIsAddressable = savedEquipment != null && savedEquipment.HammerPrefabReference != null && savedEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
+        return savedHammerIsAddressable ? savedEquipment : initialEquipment;
     }
 
     /// <summary>
