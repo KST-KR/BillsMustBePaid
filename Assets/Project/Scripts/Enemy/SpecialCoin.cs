@@ -154,6 +154,7 @@ public class SpecialCoin : MonoBehaviour
         }
 
         // 특수 효과 발동 및 풀로 반환
+        AudioManager.Instance.PlaySFX(EAudioType.CoinGet);
         ActivateSpecialEffect();
         ReturnToPool();
     }
@@ -187,6 +188,8 @@ public class SpecialCoin : MonoBehaviour
     private void GrantInstantCoin()
     {
         int finalAmount = _instantCoin;
+
+        AudioManager.Instance.PlaySFXDelayed(EAudioType.CoinGet, 0.21f, 1.5f);
 
         // 코인 획득량 2배 버프가 활성화되어 있다면 즉시 지급 코인에도 적용
         if (BuffManager.Instance != null && BuffManager.Instance.IsDoubleCoinBuffActive)

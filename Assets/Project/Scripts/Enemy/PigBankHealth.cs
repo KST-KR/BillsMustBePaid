@@ -78,6 +78,15 @@ public class PigBankHealth : MonoBehaviour, IPlayerAttackTarget
 
         Debug.Log($"{_gameData.PigBankName} 피격: 피해량 {damageAmount}, 크리티컬 여부 {isCritical}, 남은 HP {_currentHP}");
 
+        if (isCritical)
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.PigCriticalHit);
+        }
+        else
+        {
+            AudioManager.Instance.PlaySFX(EAudioType.PigHit);
+        }
+
         if (_currentHP <= 0)
         {
             // 사망 기믹 먼저 실행

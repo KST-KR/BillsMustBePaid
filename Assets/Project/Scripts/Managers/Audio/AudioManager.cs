@@ -359,6 +359,23 @@ public class AudioManager : PersistentSingleton<AudioManager>
         return null;
     }
 
+    public void PlaySFX(EAudioType audioType, float volumeScale)
+    {
+        AudioClip clip = FindAudioClip(audioType);
+
+        if (clip == null)
+        {
+            return;
+        }
+
+        _sfxSource.PlayOneShot(clip, volumeScale);
+    }
+
+    public void PlaySFXDelayed(EAudioType audioType, float delay, float volumeScale = 1.0f)
+    {
+        StartCoroutine(CoPlaySFXDelayed(audioType, delay, volumeScale));
+    }
+
     private AudioClip FindAudioClip(EAudioType audioType)
     {
         AudioData data = FindAudioData(audioType);
@@ -371,6 +388,19 @@ public class AudioManager : PersistentSingleton<AudioManager>
         Debug.LogError($"AudioType 클립을 찾을 수 없음: {audioType}", this);
 
         return null;
+    }
+
+    private System.Collections.IEnumerator CoPlaySFXDelayed(EAudioType audioType, float delay, float volumeScale)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < delay)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        PlaySFX(audioType, volumeScale);
     }
 
     private void ApplySavedVolumes()

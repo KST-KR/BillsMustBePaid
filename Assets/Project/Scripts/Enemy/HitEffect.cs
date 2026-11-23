@@ -37,8 +37,7 @@ public class HitEffect : MonoBehaviour
             _originColors[i] = _materials[i].color;
         }
 
-        // TODO : 내용 확인 함 나중에 정리하기
-        Debug.Log($"[HitEffect] 머티리얼 개수: {_materials.Length}");
+        Debug.Log($"HitEffect : 머티리얼 개수: {_materials.Length}");
     }
 
     private void OnEnable()
@@ -91,6 +90,7 @@ public class HitEffect : MonoBehaviour
 
         // Update 문 없이 while과 Time.deltaTime을 이용해 시간 측정
         float elapsedTime = 0f;
+
         while (elapsedTime < _changeTime)
         {
             elapsedTime += Time.deltaTime;

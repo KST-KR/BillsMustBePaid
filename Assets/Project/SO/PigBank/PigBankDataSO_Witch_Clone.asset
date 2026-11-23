@@ -25,9 +25,9 @@ MonoBehaviour:
     m_EditorAssetChanged: 0
   _crashLevel: 0
   _rewardCoin: 300
-  _jackpotChance: 0.05
-  _shinePigBankChance: 0.01
-  _specialCoinChance: 0.02
+  _jackpotChance: 0.1
+  _shinePigBankChance: 0
+  _specialCoinChance: 0.1
   _spawnProbability: 0
   _hitMechanism: {fileID: 0}
   _dieMechanism: {fileID: 0}

@@ -58,5 +58,11 @@ public enum EAudioType
     // 망치 구매 불가
     UnavailablePurchase,
 
+    // 코인 드랍
+    CoinDrop,
+
+    // 크리티컬 공격음
+    PigCriticalHit,
+
 }
 
