@@ -9666,6 +9666,8 @@ MonoBehaviour:
     _audioClip: {fileID: 8300000, guid: 860c361fae2e1324abbc224e85778f18, type: 3}
   - _audioType: 32
     _audioClip: {fileID: 8300000, guid: 731b3231fce21034e9e1ef6e2a2a88a3, type: 3}
+  - _audioType: 33
+    _audioClip: {fileID: 8300000, guid: 82b6fd23332c97e498e5aac2824a13e4, type: 3}
   _masterVolume: 1
   _bgmVolume: 1
   _sfxVolume: 1

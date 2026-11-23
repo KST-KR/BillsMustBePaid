@@ -49,8 +49,6 @@ public class HitEffect : MonoBehaviour
     #region Ä¿½ºÅÒ ÇÔ¼ö(public)
     public void ChangeColor()
     {
-        AudioManager.Instance.PlaySFX(EAudioType.PigHit);
-
         if (_coroutine != null)
         {
             StopCoroutine(_coroutine);

@@ -61,5 +61,8 @@ public enum EAudioType
     // 코인 드랍
     CoinDrop,
 
+    // 크리티컬 공격음
+    PigCriticalHit,
+
 }
 
