@@ -112,6 +112,15 @@ public class SceneTransitionManager : PersistentSingleton<SceneTransitionManager
         // 새 씬의 UI가 표시될 수 있도록 한 프레임 대기
         yield return null;
 
+        if (sceneName == _gameSceneName)
+        {
+            GameSceneBootstrap gameSceneBootstrap = FindObjectOfType<GameSceneBootstrap>();
+            while (gameSceneBootstrap != null && !gameSceneBootstrap.IsInitializationComplete)
+            {
+                yield return null;
+            }
+        }
+
         // 3. 페이드 인
         yield return StartCoroutine(Fade(1f, 0f));
 
