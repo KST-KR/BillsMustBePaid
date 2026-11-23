@@ -1211,9 +1211,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _coinTable:
-  - _coinPrefab: {fileID: 1317179249874708815, guid: f49d8908e36101e4e93e4a76876e9d97, type: 3}
+  - _coinPrefabReference:
+      m_AssetGUID: f49d8908e36101e4e93e4a76876e9d97
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    _coinPrefab: {fileID: 0}
     _value: 100
-  - _coinPrefab: {fileID: 1429253270662170218, guid: fd8ddabd7042da2438726fde5c4c8eec, type: 3}
+  - _coinPrefabReference:
+      m_AssetGUID: fd8ddabd7042da2438726fde5c4c8eec
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    _coinPrefab: {fileID: 0}
     _value: 10
 --- !u!114 &60649172
 MonoBehaviour:
@@ -1227,11 +1237,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da11ee825c0511149b0fbd248796d905, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _fragmentPrefabA: {fileID: 3987814852309806043, guid: 18939a80c04e9a140aa8a6aba082a93f, type: 3}
-  _fragmentPrefabB: {fileID: 3550816705152422411, guid: d493c24afba2d1a499d069892085a0d3, type: 3}
-  _fragmentPrefabC: {fileID: 4418607277694165234, guid: 32ca3e7fcbc4f714f812955d22fddf3d, type: 3}
-  _fragmentPrefabD: {fileID: 9206516277384608304, guid: 50c79e46c8e269c44b3079af983f2555, type: 3}
-  _fragmentPrefabE: {fileID: 1202351960221713280, guid: 095ed7e3dac6f754799797c3bdfbb7e4, type: 3}
+  _fragmentPrefabAReference:
+    m_AssetGUID: 18939a80c04e9a140aa8a6aba082a93f
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _fragmentPrefabBReference:
+    m_AssetGUID: d493c24afba2d1a499d069892085a0d3
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _fragmentPrefabCReference:
+    m_AssetGUID: 32ca3e7fcbc4f714f812955d22fddf3d
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _fragmentPrefabDReference:
+    m_AssetGUID: 50c79e46c8e269c44b3079af983f2555
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _fragmentPrefabEReference:
+    m_AssetGUID: 095ed7e3dac6f754799797c3bdfbb7e4
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _fragmentPrefabA: {fileID: 0}
+  _fragmentPrefabB: {fileID: 0}
+  _fragmentPrefabC: {fileID: 0}
+  _fragmentPrefabD: {fileID: 0}
+  _fragmentPrefabE: {fileID: 0}
   _fragmentCount: 5
   _minDistance: 0.5
   _maxDistance: 0.7

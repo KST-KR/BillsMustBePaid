@@ -48,7 +48,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 이미 로딩된 경우 중복 로딩 방지
         if (IsLoaded)
         {
-            LoadProgress = 1f;
+            LoadProgress = 0.9f;
             yield break;
         }
 
@@ -63,7 +63,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // Addressables 초기화
         AsyncOperationHandle initHandle = Addressables.InitializeAsync(false);
 
-        // 초기화 진행률 반영 (전체 20%)
+        // 초기화 진행률 반영 (전체 18%)
         while (!initHandle.IsDone)
         {
             LoadProgress = initHandle.PercentComplete * 0.18f;
@@ -83,7 +83,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
         // 카탈로그 로딩
         _catalogHandle = Addressables.LoadAssetAsync<GameDataCatalog>(_catalogAddress);
 
-        // 카탈로그 로딩 진행률 반영 (전체 80%)
+        // 카탈로그 로딩 진행률 반영 (전체 72%)
         while (!_catalogHandle.IsDone)
         {
             LoadProgress = 0.18f + (_catalogHandle.PercentComplete * 0.72f);
@@ -121,7 +121,16 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
 
     public void ReportInitialPrefabPreparation(float progress)
     {
-        LoadProgress = Mathf.Lerp(0.9f, 1f, Mathf.Clamp01(progress));
+        ReportInitialPrefabPreparation(progress, 0f, 1f);
+    }
+
+    public void ReportInitialPrefabPreparation(float progress, float start, float end)
+    {
+        float preparationProgress = Mathf.Lerp(
+            Mathf.Clamp01(start),
+            Mathf.Clamp01(end),
+            Mathf.Clamp01(progress));
+        LoadProgress = Mathf.Lerp(0.9f, 1f, preparationProgress);
     }
     #endregion
 }

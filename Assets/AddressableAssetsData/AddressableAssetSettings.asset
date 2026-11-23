@@ -46,6 +46,8 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 99c7c4c7e628a594f8fd41af16faa860, type: 2}
   - {fileID: 11400000, guid: 2fde3fee81c5c564abd6f28ba2812a25, type: 2}
+  - {fileID: 11400000, guid: 22869d8241dc636479841142c8ce5197, type: 2}
+  - {fileID: 11400000, guid: e0ba6e9b8033a70479437ec60436cccb, type: 2}
   - {fileID: 11400000, guid: 4a3bd4c5d48153c4d87dbccc3aa1ead8, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0

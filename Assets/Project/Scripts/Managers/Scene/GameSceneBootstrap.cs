@@ -70,10 +70,36 @@ public class GameSceneBootstrap : MonoBehaviour
                 yield break;
             }
 
+            float preparationStart = 0f;
             if (launchMode == GameLaunchData.ELaunchMode.NewGame)
             {
-                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, dataLoader.ReportInitialPrefabPreparation);
+                const float pigBankPreparationShare = 0.6f;
+                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, progress => dataLoader.ReportInitialPrefabPreparation(progress, 0f, pigBankPreparationShare));
+                preparationStart = pigBankPreparationShare;
             }
+
+            FragmentObjectPoolManager fragmentPool = FragmentObjectPoolManager.Instance;
+            bool prepareFragments = fragmentPool != null && fragmentPool.IsEnabled;
+            CoinObjectPoolManager coinPool = CoinObjectPoolManager.Instance;
+            bool prepareCoins = coinPool != null && coinPool.IsEnabled;
+            float fragmentShareWeight = prepareFragments ? 5f : 0f;
+            float coinShareWeight = prepareCoins ? 2f : 0f;
+            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight;
+
+            if (prepareFragments)
+            {
+                float fragmentPreparationEnd = preparationStart +
+                    ((1f - preparationStart) * fragmentShareWeight / optionalPreparationWeight);
+
+                yield return fragmentPool.PreparePoolsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, fragmentPreparationEnd));
+                preparationStart = fragmentPreparationEnd;
+            }
+
+            if (prepareCoins)
+            {
+                yield return coinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
+            }
+
             dataLoader.ReportInitialPrefabPreparation(1f);
 
             switch (launchMode)
@@ -119,7 +145,7 @@ public class GameSceneBootstrap : MonoBehaviour
             Debug.LogError("GameDataCatalog가 전달되지 않음.");
             yield break;
         }
-        
+
         // 카탈로그 내부 데이터 검증
         if (!catalog.Validate())
         {
@@ -455,8 +481,7 @@ public class GameSceneBootstrap : MonoBehaviour
             // 파산 사이클 수 복원
             if (RoguelikeManager.Instance != null)
             {
-                RoguelikeManager.Instance.RestoreCycleCount(
-                    saveData.playerData.bankruptcyCycle);
+                RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
             }
 
             // 성장 및 장비 데이터 복원
