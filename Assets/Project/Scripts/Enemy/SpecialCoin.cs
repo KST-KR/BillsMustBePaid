@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 #region enum
@@ -13,6 +12,10 @@ public enum SpecialCoinType
 
 public class SpecialCoin : MonoBehaviour
 {
+    #region 속성
+    public SpecialCoinType CoinType => _coinType;
+    #endregion
+
     #region 인스펙터
     [Header("특수 코인 설정")]
     [SerializeField] private SpecialCoinType _coinType;
@@ -29,6 +32,7 @@ public class SpecialCoin : MonoBehaviour
     [SerializeField] private float _coinGainDuration = 20f;
 
     [Header("드롭 및 회전 설정")]
+    [SerializeField] private float _dropDuration = 0.4f;
     [SerializeField] private float _dropHeightY = 1.5f;
     [SerializeField] private float _minDistance = 1.5f;
     [SerializeField] private float _maxDistance = 3.0f;
@@ -38,13 +42,14 @@ public class SpecialCoin : MonoBehaviour
 
     [Header("흡수 연출 설정")]
     [SerializeField] private float _pickUpTime = 0.25f;
+    [SerializeField] private float _absorbRotateSpeed = 720f;
     [SerializeField] private Vector2 _absorbViewportPos = new Vector2(0.1f, -0.3f);
     [SerializeField] private float _absorbDepthFromCam = 2.0f;
     [SerializeField] private float _absorbArcHeight = 0.35f;
     #endregion
 
     #region 내부 변수
-    private Vector3 _initialScale;
+    private Camera _mainCamera;
     private Vector3 _cachedAbsorbTarget;
     private Coroutine _coinCoroutine;
     #endregion
@@ -52,20 +57,7 @@ public class SpecialCoin : MonoBehaviour
     #region 이벤트 함수
     private void Awake()
     {
-        _initialScale = transform.localScale;
-    }
-
-    private void OnEnable()
-    {
-        transform.localScale = _initialScale;
-
-        if (Camera.main != null)
-        {
-            Vector3 viewportPoint = new Vector3(_absorbViewportPos.x, _absorbViewportPos.y, _absorbDepthFromCam);
-            _cachedAbsorbTarget = Camera.main.ViewportToWorldPoint(viewportPoint);
-        }
-
-        _coinCoroutine = StartCoroutine(SpecialCoinRoutine());
+        _mainCamera = Camera.main;
     }
 
     private void OnDisable()
@@ -78,28 +70,56 @@ public class SpecialCoin : MonoBehaviour
     }
     #endregion
 
-    #region 커스텀 함수(private)
-    private IEnumerator SpecialCoinRoutine()
+    #region 커스텀 함수 (Public)
+    /// <summary>
+    /// 스폰 좌표를 명시적으로 전달받아 드롭-대기-흡수 연출을 시작합니다.
+    /// </summary>
+    public void Init(Vector3 spawnPos)
     {
-        Vector3 startPos = transform.position;
-        Vector2 randomDir = Random.insideUnitCircle.normalized;
+        transform.position = spawnPos;
+
+        if (_mainCamera == null)
+        {
+            _mainCamera = Camera.main;
+        }
+
+        if (_mainCamera != null)
+        {
+            Vector3 viewportPoint = new Vector3(_absorbViewportPos.x, _absorbViewportPos.y, _absorbDepthFromCam);
+            _cachedAbsorbTarget = _mainCamera.ViewportToWorldPoint(viewportPoint);
+        }
+
+        if (_coinCoroutine != null)
+        {
+            StopCoroutine(_coinCoroutine);
+        }
+
+        _coinCoroutine = StartCoroutine(SpecialCoinRoutine(spawnPos));
+    }
+    #endregion
+
+    #region 커스텀 함수(private)
+    private IEnumerator SpecialCoinRoutine(Vector3 startPos)
+    {
+        float randomAngle = Random.Range(0f, Mathf.PI * 2f);
+        Vector2 randomDir = new Vector2(Mathf.Cos(randomAngle), Mathf.Sin(randomAngle));
         float randomDistance = Random.Range(_minDistance, _maxDistance);
+
         Vector3 targetPos = startPos + new Vector3(randomDir.x, 0f, randomDir.y) * randomDistance;
         targetPos.y = _groundY;
 
-        float dropDuration = 0.4f;
+        // 포물선 드롭
         float elapsed = 0f;
-
-        while (elapsed < dropDuration)
+        while (elapsed < _dropDuration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, elapsed / dropDuration);
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / _dropDuration);
 
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
             currentPos.y += Mathf.Sin(t * Mathf.PI) * _dropHeightY;
             transform.position = currentPos;
 
-            transform.Rotate(Vector3.up * _idleRotateSpeed * 2f * Time.deltaTime);
+            transform.Rotate(Vector3.up * (_idleRotateSpeed * 2f * Time.deltaTime), Space.World);
             yield return null;
         }
 
@@ -114,6 +134,7 @@ public class SpecialCoin : MonoBehaviour
             yield return null;
         }
 
+        // 흡수
         float absorbElapsed = 0f;
         Vector3 absorbStartPos = transform.position;
 
@@ -127,8 +148,7 @@ public class SpecialCoin : MonoBehaviour
             currentPos.y += Mathf.Sin(rawT * Mathf.PI) * _absorbArcHeight;
 
             transform.position = currentPos;
-            transform.Rotate(Vector3.up * 720f * Time.deltaTime, Space.World);
-            transform.localScale = Vector3.Lerp(_initialScale, _initialScale * 0.25f, easeT);
+            transform.Rotate(Vector3.up * (_absorbRotateSpeed * Time.deltaTime), Space.World);
 
             yield return null;
         }
@@ -197,12 +217,6 @@ public class SpecialCoin : MonoBehaviour
 
     private void ReturnToPool()
     {
-        if (_coinCoroutine != null)
-        {
-            StopCoroutine(_coinCoroutine);
-            _coinCoroutine = null;
-        }
-
         if (SpecialCoinPoolManager.Instance != null)
         {
             SpecialCoinPoolManager.Instance.ReturnCoin(this);

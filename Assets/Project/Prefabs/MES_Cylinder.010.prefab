@@ -48,10 +48,12 @@ MonoBehaviour:
   _coinType: 0
   _instantCoin: 500
   _spawnVisualCoinsOnInstant: 1
+  _instantCoinDropPos: {x: 0, y: 3, z: 0}
   _jackpotChanceUp: 5
   _jackpotDuration: 30
   _coinGainMultiplier: 2
   _coinGainDuration: 20
+  _dropDuration: 0.4
   _dropHeightY: 1.5
   _minDistance: 1.5
   _maxDistance: 3
@@ -59,6 +61,7 @@ MonoBehaviour:
   _idleRotateSpeed: 180
   _groundY: 2.1
   _pickUpTime: 0.2
+  _absorbRotateSpeed: 720
   _absorbViewportPos: {x: 0.1, y: -0.3}
   _absorbDepthFromCam: 2
   _absorbArcHeight: 0.35

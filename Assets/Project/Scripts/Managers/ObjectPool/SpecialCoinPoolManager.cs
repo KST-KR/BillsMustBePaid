@@ -1,38 +1,113 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+[Serializable]
+public struct SpecialCoinInfo
+{
+    [Tooltip("특수 코인 종류")]
+    public SpecialCoinType _coinType;
+
+    [Tooltip("특수 코인 프리팹")]
+    public SpecialCoin _coinPrefab;
+}
 
 public class SpecialCoinPoolManager : Singleton<SpecialCoinPoolManager>
 {
     #region 인스펙터
-    [Header("특수 코인 프리팹")]
-    [SerializeField] private SpecialCoin[] _specialCoinPrefabs;
+    [Header("특수 코인 데이터 설정")]
+    [SerializeField] private SpecialCoinInfo[] _specialCoinTable;
     #endregion
 
     #region 내부 변수
-    private List<SpecialCoin>[] _coinPools;
+    private readonly Dictionary<SpecialCoinType, Queue<SpecialCoin>> _coinPools = new Dictionary<SpecialCoinType, Queue<SpecialCoin>>();
+    private readonly Dictionary<SpecialCoinType, SpecialCoin> _prefabLookup = new Dictionary<SpecialCoinType, SpecialCoin>();
+    private readonly List<SpecialCoinType> _availableTypes = new List<SpecialCoinType>();
+    private readonly HashSet<SpecialCoin> _activeCoins = new HashSet<SpecialCoin>();
+
+    public bool IsEnabled => SettingsManager.Instance == null || SettingsManager.Instance.CoinEnabled;
     #endregion
 
     #region 이벤트 함수
     protected override void OnSingletonAwake()
     {
+        if(_specialCoinTable == null)
+        {
+            _specialCoinTable = Array.Empty<SpecialCoinInfo>();
+        }
+
         InitPools();
+
+        if(SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged += HandleSettingsChanged;
+        }
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged -= HandleSettingsChanged;
+        }
     }
     #endregion
 
     #region 커스텀 함수(private)
     private void InitPools()
     {
-        if (_specialCoinPrefabs == null)
+        _coinPools.Clear();
+        _prefabLookup.Clear();
+        _availableTypes.Clear();
+
+        foreach (SpecialCoinType type in Enum.GetValues(typeof(SpecialCoinType)))
+        {
+            _coinPools[type] = new Queue<SpecialCoin>();
+        }
+
+        for (int i = 0; i < _specialCoinTable.Length; i++)
+        {
+            SpecialCoinInfo info = _specialCoinTable[i];
+            if (info._coinPrefab == null)
+            {
+                continue;
+            }
+
+            _prefabLookup[info._coinType] = info._coinPrefab;
+            if (!_availableTypes.Contains(info._coinType))
+            {
+                _availableTypes.Add(info._coinType);
+            }
+        }
+    }
+
+    private void HandleSettingsChanged()
+    {
+        if (IsEnabled)
         {
             return;
         }
 
-        _coinPools = new List<SpecialCoin>[_specialCoinPrefabs.Length];
-
-        for (int i = 0; i < _specialCoinPrefabs.Length; i++)
+        foreach (SpecialCoin coin in _activeCoins)
         {
-            _coinPools[i] = new List<SpecialCoin>();
+            if (coin != null)
+            {
+                coin.gameObject.SetActive(false);
+                Destroy(coin.gameObject);
+            }
+        }
+        _activeCoins.Clear();
+
+        foreach (Queue<SpecialCoin> pool in _coinPools.Values)
+        {
+            foreach (SpecialCoin coin in pool)
+            {
+                if (coin != null)
+                {
+                    Destroy(coin.gameObject);
+                }
+            }
+            pool.Clear();
         }
     }
     #endregion
@@ -43,54 +118,52 @@ public class SpecialCoinPoolManager : Singleton<SpecialCoinPoolManager>
     /// </summary>
     public void TrySpawnRandomCoin(Vector3 spawnPos, float spawnChance)
     {
-        if (_specialCoinPrefabs == null || _specialCoinPrefabs.Length == 0)
+        if (!IsEnabled || _availableTypes.Count == 0)
         {
             return;
         }
 
-        if (Random.value > spawnChance)
+        if (UnityEngine.Random.value > spawnChance)
         {
             return;
         }
 
-        int randomIndex = Random.Range(0, _specialCoinPrefabs.Length);
-        SpecialCoin coin = GetCoin(randomIndex);
+        int randomIndex = UnityEngine.Random.Range(0, _availableTypes.Count);
+        SpecialCoinType selectedType = _availableTypes[randomIndex];
 
-        if (coin != null)
-        {
-            coin.transform.position = spawnPos;
-            coin.transform.rotation = _specialCoinPrefabs[randomIndex].transform.rotation;
-            coin.gameObject.SetActive(true);
-        }
+        SpawnCoin(selectedType, spawnPos);
     }
 
     /// <summary>
     /// 풀에서 비활성화된 코인을 꺼내거나 없으면 새로 생성
     /// </summary>
-    public SpecialCoin GetCoin(int index)
+    public SpecialCoin SpawnCoin(SpecialCoinType type, Vector3 spawnPos)
     {
-        if (index < 0 || index >= _coinPools.Length)
+        if (!IsEnabled || !_prefabLookup.TryGetValue(type, out SpecialCoin prefab) || prefab == null)
         {
             return null;
         }
 
-        foreach (SpecialCoin coin in _coinPools[index])
+        Queue<SpecialCoin> pool = _coinPools[type];
+        SpecialCoin coin = null;
+
+        while (pool.Count > 0 && coin == null)
         {
-            if (!coin.gameObject.activeInHierarchy)
-            {
-                return coin;
-            }
+            coin = pool.Dequeue();
         }
 
-        SpecialCoin prefab = _specialCoinPrefabs[index];
-        if (prefab == null)
+        if (coin == null)
         {
-            return null;
+            coin = Instantiate(prefab, transform);
         }
 
-        SpecialCoin newCoin = Instantiate(prefab, transform);
-        _coinPools[index].Add(newCoin);
-        return newCoin;
+        coin.transform.position = spawnPos;
+        coin.transform.rotation = prefab.transform.rotation;
+        coin.gameObject.SetActive(true);
+        coin.Init(spawnPos);
+
+        _activeCoins.Add(coin);
+        return coin;
     }
 
     /// <summary>
@@ -98,9 +171,26 @@ public class SpecialCoinPoolManager : Singleton<SpecialCoinPoolManager>
     /// </summary>
     public void ReturnCoin(SpecialCoin coin)
     {
-        if (coin != null)
+        if (coin == null)
+        {
+            return;
+        }
+
+        _activeCoins.Remove(coin);
+
+        if (!IsEnabled)
         {
             coin.gameObject.SetActive(false);
+            Destroy(coin.gameObject);
+            return;
+        }
+
+        coin.gameObject.SetActive(false);
+        coin.transform.SetParent(transform);
+
+        if (_coinPools.TryGetValue(coin.CoinType, out Queue<SpecialCoin> pool))
+        {
+            pool.Enqueue(coin);
         }
     }
     #endregion

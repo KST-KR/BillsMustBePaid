@@ -1191,10 +1191,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04b533182ac833b43912670128e1a131, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _specialCoinPrefabs:
-  - {fileID: 3103938258135072058, guid: 1f11b4425b4bcd543a7806dd9b4fb82e, type: 3}
-  - {fileID: 7634238508408207280, guid: 16ff4627b47f0d54b9519f7f74e360ed, type: 3}
-  - {fileID: 2889984857899841234, guid: 639be4f4fa01c74459ca24c1f8f42566, type: 3}
+  _specialCoinTable:
+  - _coinType: 0
+    _coinPrefab: {fileID: 3103938258135072058, guid: 1f11b4425b4bcd543a7806dd9b4fb82e, type: 3}
+  - _coinType: 1
+    _coinPrefab: {fileID: 7634238508408207280, guid: 16ff4627b47f0d54b9519f7f74e360ed, type: 3}
+  - _coinType: 2
+    _coinPrefab: {fileID: 2889984857899841234, guid: 639be4f4fa01c74459ca24c1f8f42566, type: 3}
 --- !u!114 &60649171
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17887,7 +17890,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1905, y: -134.5}
+  m_AnchoredPosition: {x: 1905, y: -219.40002}
   m_SizeDelta: {x: 220, y: 35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &847729518
@@ -22341,7 +22344,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1905, y: -67}
+  m_AnchoredPosition: {x: 1905, y: -151.9}
   m_SizeDelta: {x: 220, y: 35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1026284847
