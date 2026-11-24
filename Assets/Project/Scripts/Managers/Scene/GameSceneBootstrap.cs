@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -7,17 +8,43 @@ using UnityEngine;
 /// </summary>
 public class GameSceneBootstrap : MonoBehaviour
 {
-    #region 내부 변수
-    private bool _isManagersInitialized;
+    #region 상수
+    private const float PigBankPreparationShare = 0.6f;
+    private const float FragmentWeight = 5f;
+    private const float CoinWeight = 2f;
+    private const float HammerWeight = 2f;
+    private const float SpecialCoinWeight = 1f;
+    private const float GameBgmWeight = 2f;
+    #endregion
+
+    #region 내부 클래스
+    private sealed class InitialPreparationStep
+    {
+        public readonly float Weight;
+        public readonly Func<Action<float>, IEnumerator> Prepare;
+
+        public InitialPreparationStep(float weight, Func<Action<float>, IEnumerator> prepare)
+        {
+            Weight = weight;
+            Prepare = prepare;
+        }
+    }
+    #endregion
+
+    #region 프로퍼티
     public bool IsInitializationComplete { get; private set; }
+    public bool IsInitializationSucceeded { get; private set; }
     #endregion
 
     #region 이벤트
     public event Action OnInitializationFinished;
     #endregion
 
+    #region 이벤트 함수
     private IEnumerator Start()
     {
+        IsInitializationSucceeded = false;
+
         // 다른 컴포넌트의 Start와 이벤트 구독이 끝날 때까지 대기
         yield return null;
 
@@ -25,6 +52,7 @@ public class GameSceneBootstrap : MonoBehaviour
         {
             // Addressables 로딩
             GameDataLoader dataLoader = GameDataLoader.Instance;
+            GameDataCatalog catalog = null;
 
             if (dataLoader == null)
             {
@@ -33,10 +61,10 @@ public class GameSceneBootstrap : MonoBehaviour
             }
 
             // 게임 데이터 카탈로그 로딩
-            yield return dataLoader.LoadCatalog();
+            yield return dataLoader.LoadCatalog(loadedCatalog => catalog = loadedCatalog);
 
             // 카탈로그 로딩 결과 확인
-            if (!dataLoader.IsLoaded)
+            if (catalog == null)
             {
                 Debug.LogError("게임 데이터 카탈로그 로딩 실패");
                 yield break;
@@ -71,83 +99,95 @@ public class GameSceneBootstrap : MonoBehaviour
             }
 
             // Addressables 데이터 기반 Manager 초기화
-            yield return InitializeManagers(dataLoader.Catalog);
-            if (!_isManagersInitialized)
+            if (!InitializeManagers(catalog))
             {
                 Debug.LogError("게임 데이터 초기화 실패");
                 yield break;
             }
 
+            // 2. 저장 데이터 읽기
+            SaveSlotData saveData = null;
+            if (launchMode == GameLaunchData.ELaunchMode.LoadGame || launchMode == GameLaunchData.ELaunchMode.OpenSkillTree)
+            {
+                saveData = SaveManager.Instance.LoadGame(slotIndex);
+            }
+
             float preparationStart = 0f;
             if (launchMode == GameLaunchData.ELaunchMode.NewGame)
             {
-                const float pigBankPreparationShare = 0.6f;
-                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, progress => dataLoader.ReportInitialPrefabPreparation(progress, 0f, pigBankPreparationShare));
-                preparationStart = pigBankPreparationShare;
+                yield return SpawnPigBankManager.Instance.PrepareStagePoolsAsync(1, progress => dataLoader.ReportInitialPrefabPreparation(progress, 0f, PigBankPreparationShare));
+                preparationStart = PigBankPreparationShare;
             }
-
-            PlayerEquipment playerEquipment = FindObjectOfType<PlayerEquipment>();
-            EquipmentData initialEquipment = ResolveInitialEquipment(playerEquipment, dataLoader.Catalog, launchMode, slotIndex);
-            bool prepareHammer = playerEquipment != null && initialEquipment != null;
-            bool hasAddressableHammer = prepareHammer && initialEquipment.HammerPrefabReference != null && initialEquipment.HammerPrefabReference.RuntimeKeyIsValid();
 
             FragmentObjectPoolManager fragmentPool = FragmentObjectPoolManager.Instance;
             bool prepareFragments = fragmentPool != null && fragmentPool.IsEnabled;
             CoinObjectPoolManager coinPool = CoinObjectPoolManager.Instance;
             bool prepareCoins = coinPool != null && coinPool.IsEnabled;
+
+            PlayerEquipment playerEquipment = FindObjectOfType<PlayerEquipment>();
+            EquipmentData initialEquipment = ResolveInitialEquipment(playerEquipment, catalog, launchMode, saveData);
+            bool prepareHammer = playerEquipment != null && initialEquipment != null;
+            bool hasAddressableHammer = prepareHammer && initialEquipment.HammerPrefabReference != null && initialEquipment.HammerPrefabReference.RuntimeKeyIsValid();
+
             SpecialCoinPoolManager specialCoinPool = SpecialCoinPoolManager.Instance;
             bool prepareSpecialCoins = specialCoinPool != null && specialCoinPool.IsEnabled && specialCoinPool.HasAvailablePrefabs;
             AudioManager audioManager = AudioManager.Instance;
             bool prepareGameBgm = audioManager != null;
-            float fragmentShareWeight = prepareFragments ? 5f : 0f;
-            float coinShareWeight = prepareCoins ? 2f : 0f;
-            float hammerShareWeight = hasAddressableHammer ? 2f : 0f;
-            float specialCoinShareWeight = prepareSpecialCoins ? 1f : 0f;
-            float gameBgmShareWeight = prepareGameBgm ? 2f : 0f;
-            float optionalPreparationWeight = fragmentShareWeight + coinShareWeight + hammerShareWeight + specialCoinShareWeight + gameBgmShareWeight;
 
+            List<InitialPreparationStep> preparationSteps = new List<InitialPreparationStep>();
             if (prepareFragments)
             {
-                float fragmentPreparationEnd = preparationStart + ((1f - preparationStart) * fragmentShareWeight / optionalPreparationWeight);
-
-                yield return fragmentPool.PreparePoolsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, fragmentPreparationEnd));
-                preparationStart = fragmentPreparationEnd;
+                FragmentObjectPoolManager currentFragmentPool = fragmentPool;
+                preparationSteps.Add(new InitialPreparationStep(FragmentWeight, progress => currentFragmentPool.PreparePoolsAsync(progress)));
             }
 
             if (prepareCoins)
             {
-                float coinPreparationEnd = preparationStart + ((1f - preparationStart) * coinShareWeight / optionalPreparationWeight);
-
-                yield return coinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, coinPreparationEnd));
-                preparationStart = coinPreparationEnd;
+                CoinObjectPoolManager currentCoinPool = coinPool;
+                preparationSteps.Add(new InitialPreparationStep(CoinWeight, progress => currentCoinPool.PreparePrefabsAsync(progress)));
             }
 
             if (prepareHammer)
             {
-                float hammerPreparationEnd = preparationStart;
-                if (hasAddressableHammer)
-                {
-                    hammerPreparationEnd += ((1f - preparationStart) * hammerShareWeight / optionalPreparationWeight);
-                }
-
-                yield return playerEquipment.PrepareInitialHammerAsync(initialEquipment, progress => dataLoader.ReportInitialPrefabPreparation(
-                    progress,
-                    preparationStart,
-                    hammerPreparationEnd));
-                preparationStart = hammerPreparationEnd;
+                PlayerEquipment currentPlayerEquipment = playerEquipment;
+                EquipmentData currentInitialEquipment = initialEquipment;
+                preparationSteps.Add(new InitialPreparationStep(hasAddressableHammer ? HammerWeight : 0f, progress => currentPlayerEquipment.PrepareInitialHammerAsync(currentInitialEquipment, progress)));
             }
 
             if (prepareSpecialCoins)
             {
-                float specialCoinPreparationEnd = preparationStart + ((1f - preparationStart) * specialCoinShareWeight / optionalPreparationWeight);
-
-                yield return specialCoinPool.PreparePrefabsAsync(progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, specialCoinPreparationEnd));
-                preparationStart = specialCoinPreparationEnd;
+                SpecialCoinPoolManager currentSpecialCoinPool = specialCoinPool;
+                preparationSteps.Add(new InitialPreparationStep(SpecialCoinWeight, progress => currentSpecialCoinPool.PreparePrefabsAsync(progress)));
             }
 
             if (prepareGameBgm)
             {
-                yield return audioManager.PrepareBGMAsync(EAudioType.GameBGM, progress => dataLoader.ReportInitialPrefabPreparation(progress, preparationStart, 1f));
+                AudioManager currentAudioManager = audioManager;
+                preparationSteps.Add(new InitialPreparationStep(GameBgmWeight, progress => currentAudioManager.PrepareBGMAsync(EAudioType.GameBGM, progress)));
+            }
+
+            float remainingWeight = 0f;
+            for (int i = 0; i < preparationSteps.Count; i++)
+            {
+                remainingWeight += preparationSteps[i].Weight;
+            }
+
+            for (int i = 0; i < preparationSteps.Count; i++)
+            {
+                InitialPreparationStep currentStep = preparationSteps[i];
+                float stepStart = preparationStart;
+                float stepEnd = stepStart;
+                if (currentStep.Weight > 0f && remainingWeight > 0f)
+                {
+                    stepEnd = stepStart + (1f - stepStart) * currentStep.Weight / remainingWeight;
+                }
+
+                float progressStart = stepStart;
+                float progressEnd = stepEnd;
+                Action<float> onProgress = progress => dataLoader.ReportInitialPrefabPreparation(progress, progressStart, progressEnd);
+                yield return currentStep.Prepare(onProgress);
+                preparationStart = stepEnd;
+                remainingWeight -= currentStep.Weight;
             }
 
             dataLoader.ReportInitialPrefabPreparation(1f);
@@ -156,19 +196,19 @@ public class GameSceneBootstrap : MonoBehaviour
             switch (launchMode)
             {
                 case GameLaunchData.ELaunchMode.NewGame:
-                    StartNewGame();
+                    IsInitializationSucceeded = StartNewGame();
                     break;
 
                 case GameLaunchData.ELaunchMode.LoadGame:
-                    LoadSavedGame(slotIndex);
+                    IsInitializationSucceeded = LoadSavedGame(slotIndex, saveData);
                     break;
 
                 case GameLaunchData.ELaunchMode.OpenSkillTree:
-                    LoadSavedGameForSkillTree(slotIndex);
+                    IsInitializationSucceeded = LoadSavedGameForSkillTree(slotIndex, saveData);
                     break;
 
                 case GameLaunchData.ELaunchMode.StartNextCycle:
-                    StartNextCycle(slotIndex);
+                    IsInitializationSucceeded = StartNextCycle(slotIndex);
                     break;
 
                 default:
@@ -184,26 +224,21 @@ public class GameSceneBootstrap : MonoBehaviour
             OnInitializationFinished?.Invoke();
         }
     }
+    #endregion
 
+    #region 커스텀
     /// <summary>
     /// GameDataCatalog의 정적 데이터를 각 Manager에 전달
     /// </summary>
     /// <param name="catalog"></param>
     /// <returns></returns>
-    private IEnumerator InitializeManagers(GameDataCatalog catalog)
+    private bool InitializeManagers(GameDataCatalog catalog)
     {
-        _isManagersInitialized = false;
-        if (catalog == null)
-        {
-            Debug.LogError("GameDataCatalog가 전달되지 않음.");
-            yield break;
-        }
-
         // 카탈로그 내부 데이터 검증
         if (!catalog.Validate())
         {
             Debug.LogError("GameDataCatalog 데이터 검증 실패");
-            yield break;
+            return false;
         }
 
         // 필요한 Manager 확인
@@ -218,7 +253,7 @@ public class GameSceneBootstrap : MonoBehaviour
             SpawnPigBankManager.Instance == null)
         {
             Debug.LogError("게임 데이터 초기화에 필요한 Manager가 없습니다.");
-            yield break;
+            return false;
         }
 
         // 성장 데이터
@@ -245,7 +280,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!StageRewardManager.Instance.IsInitialized)
         {
             Debug.LogError("StageRewardManager 초기화 실패.");
-            yield break;
+            return false;
         }
 
         // 저금통 데이터베이스 및 오브젝트 풀
@@ -254,7 +289,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!PigBankObjectPoolManager.Instance.IsInitialized)
         {
             Debug.LogError("PigBankObjectPoolManager 초기화 실패.");
-            yield break;
+            return false;
         }
 
         // 저금통 스폰 데이터
@@ -263,15 +298,15 @@ public class GameSceneBootstrap : MonoBehaviour
         if (!SpawnPigBankManager.Instance.IsInitialized)
         {
             Debug.LogError("SpawnPigBankManager 초기화 실패.");
-            yield break;
+            return false;
         }
 
         Debug.Log("모든 Manager 데이터 초기화 완료");
 
-        _isManagersInitialized = true;
+        return true;
     }
 
-    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, int slotIndex)
+    private EquipmentData ResolveInitialEquipment(PlayerEquipment playerEquipment, GameDataCatalog catalog, GameLaunchData.ELaunchMode launchMode, SaveSlotData saveData)
     {
         EquipmentData initialEquipment = playerEquipment != null ? playerEquipment.StartingEquipment : null;
 
@@ -280,11 +315,9 @@ public class GameSceneBootstrap : MonoBehaviour
             return initialEquipment;
         }
 
-        SaveSlotData saveData = SaveManager.Instance.LoadGame(slotIndex);
-
         string equipmentId = saveData != null && saveData.runData != null && saveData.runData.equipmentData != null ? saveData.runData.equipmentData.equippedEquipmentId : null;
 
-        EquipmentData savedEquipment = catalog != null && catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
+        EquipmentData savedEquipment = catalog.EquipmentDatabase != null ? catalog.EquipmentDatabase.FindEquipmentById(equipmentId) : null;
 
         bool savedHammerIsAddressable = savedEquipment != null && savedEquipment.HammerPrefabReference != null && savedEquipment.HammerPrefabReference.RuntimeKeyIsValid();
 
@@ -294,18 +327,19 @@ public class GameSceneBootstrap : MonoBehaviour
     /// <summary>
     /// 새로운 런을 시작합니다.
     /// </summary>
-    private void StartNewGame()
+    private bool StartNewGame()
     {
         GameManager.Instance.StartRun();
 
         // StageManager가 OnRunStarted를 구독하고 있으므로
         // StartRun에서 첫 번째 스테이지가 자동으로 시작됨.
+        return true;
     }
 
     /// <summary>
     /// [SCENE-02] 상점에서 돌아온 다음 사이클의 영구 데이터 복원 후 새 런 시작
     /// </summary>
-    private void StartNextCycle(int slotIndex)
+    private bool StartNextCycle(int slotIndex)
     {
         SaveManager saveManager = SaveManager.Instance;
         CurrencyManager currencyManager = CurrencyManager.Instance;
@@ -313,10 +347,10 @@ public class GameSceneBootstrap : MonoBehaviour
         GameSaveController saveController = GameSaveController.Instance;
 
         // 필수 매니저 확인
-        if (saveManager == null || currencyManager == null || gameManager == null || saveController == null)
+        if (currencyManager == null || saveController == null)
         {
             Debug.LogError("다음 사이클 시작에 필요한 매니저가 없음.");
-            return;
+            return false;
         }
 
         // 저장 데이터 로드 및 검증
@@ -325,7 +359,7 @@ public class GameSceneBootstrap : MonoBehaviour
         if (saveData == null || saveData.playerData == null)
         {
             Debug.LogError("다음 사이클 저장 데이터 로드 실패.");
-            return;
+            return false;
         }
 
         // 복원 작업 시작
@@ -334,10 +368,10 @@ public class GameSceneBootstrap : MonoBehaviour
         try
         {
             // 레거시 포인트 복원
-            if (!currencyManager.RestoreBalances(currencyManager.Gold, saveData.playerData.legacyPoints))
+            if (!currencyManager.RestoreLegacyPoints(saveData.playerData.legacyPoints))
             {
                 Debug.LogError("레거시 포인트 복원 실패.");
-                return;
+                return false;
             }
 
             // 파산 사이클 수 복원
@@ -347,28 +381,16 @@ public class GameSceneBootstrap : MonoBehaviour
             }
 
             // 영구 성장 데이터 복원
-            if (LegacyShopManager.Instance != null)
-            {
-                LegacyShopManager.Instance.ImportSaveData(saveData.playerData.permanentGrowth);
-            }
+            LegacyShopManager.Instance.ImportSaveData(saveData.playerData.permanentGrowth);
 
             // 이전 런 데이터 초기화
             currencyManager.ResetRunGold();
 
-            if (GrowthManager.Instance != null)
-            {
-                GrowthManager.Instance.ResetRunGrowth();
-            }
+            GrowthManager.Instance.ResetRunGrowth();
 
-            if (PerkManager.Instance != null)
-            {
-                PerkManager.Instance.ResetRunPerks();
-            }
+            PerkManager.Instance.ResetRunPerks();
 
-            if (BillManager.Instance != null)
-            {
-                BillManager.Instance.ResetRunBills();
-            }
+            BillManager.Instance.ResetRunBills();
         }
         finally
         {
@@ -381,85 +403,30 @@ public class GameSceneBootstrap : MonoBehaviour
         gameManager.StartRun();
 
         Debug.Log($"다음 사이클 런 시작: {saveData.playerData.bankruptcyCycle}");
+        return true;
     }
 
     /// <summary>
-    /// 저장 데이터를 검증한 뒤 게임 상태를 순서대로 복원합니다.
+    /// 저장 데이터를 검증한 뒤 게임 상태를 순서대로 복원
     /// </summary>
-
-    private void LoadSavedGame(int slotIndex)
+    private bool LoadSavedGame(int slotIndex, SaveSlotData saveData)
     {
         SaveManager saveManager = SaveManager.Instance;
         CurrencyManager currencyManager = CurrencyManager.Instance;
-        GrowthManager growthManager = GrowthManager.Instance;
         GameManager gameManager = GameManager.Instance;
         StageManager stageManager = StageManager.Instance;
         GameSaveController saveController = GameSaveController.Instance;
         UIManager uiManager = UIManager.Instance;
 
-        // 1. 필요한 매니저 검증
-        if (saveManager == null || currencyManager == null || growthManager == null || gameManager == null || stageManager == null || saveController == null || uiManager == null)
+        // 필요한 매니저 검증
+        if (uiManager == null)
         {
             Debug.LogError("게임 데이터 복원에 필요한 매니저가 없음.");
-            return;
+            return false;
         }
 
-        // 2. 저장 데이터 읽기
-        SaveSlotData saveData = saveManager.LoadGame(slotIndex);
-
-        // 3. 저장 데이터 검증
-        if (saveData == null || saveData.runData == null || saveData.playerData == null)
+        if (!RestoreSavedGameData(saveData, slotIndex, "이어하기", "게임 데이터 복원에 필요한 매니저가 없음.", saveManager, currencyManager, gameManager, stageManager, saveController, () =>
         {
-            Debug.LogError($"저장 슬롯 {slotIndex}의 데이터가 올바르지 않음.");
-            return;
-        }
-
-        if (!saveData.runData.isRunActive || saveData.runData.currentStage <= 0)
-        {
-            Debug.LogError("이어하기에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
-            return;
-        }
-
-        bool isRestoreSucceeded = false;
-
-        // 4. 모든 검증이 끝난 뒤 복원 시작
-        saveController.SetRestoringSaveData(true);
-
-        try
-        {
-            // 재화 복원
-            if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
-            {
-                Debug.LogError("재화 데이터 복원에 실패.");
-                return;
-            }
-
-            // 파산 사이클 수 복원
-            if (RoguelikeManager.Instance != null)
-            {
-                RoguelikeManager.Instance.RestoreCycleCount(saveData.playerData.bankruptcyCycle);
-            }
-
-            // 성장 및 장비 데이터 복원
-            saveManager.NotifyGameLoaded(saveData);
-
-            // 저금통 해금 및 파괴 레벨 데이터 복원
-            if (saveData.runData.piggyBankData != null)
-            {
-                if (PigBankUnlock.Instance != null)
-                {
-                    PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
-                }
-
-                if (StageRewardManager.Instance != null)
-                {
-                    StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
-                }
-            }
-
-            // 런 활성 상태 복원
-            gameManager.RestoreRunState();
-
             // 저장 당시 스테이지 상태에 따라 복원
             if (saveData.runData.isStageInProgress)
             {
@@ -475,69 +442,81 @@ public class GameSceneBootstrap : MonoBehaviour
 
                 Debug.Log($"스테이지 클리어 데이터 복원: {saveData.runData.currentStage}");
             }
-
-            if (saveData.runData.hasBillSaveData && BillManager.Instance != null)
-            {
-                BillManager.Instance.ImportSaveData(saveData.runData.billData);
-            }
-            isRestoreSucceeded = true;
-        }
-        finally
+        }, null))
         {
-            // 복원 성공 여부와 관계없이 플래그 해제
-            saveController.SetRestoringSaveData(false);
+            return false;
         }
 
-        // 복원이 성공한 경우에만 UI 변경
-        if (isRestoreSucceeded && !saveData.runData.isStageInProgress)
+        if (!saveData.runData.isStageInProgress)
         {
             uiManager.ShowSkillTreeFromMainMenu();
         }
 
-        Debug.Log($"이어하기 데이터 복원 완료: " +
-            $"스테이지 {saveData.runData.currentStage}, " +
-            $"골드 {currencyManager.Gold}, " +
-            $"레거시 포인트 {currencyManager.LegacyPoints}");
+        Debug.Log($"이어하기 데이터 복원 완료: " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
+        return true;
     }
 
     /// <summary>
     /// 저장 데이터를 복원한 뒤 스테이지를 시작하지 않고 스킬트리 화면 표시
     /// </summary>
-    private void LoadSavedGameForSkillTree(int slotIndex)
+    private bool LoadSavedGameForSkillTree(int slotIndex, SaveSlotData saveData)
     {
         SaveManager saveManager = SaveManager.Instance;
         CurrencyManager currencyManager = CurrencyManager.Instance;
-        GrowthManager growthManager = GrowthManager.Instance;
         UIManager uiManager = UIManager.Instance;
         GameManager gameManager = GameManager.Instance;
         StageManager stageManager = StageManager.Instance;
         GameSaveController saveController = GameSaveController.Instance;
 
-        // 1. 필요한 매니저 검증
-        if (saveManager == null || currencyManager == null || growthManager == null || uiManager == null || gameManager == null || stageManager == null || saveController == null)
+        // 필요한 매니저 검증
+        if (uiManager == null)
         {
             Debug.LogError("스킬트리 진입에 필요한 매니저가 없음.");
-            return;
+            return false;
         }
 
-        // 2. 저장 데이터 읽기
-        SaveSlotData saveData = saveManager.LoadGame(slotIndex);
+        if (!RestoreSavedGameData(saveData, slotIndex, "스킬트리 진입", "스킬트리 진입에 필요한 매니저가 없음.", saveManager, currencyManager, gameManager, stageManager, saveController, () => stageManager.RestoreStageProgress(saveData.runData.currentStage), () =>
+        {
+            // 스킬트리 전용 모드 설정
+            saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);
 
-        // 3. 저장 데이터 검증
+            // 스킬트리 화면 진입을 위한 게임 상태 설정
+            gameManager.ChangeGameState(EGameState.StageClear);
+        }))
+        {
+            return false;
+        }
+
+        // 복원이 끝난 뒤 스킬트리 화면 표시
+        uiManager.ShowSkillTreeFromMainMenu();
+
+        Debug.Log($"스킬트리 진입 완료: 슬롯 {slotIndex}, " + $"스테이지 {saveData.runData.currentStage}, " + $"골드 {currencyManager.Gold}, " + $"레거시 포인트 {currencyManager.LegacyPoints}");
+        return true;
+    }
+
+    private bool RestoreSavedGameData(SaveSlotData saveData, int slotIndex, string launchModeName, string managerErrorMessage, SaveManager saveManager, CurrencyManager currencyManager, GameManager gameManager, StageManager stageManager, GameSaveController saveController, Action restoreStageState, Action restoreAfterBillState)
+    {
+        // 필요한 매니저 검증
+        if (saveManager == null || currencyManager == null || gameManager == null || stageManager == null || saveController == null)
+        {
+            Debug.LogError(managerErrorMessage);
+            return false;
+        }
+
+        // 저장 데이터 검증
         if (saveData == null || saveData.runData == null || saveData.playerData == null)
         {
             Debug.LogError($"저장 슬롯 {slotIndex}의 데이터가 올바르지 않음.");
-            return;
+            return false;
         }
 
-        if (!saveData.runData.isRunActive ||
-            saveData.runData.currentStage <= 0)
+        if (!saveData.runData.isRunActive || saveData.runData.currentStage <= 0)
         {
-            Debug.LogError("스킬트리 진입에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
-            return;
+            Debug.LogError($"{launchModeName}에 필요한 런 또는 스테이지 정보가 올바르지 않음.");
+            return false;
         }
 
-        // 4. 모든 검증이 끝난 뒤 복원 시작
+        // 모든 검증이 끝난 뒤 복원 시작
         saveController.SetRestoringSaveData(true);
 
         try
@@ -546,7 +525,7 @@ public class GameSceneBootstrap : MonoBehaviour
             if (!currencyManager.RestoreBalances(saveData.runData.currentGold, saveData.playerData.legacyPoints))
             {
                 Debug.LogError("재화 데이터 복원에 실패.");
-                return;
+                return false;
             }
 
             // 파산 사이클 수 복원
@@ -561,47 +540,28 @@ public class GameSceneBootstrap : MonoBehaviour
             // 저금통 해금 및 파괴 레벨 데이터 복원
             if (saveData.runData.piggyBankData != null)
             {
-                if (PigBankUnlock.Instance != null)
-                {
-                    PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
-                }
-
-                if (StageRewardManager.Instance != null)
-                {
-                    StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
-                }
+                PigBankUnlock.Instance.ImportSaveData(saveData.runData.piggyBankData);
+                StageRewardManager.Instance.ImportSaveData(saveData.runData.piggyBankData);
             }
 
             // 런 활성 상태 복원
             gameManager.RestoreRunState();
+            restoreStageState?.Invoke();
 
-            // 스테이지 번호와 진행 여부 복원
-            stageManager.RestoreStageProgress(saveData.runData.currentStage);
-
-            if (saveData.runData.hasBillSaveData && BillManager.Instance != null)
+            if (saveData.runData.hasBillSaveData)
             {
                 BillManager.Instance.ImportSaveData(saveData.runData.billData);
             }
 
-            // 스킬트리 전용 모드 설정
-            saveController.SetSkillTreeOnlyMode(saveData.runData.isStageInProgress);
-
-            // 스킬트리 화면 진입을 위한 게임 상태 설정
-            gameManager.ChangeGameState(EGameState.StageClear);
+            restoreAfterBillState?.Invoke();
         }
         finally
         {
-            // 복원 성공 여부와 관계없이 플래그 해제
             saveController.SetRestoringSaveData(false);
         }
 
-        // 5. 복원이 끝난 뒤 스킬트리 화면 표시
-        uiManager.ShowSkillTreeFromMainMenu();
-
-        Debug.Log($"스킬트리 진입 완료: 슬롯 {slotIndex}, " +
-            $"스테이지 {saveData.runData.currentStage}, " +
-            $"골드 {currencyManager.Gold}, " +
-            $"레거시 포인트 {currencyManager.LegacyPoints}");
+        return true;
     }
+    #endregion
 
 }
