@@ -30,6 +30,7 @@ public class BillPanelController : MonoBehaviour
     private BillManager _billManager;
     private CurrencyManager _currencyManager;
     private BillRecord _displayedBill;
+    private SceneTransitionManager _sceneTransitionManager;
     private bool _isSubscribed;
     private bool _hasCachedDueColors;
     private Color _defaultDueLabelColor;
@@ -62,6 +63,11 @@ public class BillPanelController : MonoBehaviour
 
         _currencyManager = CurrencyManager.Instance;
 
+        if (_sceneTransitionManager == null)
+        {
+            _sceneTransitionManager = SceneTransitionManager.Instance;
+        }
+
         if (_billManager != null)
         {
             _billManager.OnBillIssued += HandleBillChanged;
@@ -84,7 +90,7 @@ public class BillPanelController : MonoBehaviour
         if (_bankruptcyButton != null)
         {
             _bankruptcyButton.onClick.AddListener(HandleBankruptcyClicked);
-        }
+        }        
 
         _isSubscribed = true;
     }
@@ -156,8 +162,17 @@ public class BillPanelController : MonoBehaviour
             return;
         }
 
-        if (RoguelikeManager.Instance.RestartAfterBankruptcy() && AudioManager.Instance != null)
+        if (AudioManager.Instance != null)
         {
+            if (_sceneTransitionManager != null)
+            {
+                _sceneTransitionManager.OnFadeOutCompleted += OnFadeOutCompleted_Bankruptcy;
+            }
+
+            if (!SceneTransitionManager.Instance.LoadLegacyShopScene())
+            {
+                return;
+            }
             AudioManager.Instance.PlaySFX(EAudioType.BankruptcyRestart);
         }
     }
@@ -191,6 +206,19 @@ public class BillPanelController : MonoBehaviour
 
         DisplayBill(bill);
         SetBankruptcyButtonVisible(_billManager.HasExpiredBills);
+    }
+
+    private void OnFadeOutCompleted_Bankruptcy()
+    {
+        if (_sceneTransitionManager != null)
+        {
+            _sceneTransitionManager.OnFadeOutCompleted -= OnFadeOutCompleted_Bankruptcy;
+        }
+
+        if (RoguelikeManager.Instance != null)
+        {
+            RoguelikeManager.Instance.RestartAfterBankruptcy();
+        }        
     }
 
     private BillRecord FindMostRecentBill(EBillStatus status)

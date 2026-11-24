@@ -84,13 +84,7 @@ public class RoguelikeManager : Singleton<RoguelikeManager>
         {
             PerkManager.Instance.ResetRunPerks();
         }
-        BillManager.Instance.ResetRunBills();
-
-        if (!SceneTransitionManager.Instance.LoadLegacyShopScene())
-        {
-            _isRestartingAfterBankruptcy = false;
-            return false;
-        }
+        BillManager.Instance.ResetRunBills();        
 
         return true;
     }
