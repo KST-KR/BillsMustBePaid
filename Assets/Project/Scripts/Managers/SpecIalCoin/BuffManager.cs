@@ -38,8 +38,26 @@ public class BuffManager : Singleton<BuffManager>
         ResetAllBuffs();
     }
 
+    private void Start()
+    {
+        if (!IsActiveInstance)
+        {
+            return;
+        }
+
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared += HandleStageCleared;
+        }
+    }
+
     protected override void OnSingletonDestroy()
     {
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared -= HandleStageCleared;
+        }
+
         ResetAllBuffs();
     }
     #endregion
@@ -55,7 +73,15 @@ public class BuffManager : Singleton<BuffManager>
             StopCoroutine(_jackpotRoutine);
         }
 
-        _jackpotRoutine = StartCoroutine(JackpotBuffRoutine(duration, multiplier));
+        JackpotChanceMultiplier = multiplier;
+        JackpotRemainingTime = duration;
+        JackpotDuration = duration;
+
+        _jackpotRoutine = StartCoroutine(JackpotBuffRoutine());
+
+        OnJackpotBuffStateChanged?.Invoke(true);
+
+        Debug.Log($"BuffManager : ¿Ë∆Ã »Æ∑¸ {multiplier}πË πˆ«¡ Ω√¿€! ({duration}√ )");
     }
 
     /// <summary>
@@ -68,7 +94,15 @@ public class BuffManager : Singleton<BuffManager>
             StopCoroutine(_doubleCoinRoutine);
         }
 
-        _doubleCoinRoutine = StartCoroutine(DoubleCoinBuffRoutine(duration, multiplier));
+        CoinGainMultiplier = multiplier;
+        DoubleCoinRemainingTime = duration;
+        DoubleCoinDuration = duration;
+
+        _doubleCoinRoutine = StartCoroutine(DoubleCoinBuffRoutine());
+
+        OnDoubleCoinBuffStateChanged?.Invoke(true);
+
+        Debug.Log($"[BuffManager] ƒ⁄¿Œ »πµÊ∑Æ {multiplier}πË πˆ«¡ Ω√¿€! ({duration}√ )");
     }
 
     /// <summary>
@@ -99,15 +133,8 @@ public class BuffManager : Singleton<BuffManager>
     #endregion
 
     #region ƒøΩ∫≈“ «‘ºˆ(private)
-    private IEnumerator JackpotBuffRoutine(float duration, float multiplier)
+    private IEnumerator JackpotBuffRoutine()
     {
-        JackpotChanceMultiplier = multiplier;
-        JackpotRemainingTime = duration;
-        JackpotDuration = duration;
-        OnJackpotBuffStateChanged?.Invoke(true);
-
-        Debug.Log($"BuffManager : ¿Ë∆Ã »Æ∑¸ {multiplier}πË πˆ«¡ Ω√¿€! ({duration}√ )");
-
         while (JackpotRemainingTime > 0f)
         {
             JackpotRemainingTime -= Time.deltaTime;
@@ -122,15 +149,8 @@ public class BuffManager : Singleton<BuffManager>
         Debug.Log("[BuffManager] ¿Ë∆Ã »Æ∑¸ πˆ«¡ ¡æ∑·");
     }
 
-    private IEnumerator DoubleCoinBuffRoutine(float duration, float multiplier)
+    private IEnumerator DoubleCoinBuffRoutine()
     {
-        CoinGainMultiplier = multiplier;
-        DoubleCoinRemainingTime = duration;
-        DoubleCoinDuration = duration;
-        OnDoubleCoinBuffStateChanged?.Invoke(true);
-
-        Debug.Log($"[BuffManager] ƒ⁄¿Œ »πµÊ∑Æ {multiplier}πË πˆ«¡ Ω√¿€! ({duration}√ )");
-
         while (DoubleCoinRemainingTime > 0f)
         {
             DoubleCoinRemainingTime -= Time.deltaTime;
@@ -143,6 +163,11 @@ public class BuffManager : Singleton<BuffManager>
         OnDoubleCoinBuffStateChanged?.Invoke(false);
 
         Debug.Log("[BuffManager] ƒ⁄¿Œ »πµÊ∑Æ πˆ«¡ ¡æ∑·");
+    }
+
+    private void HandleStageCleared(int stageNumber)
+    {
+        ResetAllBuffs();
     }
     #endregion
 }

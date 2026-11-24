@@ -1,13 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 public class BuffUI : MonoBehaviour
 {
     #region ÀÎ½ºÆåÅÍ
-    [Header("½ºÅ×ÀÌÁö Å¬¸®¾î ÆÐ³Î (È°¼ºÈ­ ½Ã ¹öÇÁ UI ÀÚµ¿ ¼û±è)")]
-    [SerializeField] private GameObject _stageClearPanel;
-
     [Header("ÀèÆÌ È®·ü 5¹è UI")]
     [SerializeField] private GameObject _jackpotBuffRoot;
     [SerializeField] private TextMeshProUGUI _jackpotBuffText;
@@ -19,9 +17,19 @@ public class BuffUI : MonoBehaviour
     [SerializeField] private Image _doubleCoinFillBar;
     #endregion
 
+    #region ³»ºÎ º¯¼ö
+    private Coroutine _jackpotUICoroutine;
+    private Coroutine _doubleCoinUICoroutine;
+    #endregion
+
     #region ÀÌº¥Æ® ÇÔ¼ö
     private void Start()
     {
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared += HandleStageCleared;
+        }
+
         if (BuffManager.HasInstance)
         {
             BuffManager.Instance.OnJackpotBuffStateChanged += HandleJackpotStateChanged;
@@ -33,35 +41,50 @@ public class BuffUI : MonoBehaviour
         }
         else
         {
-            if (_jackpotBuffRoot != null) _jackpotBuffRoot.SetActive(false);
-            if (_doubleCoinBuffRoot != null) _doubleCoinBuffRoot.SetActive(false);
+            HideAllBuffUI();
         }
     }
 
     private void OnDestroy()
     {
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared -= HandleStageCleared;
+        }
+
         if (BuffManager.HasInstance)
         {
             BuffManager.Instance.OnJackpotBuffStateChanged -= HandleJackpotStateChanged;
             BuffManager.Instance.OnDoubleCoinBuffStateChanged -= HandleDoubleCoinStateChanged;
         }
     }
+    #endregion
 
-    private void Update()
+    #region Ä¿½ºÅÒ ÇÔ¼ö (Private)
+    private void HandleStageCleared(int stageNumber)
     {
-        if (_stageClearPanel != null && _stageClearPanel.activeInHierarchy)
+        HideAllBuffUI();
+    }
+
+    private void HandleJackpotStateChanged(bool isActive)
+    {
+        if (StageManager.Instance != null && !StageManager.Instance.IsStageActive)
         {
-            HideAllBuffUI();
-            return;
+            isActive = false;
         }
 
-        if (!BuffManager.HasInstance)
+        if (_jackpotUICoroutine != null)
         {
-            return;
+            StopCoroutine(_jackpotUICoroutine);
+            _jackpotUICoroutine = null;
         }
 
-        // 1. ÀèÆÌ È®·ü 5¹è ¹öÇÁ °»½Å
-        if (BuffManager.Instance.IsJackpotBuffActive)
+        if (_jackpotBuffRoot != null)
+        {
+            _jackpotBuffRoot.SetActive(isActive);
+        }
+
+        if (isActive && BuffManager.HasInstance)
         {
             if (_jackpotBuffText != null)
             {
@@ -72,10 +95,34 @@ public class BuffUI : MonoBehaviour
             {
                 _jackpotFillBar.fillAmount = BuffManager.Instance.JackpotProgress;
             }
+
+            _jackpotUICoroutine = StartCoroutine(UpdateJackpotUIRoutine());
+        }
+        else if (_jackpotFillBar != null)
+        {
+            _jackpotFillBar.fillAmount = 0f;
+        }
+    }
+
+    private void HandleDoubleCoinStateChanged(bool isActive)
+    {
+        if (StageManager.Instance != null && !StageManager.Instance.IsStageActive)
+        {
+            isActive = false;
         }
 
-        // 2. ÄÚÀÎ È¹µæ·® 2¹è ¹öÇÁ °»½Å
-        if (BuffManager.Instance.IsDoubleCoinBuffActive)
+        if (_doubleCoinUICoroutine != null)
+        {
+            StopCoroutine(_doubleCoinUICoroutine);
+            _doubleCoinUICoroutine = null;
+        }
+
+        if (_doubleCoinBuffRoot != null)
+        {
+            _doubleCoinBuffRoot.SetActive(isActive);
+        }
+
+        if (isActive && BuffManager.HasInstance)
         {
             if (_doubleCoinBuffText != null)
             {
@@ -86,49 +133,89 @@ public class BuffUI : MonoBehaviour
             {
                 _doubleCoinFillBar.fillAmount = BuffManager.Instance.DoubleCoinProgress;
             }
-        }
-    }
-    #endregion
 
-    #region Ä¿½ºÅÒ ÇÔ¼ö (Private)
-    private void HandleJackpotStateChanged(bool isActive)
-    {
-        if (_stageClearPanel != null && _stageClearPanel.activeInHierarchy)
-        {
-            isActive = false;
+            _doubleCoinUICoroutine = StartCoroutine(UpdateDoubleCoinUIRoutine());
         }
-
-        if (_jackpotBuffRoot != null)
+        else if (_doubleCoinFillBar != null)
         {
-            _jackpotBuffRoot.SetActive(isActive);
-        }
-
-        if (isActive && _jackpotBuffText != null && BuffManager.HasInstance)
-        {
-            _jackpotBuffText.text = $"ÀèÆÌ È®·ü {BuffManager.Instance.JackpotChanceMultiplier:0}¹è";
+            _doubleCoinFillBar.fillAmount = 0f;
         }
     }
 
-    private void HandleDoubleCoinStateChanged(bool isActive)
+    private IEnumerator UpdateJackpotUIRoutine()
     {
-        if (_stageClearPanel != null && _stageClearPanel.activeInHierarchy)
+        while (BuffManager.HasInstance && BuffManager.Instance.IsJackpotBuffActive)
         {
-            isActive = false;
+            if (_jackpotFillBar != null)
+            {
+                _jackpotFillBar.fillAmount = BuffManager.Instance.JackpotProgress;
+            }
+
+            yield return null;
         }
 
-        if (_doubleCoinBuffRoot != null)
+        if (_jackpotFillBar != null)
         {
-            _doubleCoinBuffRoot.SetActive(isActive);
+            _jackpotFillBar.fillAmount = 0f;
         }
 
-        if (isActive && _doubleCoinBuffText != null && BuffManager.HasInstance)
+        if (_jackpotBuffRoot != null && _jackpotBuffRoot.activeSelf)
         {
-            _doubleCoinBuffText.text = $"ÄÚÀÎ È¹µæ {BuffManager.Instance.CoinGainMultiplier:0}¹è";
+            _jackpotBuffRoot.SetActive(false);
         }
+
+        _jackpotUICoroutine = null;
+    }
+
+    private IEnumerator UpdateDoubleCoinUIRoutine()
+    {
+        while (BuffManager.HasInstance && BuffManager.Instance.IsDoubleCoinBuffActive)
+        {
+            if (_doubleCoinFillBar != null)
+            {
+                _doubleCoinFillBar.fillAmount = BuffManager.Instance.DoubleCoinProgress;
+            }
+
+            yield return null;
+        }
+
+        if (_doubleCoinFillBar != null)
+        {
+            _doubleCoinFillBar.fillAmount = 0f;
+        }
+
+        if (_doubleCoinBuffRoot != null && _doubleCoinBuffRoot.activeSelf)
+        {
+            _doubleCoinBuffRoot.SetActive(false);
+        }
+
+        _doubleCoinUICoroutine = null;
     }
 
     private void HideAllBuffUI()
     {
+        if (_jackpotUICoroutine != null)
+        {
+            StopCoroutine(_jackpotUICoroutine);
+            _jackpotUICoroutine = null;
+        }
+
+        if (_doubleCoinUICoroutine != null)
+        {
+            StopCoroutine(_doubleCoinUICoroutine);
+            _doubleCoinUICoroutine = null;
+        }
+
+        if (_jackpotFillBar != null)
+        {
+            _jackpotFillBar.fillAmount = 0f;
+        }
+
+        if (_doubleCoinFillBar != null)
+        {
+            _doubleCoinFillBar.fillAmount = 0f;
+        }
+
         if (_jackpotBuffRoot != null && _jackpotBuffRoot.activeSelf)
         {
             _jackpotBuffRoot.SetActive(false);
