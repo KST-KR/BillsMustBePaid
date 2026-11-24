@@ -60,8 +60,21 @@ public class SpecialCoin : MonoBehaviour
         _mainCamera = Camera.main;
     }
 
+    private void OnEnable()
+    {
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared += HandleStageCleared;
+        }
+    }
+
     private void OnDisable()
     {
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.OnStageCleared -= HandleStageCleared;
+        }
+
         if (_coinCoroutine != null)
         {
             StopCoroutine(_coinCoroutine);
@@ -76,6 +89,13 @@ public class SpecialCoin : MonoBehaviour
     /// </summary>
     public void Init(Vector3 spawnPos)
     {
+        // 이미 스테이지가 클리어된 상태라면 즉시 풀로 반환
+        if (StageManager.Instance != null && !StageManager.Instance.IsStageActive)
+        {
+            ReturnToPool();
+            return;
+        }
+
         transform.position = spawnPos;
 
         if (_mainCamera == null)
@@ -99,6 +119,18 @@ public class SpecialCoin : MonoBehaviour
     #endregion
 
     #region 커스텀 함수(private)
+    private void HandleStageCleared(int stageNumber)
+    {
+        if (_coinCoroutine != null)
+        {
+            StopCoroutine(_coinCoroutine);
+            _coinCoroutine = null;
+        }
+
+        // 흡수 연출 및 효과 발동 없이 즉시 풀로 반환
+        ReturnToPool();
+    }
+
     private IEnumerator SpecialCoinRoutine(Vector3 startPos)
     {
         float randomAngle = Random.Range(0f, Mathf.PI * 2f);
