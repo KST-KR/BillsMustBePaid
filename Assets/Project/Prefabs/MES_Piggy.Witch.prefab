@@ -218,6 +218,7 @@ MonoBehaviour:
   _Text: {fileID: 2587071642245917024}
   _textLogues:
   - "\uC218\uB9AC\uC218\uB9AC\uB9C8\uC218\uB9AC"
+  - "\uC544\uBC14\uB2E4\uCF00\uD0C0\uBE0C\uB77C"
   _minInterval: 10
   _maxInterval: 20
   _textHoldingTime: 2
@@ -398,7 +399,6 @@ GameObject:
   - component: {fileID: 5371968114124033888}
   - component: {fileID: 5483214666120056331}
   - component: {fileID: 2587071642245917024}
-  - component: {fileID: 5357355818817985595}
   m_Layer: 7
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -522,21 +522,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &5357355818817985595
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5973359222530274348}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b23ed8b9d731f6242923eed81ac0de65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _minFontSize: 12
-  _maxFontSize: 36
-  _maxIterations: 12
 --- !u!1 &7223226756811101128
 GameObject:
   m_ObjectHideFlags: 0
