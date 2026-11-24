@@ -19,7 +19,7 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
     #endregion
 
     #region 프로퍼티
-    public GameDataCatalog Catalog { get; private set; }
+    public static GameDataCatalog Catalog { get; private set; }
     public bool IsLoaded => Catalog != null;
 
     // 전체 데이터 로딩 진행률 (0 ~ 1)
@@ -43,12 +43,13 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
     /// <summary>
     /// Addressables 초기화 및 게임 데이터 카탈로그 로딩
     /// </summary>
-    public IEnumerator LoadCatalog()
+    public IEnumerator LoadCatalog(System.Action<GameDataCatalog> onCatalogLoaded = null)
     {
         // 이미 로딩된 경우 중복 로딩 방지
         if (IsLoaded)
         {
             LoadProgress = 0.9f;
+            onCatalogLoaded?.Invoke(Catalog);
             yield break;
         }
 
@@ -113,6 +114,8 @@ public class GameDataLoader : PersistentSingleton<GameDataLoader>
             _catalogHandle = default;
             yield break;
         }
+
+        onCatalogLoaded?.Invoke(Catalog);
 
         LoadProgress = 0.9f;
 
