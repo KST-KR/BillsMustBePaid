@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EquipmentData_FastHammer
   m_EditorClassIdentifier: 
   _hammerPrefabReference:
-    m_AssetGUID: 8dba85d720979b2459cf3eac318581cb
+    m_AssetGUID: d773dca8864b85d459a781700e89eadf
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
