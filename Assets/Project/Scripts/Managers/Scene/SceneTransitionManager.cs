@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,6 +21,11 @@ public class SceneTransitionManager : PersistentSingleton<SceneTransitionManager
 
     #region 내부 변수
     private bool _isTransitioning;
+    #endregion
+
+    #region 이벤트
+    public event Action OnFadeOutCompleted;
+    public event Action OnFadeInCompleted;
     #endregion
 
     #region 이벤트 함수
@@ -92,6 +98,7 @@ public class SceneTransitionManager : PersistentSingleton<SceneTransitionManager
         // 1. 페이드 아웃
         _fadeCanvasGroup.blocksRaycasts = true;
         yield return StartCoroutine(Fade(0f, 1f));
+        OnFadeOutCompleted?.Invoke();
 
         // 2. 씬 비동기 로드
         AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
@@ -126,6 +133,7 @@ public class SceneTransitionManager : PersistentSingleton<SceneTransitionManager
 
         _fadeCanvasGroup.blocksRaycasts = false;
         _isTransitioning = false;
+        OnFadeInCompleted?.Invoke();
     }
 
     private IEnumerator Fade(float startAlpah, float targetAlpha)

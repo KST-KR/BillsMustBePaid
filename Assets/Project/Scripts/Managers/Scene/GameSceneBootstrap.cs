@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -9,6 +10,10 @@ public class GameSceneBootstrap : MonoBehaviour
     #region 내부 변수
     private bool _isManagersInitialized;
     public bool IsInitializationComplete { get; private set; }
+    #endregion
+
+    #region 이벤트
+    public event Action OnInitializationFinished;
     #endregion
 
     private IEnumerator Start()
@@ -176,6 +181,7 @@ public class GameSceneBootstrap : MonoBehaviour
             // 실행 성공 여부와 관계없이 진입 데이터 정리
             GameLaunchData.Clear();
             IsInitializationComplete = true;
+            OnInitializationFinished?.Invoke();
         }
     }
 
