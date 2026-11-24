@@ -269,6 +269,22 @@ public class CurrencyManager : PersistentSingleton<CurrencyManager>
 
         return true;
     }
+
+    /// <summary>
+    /// 저장된 레거시 포인트만 복원
+    /// </summary>
+    public bool RestoreLegacyPoints(int legacyPoints)
+    {
+        if (legacyPoints < 0)
+        {
+            Debug.LogError("복원할 레거시 포인트는 음수가 되면 안됌.");
+            return false;
+        }
+
+        SetBalance(ECurrencyType.LegacyPoint, legacyPoints);
+        Debug.Log($"레거시 포인트 복원 완료: {LegacyPoints}");
+        return true;
+    }
     #endregion
 
     #region 커스텀 (Private)
