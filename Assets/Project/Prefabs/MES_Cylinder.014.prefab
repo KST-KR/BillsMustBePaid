@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5104037292287805522}
@@ -48,17 +48,20 @@ MonoBehaviour:
   _coinType: 2
   _instantCoin: 500
   _spawnVisualCoinsOnInstant: 1
+  _instantCoinDropPos: {x: 0, y: 3, z: 0}
   _jackpotChanceUp: 5
   _jackpotDuration: 30
   _coinGainMultiplier: 2
-  _coinGainDuration: 20
-  _dropHeightY: 1.5
+  _coinGainDuration: 10
+  _dropDuration: 0.4
+  _dropHeightY: 1.7
   _minDistance: 1.5
   _maxDistance: 3
   _idleDuration: 2
   _idleRotateSpeed: 180
-  _groundY: 2.1
+  _groundY: 2.4
   _pickUpTime: 0.2
+  _absorbRotateSpeed: 720
   _absorbViewportPos: {x: 0.1, y: -0.3}
   _absorbDepthFromCam: 2
   _absorbArcHeight: 0.35
