@@ -15,4 +15,4 @@ MonoBehaviour:
   _summonCount: 1
   _spawnRadius: 1.5
   _summonChance: 1
-  _cloneDate: {fileID: 11400000, guid: 19a535ee65fe10946bfbb04ef11b0923, type: 2}
+  _cloneData: {fileID: 11400000, guid: 19a535ee65fe10946bfbb04ef11b0923, type: 2}

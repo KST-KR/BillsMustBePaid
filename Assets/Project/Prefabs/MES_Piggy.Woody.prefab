@@ -232,7 +232,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAFC0\uAFC0 !"
+  m_text: "\uC790\uC5F0\uC744 \uC0AC\uB791\uD574"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8d9b2bce949c81e47a2f4eae96ef547b, type: 2}
   m_sharedMaterial: {fileID: 4548245248331571157, guid: 8d9b2bce949c81e47a2f4eae96ef547b, type: 2}
@@ -295,7 +295,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -76.23547, y: 0, z: -70.16556, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -517,6 +517,7 @@ MonoBehaviour:
   _Text: {fileID: 4636383954248257754}
   _textLogues:
   - "\uC790\uC5F0\uC744 \uC0AC\uB791\uD574"
-  _minInterval: 10
-  _maxInterval: 20
+  - "\uBC30\uACE0\uD504\uB2F9"
+  _minInterval: 5
+  _maxInterval: 15
   _textHoldingTime: 2

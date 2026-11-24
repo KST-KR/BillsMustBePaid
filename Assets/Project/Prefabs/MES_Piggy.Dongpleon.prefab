@@ -94,7 +94,6 @@ GameObject:
   - component: {fileID: 7906953087184660971}
   - component: {fileID: 1611431047628866145}
   - component: {fileID: 3559046073652931834}
-  - component: {fileID: 1599051917601213349}
   m_Layer: 7
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -149,7 +148,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAFC0\uAFC0 !"
+  m_text: "\uB300\uD3EC \uC900\uBE44!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8d9b2bce949c81e47a2f4eae96ef547b, type: 2}
   m_sharedMaterial: {fileID: 4548245248331571157, guid: 8d9b2bce949c81e47a2f4eae96ef547b, type: 2}
@@ -176,8 +175,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 80
-  m_fontSizeBase: 80
+  m_fontSize: 85
+  m_fontSizeBase: 85
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -212,27 +211,12 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -21.79506, y: 0, z: -29.088058, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1599051917601213349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1884092281091405621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b23ed8b9d731f6242923eed81ac0de65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _minFontSize: 12
-  _maxFontSize: 36
-  _maxIterations: 12
 --- !u!1 &4450541366462981206
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,8 +435,8 @@ MonoBehaviour:
   _textLogues:
   - "\uB300\uD3EC \uC900\uBE44!"
   - "\uBC1C\uC0AC!"
-  _minInterval: 10
-  _maxInterval: 20
+  _minInterval: 5
+  _maxInterval: 15
   _textHoldingTime: 2
 --- !u!1 &4932759820310447901
 GameObject:
