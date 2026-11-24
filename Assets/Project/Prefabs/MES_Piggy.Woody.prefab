@@ -518,6 +518,6 @@ MonoBehaviour:
   _textLogues:
   - "\uC790\uC5F0\uC744 \uC0AC\uB791\uD574"
   - "\uBC30\uACE0\uD504\uB2F9"
-  _minInterval: 10
-  _maxInterval: 20
+  _minInterval: 5
+  _maxInterval: 15
   _textHoldingTime: 2

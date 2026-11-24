@@ -435,8 +435,8 @@ MonoBehaviour:
   _textLogues:
   - "\uB300\uD3EC \uC900\uBE44!"
   - "\uBC1C\uC0AC!"
-  _minInterval: 10
-  _maxInterval: 20
+  _minInterval: 5
+  _maxInterval: 15
   _textHoldingTime: 2
 --- !u!1 &4932759820310447901
 GameObject:

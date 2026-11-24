@@ -135,7 +135,7 @@ MonoBehaviour:
   - "\uAFC0\uAFC0!"
   - "\uB3C8 \uB0B4\uB194!"
   _minInterval: 5
-  _maxInterval: 10
+  _maxInterval: 15
   _textHoldingTime: 2
 --- !u!1 &894245988516401612
 GameObject:

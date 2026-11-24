@@ -385,8 +385,8 @@ MonoBehaviour:
   _textLogues:
   - "\uD589\uC6B4\uC774 \uAC00\uB4DD!"
   - "\uB124\uC78E\uD074\uB85C\uBC84~"
-  _minInterval: 10
-  _maxInterval: 20
+  _minInterval: 5
+  _maxInterval: 15
   _textHoldingTime: 2
 --- !u!1 &6860260406525649353
 GameObject:
