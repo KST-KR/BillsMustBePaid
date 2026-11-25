@@ -144,27 +144,23 @@ public class TonyLoanPhoneController : MonoBehaviour
 
     private void RefreshCallButton()
     {
-        if (_callTonyButton != null && _billManager != null)
+        if (_callTonyButton != null)
         {
-            _callTonyButton.gameObject.SetActive(_billManager.CanTakeTonyLoan);
+            bool show = _billManager != null && _billManager.CanTakeTonyLoan;
+            _callTonyButton.gameObject.SetActive(show);
+            _callTonyButton.interactable = show;
         }
     }
 
     private void StartCall()
     {
-        if (_billManager == null || !_billManager.CanTakeTonyLoan || _callPanel == null)
+        if (_billManager == null || !_billManager.CanTakeTonyLoan || _callPanel == null || _callPanel.activeSelf)
         {
             RefreshCallButton();
             return;
         }
 
         _offeredPrincipal = _billManager.GetTonyLoanAmount();
-        if (_offeredPrincipal <= 0)
-        {
-            RefreshCallButton();
-            return;
-        }
-
         _isConnected = false;
         if (AudioManager.Instance != null)
         {
@@ -214,10 +210,9 @@ public class TonyLoanPhoneController : MonoBehaviour
             AudioManager.Instance.PlaySFX(EAudioType.TonyCallConnected);
         }
 
-        int repaymentAmount = CalculateRepayment(_offeredPrincipal);
         _callTitleText.text = "빅 토니";
+        int repaymentAmount = CalculateRepayment(_offeredPrincipal);
         _dialogueText.text = "이번 청구서가 급하다고? 필요한 돈을 빌려주지\n대신 " + _repaymentDays + "일 안에 원금의 " + Mathf.Max(0, _repaymentPercent - 100) + "%를 더해 갚아";
-        int penaltyPercent = Mathf.RoundToInt(BillManager.CTonyLoanPenaltyRate * 100.0f);
         _loanAmountText.text = "빌릴 금액  $" + _offeredPrincipal.ToString("N0") + "\n상환 금액  $" + repaymentAmount.ToString("N0") + " - " + _repaymentDays + "일 후";
         _acceptButton.gameObject.SetActive(true);
         _callSequence = null;
