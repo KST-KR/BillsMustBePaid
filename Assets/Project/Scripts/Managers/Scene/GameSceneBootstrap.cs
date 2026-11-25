@@ -329,10 +329,30 @@ public class GameSceneBootstrap : MonoBehaviour
     /// </summary>
     private bool StartNewGame()
     {
-        GameManager.Instance.StartRun();
+        CurrencyManager currencyManager = CurrencyManager.Instance;
 
-        // StageManager가 OnRunStarted를 구독하고 있으므로
-        // StartRun에서 첫 번째 스테이지가 자동으로 시작됨.
+        if (currencyManager == null)
+        {
+            Debug.LogError("새 게임 시작에 필요한 CurrencyManager가 없음.");
+            return false;
+        }
+
+        // 재화 초기화 (골드 + 레거시 포인트를 초기값으로)
+        currencyManager.ResetBalances();
+
+        // 영구 상점 구매 이력 초기화 (null이면 목록만 비우고 이벤트 발생
+        if (LegacyShopManager.Instance != null)
+        {
+            LegacyShopManager.Instance.ImportSaveData(null);
+        }
+
+        // 사이클 번호 초기화
+        if (RoguelikeManager.Instance != null)
+        {
+            RoguelikeManager.Instance.RestoreCycleCount(1);
+        }
+
+        GameManager.Instance.StartRun();
         return true;
     }
 
