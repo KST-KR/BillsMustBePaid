@@ -9084,7 +9084,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _billRules:
   - {fileID: 11400000, guid: fe741688ab171dc459dfe89221ac4156, type: 2}
-  _payBillButton: {fileID: 1866588744}
   _payBillButtonImage: {fileID: 1866588745}
   _unaffordableButtonSprite: {fileID: 21300000, guid: 6a3a39bcab6df52439460531a1cc5f06, type: 3}
   _affordableButtonSprite: {fileID: 21300000, guid: e2cd5eb182c0db7418e8565fc9984a53, type: 3}

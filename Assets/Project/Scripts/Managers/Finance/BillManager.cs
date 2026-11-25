@@ -17,7 +17,10 @@ public class BillManager : Singleton<BillManager>
     public IReadOnlyList<BillRecord> UnpaidBills => GetUnpaidBills();
     public BillRecord CurrentBill => GetNextUnpaidBill();
     public int CurrentDay => _currentDay;
-    public bool CanTakeTonyLoan => GetTonyLoanAmount() > 0 && _tonyLoanState == ETonyLoanState.Available && !HasExpiredBills && (GameManager.Instance == null || GameManager.Instance.IsRunActive);
+
+    public bool IsTonyLoanTurn => _tonyLoanState == ETonyLoanState.Available && CurrentBill != null &&
+        !HasExpiredBills && (GameManager.Instance == null || GameManager.Instance.IsRunActive);
+    public bool CanTakeTonyLoan => IsTonyLoanTurn && GetTonyLoanAmount() > 0;
     public bool HasExpiredBills
     {
         get
@@ -47,7 +50,6 @@ public class BillManager : Singleton<BillManager>
     [SerializeField] private BillData[] _billRules = new BillData[0];
 
     [Header("청구서 납부 버튼")]
-    [SerializeField] private Button _payBillButton;
     [SerializeField] private Image _payBillButtonImage;
     [SerializeField] private Sprite _unaffordableButtonSprite;
     [SerializeField] private Sprite _affordableButtonSprite;
@@ -77,11 +79,6 @@ public class BillManager : Singleton<BillManager>
 
     private void Start()
     {
-        if (_payBillButton != null)
-        {
-            _payBillButton.onClick.AddListener(HandlePayButtonClicked);
-        }
-
         _currencyManager = CurrencyManager.Instance;
 
         if (CurrencyManager.Instance != null)
@@ -101,11 +98,6 @@ public class BillManager : Singleton<BillManager>
 
     protected override void OnSingletonDestroy()
     {
-        if (_payBillButton != null)
-        {
-            _payBillButton.onClick.RemoveListener(HandlePayButtonClicked);
-        }
-
         if (_currencyManager != null)
         {
             _currencyManager.OnBalanceChanged -= HandleBalanceChanged;
@@ -163,7 +155,8 @@ public class BillManager : Singleton<BillManager>
         }
 
         bill.SetStatus(EBillStatus.Paid);
-        if (string.Equals(bill.BillTypeId, CTonyLoanBillTypeId, StringComparison.OrdinalIgnoreCase))
+        bool repaidTonyLoan = string.Equals(bill.BillTypeId, CTonyLoanBillTypeId, StringComparison.OrdinalIgnoreCase);
+        if (repaidTonyLoan)
         {
             _tonyLoanState = ETonyLoanState.WaitingForRegularBill;
         }
@@ -174,6 +167,11 @@ public class BillManager : Singleton<BillManager>
 
         OnBillPaid?.Invoke(bill);
         OnBillChanged?.Invoke(bill);
+
+        if (repaidTonyLoan)
+        {
+            IssueBillsForDay(_currentDay, bill);
+        }
 
         RefreshPayButtonImage();
         return true;
@@ -474,11 +472,6 @@ public class BillManager : Singleton<BillManager>
         return true;
     }
 
-    private void HandlePayButtonClicked()
-    {
-        TryPayCurrentBill();
-    }
-
     private void HandleBalanceChanged(ECurrencyType type, int previousAmount, int currentAmount)
     {
         if (type == ECurrencyType.Gold)
@@ -541,8 +534,13 @@ public class BillManager : Singleton<BillManager>
         }
     }
 
-    private void IssueBillsForDay(int gameDay)
-    {
+    private void IssueBillsForDay(int gameDay, BillRecord repaidLoan = null)
+    {        
+        if (_tonyLoanState == ETonyLoanState.Outstanding)
+        {
+            return;
+        }
+
         for (int i = 0; i < _billRules.Length; i++)
         {
             BillData billData = _billRules[i];
@@ -568,9 +566,15 @@ public class BillManager : Singleton<BillManager>
                 }
 
                 scheduledDay = previousCycle.DueDay + 1;
+                
+                if (repaidLoan != null && previousCycle.IssueDay <= repaidLoan.IssueDay &&
+                    repaidLoan.IssueDay <= previousCycle.DueDay)
+                {
+                    scheduledDay = gameDay;
+                }
             }
 
-            if (scheduledDay == gameDay)
+            if (scheduledDay <= gameDay)
             {
                 IssueBill(billData, nextCycle);
             }
